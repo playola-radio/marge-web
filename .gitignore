@@ -5,3 +5,7 @@ dist
 server/test/e2e/.venv/
 __pycache__/
 *.pyc
+.DS_Store
+coverage/
+.env.*
+!.env.example
