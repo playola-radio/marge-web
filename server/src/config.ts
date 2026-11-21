@@ -8,6 +8,17 @@ export interface Config {
   providers: Record<string, OAuthProvider>;
   sessionTtlSeconds: number;
   port: number;
+  googleSignIn: { clientId: string; clientSecret: string } | null;
+  allowedEmails: string[];
+  clientOrigins: string[];
+  devLogin: boolean;
+}
+
+function splitList(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv): Config {
@@ -46,5 +57,14 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     providers,
     sessionTtlSeconds,
     port: Number(env.PORT ?? 3000),
+    // Sign-in settings never stop the server booting: the relay must keep
+    // working without them, so the sign-in endpoint answers 500 instead.
+    googleSignIn:
+      env.GOOGLE_SIGNIN_CLIENT_ID && env.GOOGLE_SIGNIN_CLIENT_SECRET
+        ? { clientId: env.GOOGLE_SIGNIN_CLIENT_ID, clientSecret: env.GOOGLE_SIGNIN_CLIENT_SECRET }
+        : null,
+    allowedEmails: splitList(env.MARGE_ALLOWED_EMAILS).map((email) => email.toLowerCase()),
+    clientOrigins: splitList(env.CLIENT_ORIGINS),
+    devLogin: env.NODE_ENV === 'development' || env.NODE_ENV === 'test',
   };
 }
