@@ -6,6 +6,7 @@
 [build.environment]
   NODE_VERSION = "22.15.0"
   VITE_SERVER_BASE_URL = "https://api.marge.playola.fm"
+  VITE_GOOGLE_CLIENT_ID = "360017545997-fi7r67lac1bvanjukfd77lrb27q18tet.apps.googleusercontent.com"
 
 [[redirects]]
   from = "/*"
