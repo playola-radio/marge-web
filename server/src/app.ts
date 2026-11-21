@@ -23,6 +23,8 @@ export interface AppDeps {
 
 export function buildApp(deps: AppDeps): Express {
   const app = express();
+  // Render's proxy appends the real client address to X-Forwarded-For; trust only that one hop.
+  app.set('trust proxy', 1);
   app.use(helmet());
   app.use(express.json());
 

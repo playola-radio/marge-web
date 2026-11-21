@@ -219,6 +219,23 @@ describe('POST /v1/auth/google/signin', () => {
       expect((await request(app).post('/session').send({})).status).not.to.equal(429);
     });
 
+    it("counts each client behind Render's proxy separately", async () => {
+      const app = makeApp({ rateLimit });
+      expect((await signIn(app).set('X-Forwarded-For', '203.0.113.1')).status).to.equal(200);
+      expect((await signIn(app).set('X-Forwarded-For', '203.0.113.1')).status).to.equal(429);
+      expect((await signIn(app).set('X-Forwarded-For', '203.0.113.2')).status).to.equal(200);
+    });
+
+    it('ignores client-supplied addresses before the one the proxy adds', async () => {
+      const app = makeApp({ rateLimit });
+      expect(
+        (await signIn(app).set('X-Forwarded-For', '198.51.100.9, 203.0.113.1')).status,
+      ).to.equal(200);
+      expect(
+        (await signIn(app).set('X-Forwarded-For', '198.51.100.7, 203.0.113.1')).status,
+      ).to.equal(429);
+    });
+
     it('does not let POST /session use up the sign-in count', async () => {
       const app = makeApp({ rateLimit });
       expect((await request(app).post('/session').send({})).status).not.to.equal(429);
