@@ -1,0 +1,2405 @@
+{
+  "version": "2.25",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ekNpZ",
+      "x": 0,
+      "y": 0,
+      "name": "Landing — Desktop — Default",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "children": [
+        {
+          "type": "frame",
+          "id": "yeAvy",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            56,
+            72
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "y3mV8",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VwGvE",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "D52PhJ",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y566oW",
+              "name": "Sign In Block",
+              "width": 480,
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ieUTg",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zy75z",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 120,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "LluRm",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "soQ0i",
+                  "name": "Google Button",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NcC06",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Kd6a0",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "JBRCN",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "cGzpL",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "PfQ3L",
+      "x": 1520,
+      "y": 0,
+      "name": "Landing — Mobile — Default",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "k3VU3T",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            40,
+            24,
+            32,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "mTB8P",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KJGjI",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "ZpPsz",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ENQeq",
+              "name": "Sign In Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NvpQX",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NI09U",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 72,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "jyuC0",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OOcm1",
+                  "name": "Google Button",
+                  "width": "fill_container",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RW9ms",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Uk53k",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "JdOyR",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "ZhVBy",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "U4xU0",
+      "x": 0,
+      "y": 1000,
+      "name": "Landing — Desktop — Signing in",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "children": [
+        {
+          "type": "frame",
+          "id": "aO17y",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            56,
+            72
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "PYLhJ",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dJwH3",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "Z6SCML",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RfHeE",
+              "name": "Sign In Block",
+              "width": 480,
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xSsH2",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XSy6M",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 120,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "GbGHo",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "poIKp",
+                  "name": "Google Button",
+                  "fill": "#FFD43B99",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "R8IlL",
+                      "name": "Spinner",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "loader-circle",
+                      "library": "lucide",
+                      "fill": "$ink"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YhIjM",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Signing in…",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "N1xqD",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "nBo9b",
+      "x": 1520,
+      "y": 1000,
+      "name": "Landing — Mobile — Signing in",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "jGc5f",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            40,
+            24,
+            32,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "brdn6",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Glcsi",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "U9tzza",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vmuSF",
+              "name": "Sign In Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Mstpr",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r8iPH",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 72,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "O6ZTK",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p8LHb",
+                  "name": "Google Button",
+                  "width": "fill_container",
+                  "fill": "#FFD43B99",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "cpCrQ",
+                      "name": "Spinner",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "loader-circle",
+                      "library": "lucide",
+                      "fill": "$ink"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jrY4E",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Signing in…",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "cgIwK",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "cheSJ",
+      "x": 0,
+      "y": 2000,
+      "name": "Landing — Desktop — Sign-in failed",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ey3kV",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            56,
+            72
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "xorjt",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "EtHuU",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "TaXok",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "M6EQU",
+              "name": "Sign In Block",
+              "width": 480,
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cn0mu",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "M9cLqB",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 120,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "Td2G0",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "I2uigG",
+                  "name": "Error",
+                  "width": "fill_container",
+                  "fill": "#B4231826",
+                  "cornerRadius": 10,
+                  "stroke": "#F0A39B",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Bxwb4",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "#F7B6AE"
+                    },
+                    {
+                      "type": "text",
+                      "id": "P4h1kB",
+                      "name": "Error Text",
+                      "fill": "#FDE2DE",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Sign-in didn't finish. Try again.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i6mxC",
+                  "name": "Google Button",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RVXqp",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Uz9au",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "b6K4O",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "MxM3A",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zM8ae",
+      "x": 1520,
+      "y": 2000,
+      "name": "Landing — Mobile — Sign-in failed",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ZGcrE",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            40,
+            24,
+            32,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yMjiv",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z0PNT",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "D8Ibu",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sObLC",
+              "name": "Sign In Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ccVil",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "evvzX",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 72,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "w3TOl",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qD7Nb",
+                  "name": "Error",
+                  "width": "fill_container",
+                  "fill": "#B4231826",
+                  "cornerRadius": 10,
+                  "stroke": "#F0A39B",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "yIbqS",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "circle-alert",
+                      "library": "lucide",
+                      "fill": "#F7B6AE"
+                    },
+                    {
+                      "type": "text",
+                      "id": "m9N4V",
+                      "name": "Error Text",
+                      "fill": "#FDE2DE",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Sign-in didn't finish. Try again.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hZRNl",
+                  "name": "Google Button",
+                  "width": "fill_container",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "N9Hdp",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ydxLc",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "aySoc",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "mjojz",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "H3FPwA",
+      "x": 0,
+      "y": 3000,
+      "name": "Landing — Desktop — Not approved",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "children": [
+        {
+          "type": "frame",
+          "id": "KDyhC",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            56,
+            72
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "OuxnC",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xmgvB",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "YDu7n",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GnVno",
+              "name": "Sign In Block",
+              "width": 480,
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "tTV2B",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "j6vuV",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 120,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "mG6i8",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XcuVo",
+                  "name": "Error",
+                  "width": "fill_container",
+                  "fill": "#B4231826",
+                  "cornerRadius": 10,
+                  "stroke": "#F0A39B",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "tWmmF",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "lock",
+                      "library": "lucide",
+                      "fill": "#F7B6AE"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gMbub",
+                      "name": "Error Text",
+                      "fill": "#FDE2DE",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "This Google account isn't approved for marge. Sign in with an approved account.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yAL63",
+                  "name": "Google Button",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "n0JW6",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PcJhx",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "eE5TJ",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "ItEbL",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "n7Xaq",
+      "x": 1520,
+      "y": 3000,
+      "name": "Landing — Mobile — Not approved",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "k7tZJ",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "padding": [
+            40,
+            24,
+            32,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "NxUjo",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "AjKpj",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "rJwWQ",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KvYSI",
+              "name": "Sign In Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "GytBY",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wi0sY",
+                      "name": "Wordmark",
+                      "fill": "$cream",
+                      "content": "marge",
+                      "fontFamily": "$font-display",
+                      "fontSize": 72,
+                      "fontWeight": "800",
+                      "letterSpacing": -3
+                    },
+                    {
+                      "type": "text",
+                      "id": "dHAzE",
+                      "name": "Subline",
+                      "fill": "#C9D3E6",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Operations console for the Playola software factory, traces and prompts.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HqNWf",
+                  "name": "Error",
+                  "width": "fill_container",
+                  "fill": "#B4231826",
+                  "cornerRadius": 10,
+                  "stroke": "#F0A39B",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "b27Rxz",
+                      "name": "Error Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "lock",
+                      "library": "lucide",
+                      "fill": "#F7B6AE"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ch6F9",
+                      "name": "Error Text",
+                      "fill": "#FDE2DE",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "This Google account isn't approved for marge. Sign in with an approved account.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ppGBZ",
+                  "name": "Google Button",
+                  "width": "fill_container",
+                  "fill": "$sun",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    24
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "b4fsWf",
+                      "name": "G Badge",
+                      "width": 22,
+                      "height": 22,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FRtoS",
+                          "name": "G",
+                          "fill": "#4285F4",
+                          "content": "G",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "b4aK3w",
+                      "name": "Label",
+                      "fill": "$ink",
+                      "content": "Sign in with Google",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "g9ntZn",
+              "name": "Access Note",
+              "fill": "#8A96B0",
+              "content": "Approved Playola accounts only",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dLhda",
+      "x": 0,
+      "y": 4400,
+      "name": "Title — Desktop — Default",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Df5ZE",
+          "name": "Panel",
+          "width": 560,
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            56,
+            72
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "OIhc5",
+              "name": "Brand",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "e0n2MQ",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "dbK5G",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YmaiK",
+              "name": "Menu Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wAnjj",
+                  "name": "Wordmark",
+                  "fill": "$cream",
+                  "content": "marge",
+                  "fontFamily": "$font-display",
+                  "fontSize": 96,
+                  "fontWeight": "800",
+                  "letterSpacing": -3
+                },
+                {
+                  "type": "frame",
+                  "id": "jYozR",
+                  "name": "Menu",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "D9vuD",
+                      "name": "Menu Item — Software Factory",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF0D",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFF1F",
+                      "strokeWidth": 1,
+                      "gap": 16,
+                      "padding": [
+                        18,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rurFp",
+                          "name": "Icon Tile",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$sun",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "JwQ2n",
+                              "name": "Icon",
+                              "width": 24,
+                              "height": 24,
+                              "icon": "factory",
+                              "library": "lucide",
+                              "fill": "$ink"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Lh1Jy",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QSAbT",
+                              "name": "Title",
+                              "fill": "$cream",
+                              "content": "Software Factory",
+                              "fontFamily": "$font-body",
+                              "fontSize": 18,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zrktt",
+                              "name": "Sub",
+                              "fill": "#AEB9D0",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Designs, builds and pull requests",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "OjYXF",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$sky"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SIpTF",
+              "name": "Account",
+              "width": "fill_container",
+              "stroke": "#FFFFFF1F",
+              "strokeWidth": {
+                "top": 1
+              },
+              "padding": [
+                16,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oXELc",
+                  "name": "Email",
+                  "fill": "#AEB9D0",
+                  "content": "brian@playola.fm",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "qxMgb",
+                  "name": "Sign Out",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "OJMZQ",
+                      "name": "Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "log-out",
+                      "library": "lucide",
+                      "fill": "$cream"
+                    },
+                    {
+                      "type": "text",
+                      "id": "d7S9Y",
+                      "name": "Label",
+                      "fill": "$cream",
+                      "content": "Sign out",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Scisi",
+          "name": "Portrait Image",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "marge-face.jpeg",
+            "mode": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "xKYxm",
+      "x": 1520,
+      "y": 4400,
+      "name": "Title — Mobile — Default",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "iCsrD",
+          "name": "Portrait Image",
+          "width": "fill_container",
+          "height": 320,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "marge-face.jpeg",
+            "mode": "cover",
+            "transform": [
+              1.25,
+              0,
+              0,
+              1.25,
+              -0.2,
+              0
+            ]
+          }
+        },
+        {
+          "type": "frame",
+          "id": "QQsU3",
+          "name": "Panel",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$ink",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            28,
+            24,
+            32,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cH9xa",
+              "name": "Brand",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O2a4Ej",
+                  "name": "Dot",
+                  "width": 12,
+                  "height": 12,
+                  "fill": "$sun",
+                  "cornerRadius": 999
+                },
+                {
+                  "type": "text",
+                  "id": "H5ZbVi",
+                  "name": "Product",
+                  "fill": "$sky",
+                  "content": "PLAYOLA · MARGE",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u1HzMj",
+              "name": "Menu Block",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Mb6oq",
+                  "name": "Wordmark",
+                  "fill": "$cream",
+                  "content": "marge",
+                  "fontFamily": "$font-display",
+                  "fontSize": 64,
+                  "fontWeight": "800",
+                  "letterSpacing": -3
+                },
+                {
+                  "type": "frame",
+                  "id": "OB9GD",
+                  "name": "Menu",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y7Ym03",
+                      "name": "Menu Item — Software Factory",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF0D",
+                      "cornerRadius": 14,
+                      "stroke": "#FFFFFF1F",
+                      "strokeWidth": 1,
+                      "gap": 16,
+                      "padding": [
+                        18,
+                        20
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "o4EKkf",
+                          "name": "Icon Tile",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$sun",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eQnyl",
+                              "name": "Icon",
+                              "width": 24,
+                              "height": 24,
+                              "icon": "factory",
+                              "library": "lucide",
+                              "fill": "$ink"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ITJPg",
+                          "name": "Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "MM9h8",
+                              "name": "Title",
+                              "fill": "$cream",
+                              "content": "Software Factory",
+                              "fontFamily": "$font-body",
+                              "fontSize": 18,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OlWe1",
+                              "name": "Sub",
+                              "fill": "#AEB9D0",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Designs, builds and pull requests",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "LwKjL",
+                          "name": "Chevron",
+                          "width": 22,
+                          "height": 22,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$sky"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "O8xx3A",
+              "name": "Account",
+              "width": "fill_container",
+              "stroke": "#FFFFFF1F",
+              "strokeWidth": {
+                "top": 1
+              },
+              "padding": [
+                16,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xP7zS",
+                  "name": "Email",
+                  "fill": "#AEB9D0",
+                  "content": "brian@playola.fm",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "ks61V",
+                  "name": "Sign Out",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "gMZko",
+                      "name": "Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "log-out",
+                      "library": "lucide",
+                      "fill": "$cream"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CBPxn",
+                      "name": "Label",
+                      "fill": "$cream",
+                      "content": "Sign out",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hbp9Y",
+      "x": 0,
+      "y": 5400,
+      "name": "Factory — Desktop — Not built yet",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "yzviS",
+          "name": "Header",
+          "width": "fill_container",
+          "stroke": "#FFFFFF1F",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "padding": [
+            20,
+            40
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "O9HCqF",
+              "name": "Back",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ox5w7",
+                  "name": "Back Icon",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "arrow-left",
+                  "library": "lucide",
+                  "fill": "$cream"
+                },
+                {
+                  "type": "text",
+                  "id": "Kf8if",
+                  "name": "Wordmark",
+                  "fill": "$cream",
+                  "content": "marge",
+                  "fontFamily": "$font-display",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": -0.5
+                },
+                {
+                  "type": "text",
+                  "id": "enmP8",
+                  "name": "Sep",
+                  "fill": "#5C6A88",
+                  "content": "/",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "I3H5L5",
+                  "name": "Section",
+                  "fill": "$sky",
+                  "content": "Software Factory",
+                  "fontFamily": "$font-body",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uFX5T",
+              "name": "Account",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nX4SS",
+                  "name": "Email",
+                  "fill": "#AEB9D0",
+                  "content": "brian@playola.fm",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "s32ZS3",
+                  "name": "Sign Out",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "sXsjI",
+                      "name": "Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "log-out",
+                      "library": "lucide",
+                      "fill": "$cream"
+                    },
+                    {
+                      "type": "text",
+                      "id": "N5v5bm",
+                      "name": "Label",
+                      "fill": "$cream",
+                      "content": "Sign out",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tAms1",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 40,
+          "children": [
+            {
+              "type": "text",
+              "id": "ZX7bB",
+              "name": "Page Title",
+              "fill": "$cream",
+              "content": "Software Factory",
+              "fontFamily": "$font-display",
+              "fontSize": 48,
+              "fontWeight": "800",
+              "letterSpacing": -1
+            },
+            {
+              "type": "frame",
+              "id": "CF6HI",
+              "name": "Empty State",
+              "width": "fill_container",
+              "height": "fill_container",
+              "cornerRadius": 16,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 24,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IA7Hi",
+                  "name": "Icon Tile",
+                  "width": 56,
+                  "height": 56,
+                  "fill": "$sun",
+                  "cornerRadius": 14,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "RqBaX",
+                      "name": "Icon",
+                      "width": 28,
+                      "height": 28,
+                      "icon": "factory",
+                      "library": "lucide",
+                      "fill": "$ink"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "z066P",
+                  "name": "Empty Title",
+                  "fill": "$cream",
+                  "content": "Control panel not built yet",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "xxrQ8",
+                  "name": "Empty Body",
+                  "fill": "#AEB9D0",
+                  "textGrowth": "fixed-width",
+                  "width": 360,
+                  "content": "Designs, builds and pull requests will show here. Until then, use the factory command line.",
+                  "lineHeight": 1.5,
+                  "textAlign": "center",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qvScV",
+      "x": 1520,
+      "y": 5400,
+      "name": "Factory — Mobile — Not built yet",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$ink",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "l5rolx",
+          "name": "Header",
+          "width": "fill_container",
+          "stroke": "#FFFFFF1F",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "padding": [
+            16,
+            20
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "YbntU",
+              "name": "Back",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "biqmQ",
+                  "name": "Back Icon",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "arrow-left",
+                  "library": "lucide",
+                  "fill": "$cream"
+                },
+                {
+                  "type": "text",
+                  "id": "I9ZZta",
+                  "name": "Wordmark",
+                  "fill": "$cream",
+                  "content": "marge",
+                  "fontFamily": "$font-display",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": -0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SMlvv",
+              "name": "Account",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "LmVgV",
+                  "name": "Sign Out",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Ldv9U",
+                      "name": "Icon",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "log-out",
+                      "library": "lucide",
+                      "fill": "$cream"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pEp7P",
+                      "name": "Label",
+                      "fill": "$cream",
+                      "content": "Sign out",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lxN4N",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            24,
+            20
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "DgYh9",
+              "name": "Page Title",
+              "fill": "$cream",
+              "content": "Software Factory",
+              "fontFamily": "$font-display",
+              "fontSize": 36,
+              "fontWeight": "800",
+              "letterSpacing": -1
+            },
+            {
+              "type": "frame",
+              "id": "h9nbf",
+              "name": "Empty State",
+              "width": "fill_container",
+              "height": "fill_container",
+              "cornerRadius": 16,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 24,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O7QGT",
+                  "name": "Icon Tile",
+                  "width": 56,
+                  "height": 56,
+                  "fill": "$sun",
+                  "cornerRadius": 14,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "R0CPaE",
+                      "name": "Icon",
+                      "width": 28,
+                      "height": 28,
+                      "icon": "factory",
+                      "library": "lucide",
+                      "fill": "$ink"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "G3i9Ug",
+                  "name": "Empty Title",
+                  "fill": "$cream",
+                  "content": "Control panel not built yet",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "l7Ve4U",
+                  "name": "Empty Body",
+                  "fill": "#AEB9D0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Designs, builds and pull requests will show here. Until then, use the factory command line.",
+                  "lineHeight": 1.5,
+                  "textAlign": "center",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "sky": {
+      "type": "color",
+      "value": "#8FC3E6"
+    },
+    "sky-deep": {
+      "type": "color",
+      "value": "#5E9FD0"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#14213D"
+    },
+    "ink-soft": {
+      "type": "color",
+      "value": "#3D4A66"
+    },
+    "cream": {
+      "type": "color",
+      "value": "#FFF8E7"
+    },
+    "sun": {
+      "type": "color",
+      "value": "#FFD43B"
+    },
+    "line": {
+      "type": "color",
+      "value": "#14213D1F"
+    },
+    "danger": {
+      "type": "color",
+      "value": "#B42318"
+    },
+    "font-display": {
+      "type": "string",
+      "value": "Bricolage Grotesque"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    }
+  },
+  "fileToken": "d3de5695-70d3-46e1-9f7f-fa975155cb61"
+}
