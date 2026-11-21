@@ -37,11 +37,13 @@ yet.
 
 - `server/package.json`: add dependency `cors` and dev dependency `@types/cors`; run `npm install` in `server/` so
 - `server/package-lock.json` updates.
-- `server/src/config.ts`: add three fields to `Config`, all read in `loadConfig` without throwing when absent:
+- `server/src/config.ts`: add four fields to `Config`, all read in `loadConfig` without throwing when absent:
 - - `googleSignIn: { clientId: string; clientSecret: string } | null` — set only when both
 - `GOOGLE_SIGNIN_CLIENT_ID` and `GOOGLE_SIGNIN_CLIENT_SECRET` are present.
 - - `allowedEmails: string[]` — from `MARGE_ALLOWED_EMAILS`, split on commas, trimmed, lower-cased, empties dropped.
 - - `clientOrigins: string[]` — from `CLIENT_ORIGINS`, split on commas, trimmed, empties dropped.
+- - `devLogin: boolean` — true only when `NODE_ENV` is exactly `development` or `test` (case-sensitive; unset is
+- false).
 - New `server/src/lib/googleSignIn.ts`:
 - - Exports `type GoogleIdentity = { email: string; emailVerified: boolean; name: string }`.
 - - Exports `type ExchangeGoogleCode = (code: string, client: { clientId: string; clientSecret: string }) => Promise<GoogleIdentity>`.
@@ -67,12 +69,21 @@ yet.
 - 4. Lower-cased email not in `allowedEmails` → `403 { error: 'not_approved' }`.
 - 5. Otherwise `200 { margeToken: jwt.sign({ email, name }, JWT_SECRET, { algorithm: 'HS256', expiresIn: '30d' }) }`.
 - 6. Any other thrown error → `next(err)`.
+- The same router registers `POST /auth/dev-login` (ApiContract.md) only when `deps.config.devLogin` is true, so
+- the route does not exist otherwise and the request falls through to 404. It takes no body. If
+- `process.env.JWT_SECRET` is unset it calls `next(new Error(...))`; otherwise it returns
+- `200 { margeToken: jwt.sign({ email: 'dev@marge.local', name: 'Dev User' }, JWT_SECRET, { algorithm: 'HS256', expiresIn: '30d' }) }`.
+- It sits under `/v1/auth`, so `signInLimiter` and CORS already cover it.
 - `server/src/v1/index.ts`: mount `v1AuthRouter(deps)`; the `_deps` parameter becomes `deps`.
 - `render.yaml`: add `CLIENT_ORIGINS` = `https://marge.playola.fm` to the `marge-api` service's `envVars`. Add
 - `GOOGLE_SIGNIN_CLIENT_ID`, `GOOGLE_SIGNIN_CLIENT_SECRET` and `MARGE_ALLOWED_EMAILS` to the `production` env group
 - as `sync: false`. Their values already exist in Render; this only declares them.
 - `server/.env.example`: document `GOOGLE_SIGNIN_CLIENT_ID`, `GOOGLE_SIGNIN_CLIENT_SECRET`, `MARGE_ALLOWED_EMAILS`
-- and `CLIENT_ORIGINS` (`http://localhost:5173` locally), in the file's existing comment style.
+- and `CLIENT_ORIGINS` (`http://localhost:5173` locally), in the file's existing comment style. Add
+- `NODE_ENV=development` with a one-line comment that it turns on dev sign-in (`/dev-user`) and must never be set
+- on Render.
+- `docker-compose.yaml` `server` service: add `NODE_ENV: development` and `CLIENT_ORIGINS: http://localhost:5173`
+- to its `environment`. Leave the `migrate` service as it is.
 
 **Tests**
 
@@ -101,12 +112,21 @@ yet.
 - - `MARGE_ALLOWED_EMAILS=" A@x.com, ,b@y.com "` gives `['a@x.com','b@y.com']`.
 - - `CLIENT_ORIGINS` is parsed the same way.
 - - `googleSignIn` is null unless both Google settings are set.
+- - `devLogin` is true for `NODE_ENV=development` and `NODE_ENV=test`, and false for `production`, unset and
+- `Development`.
 - - The existing required-variable tests still pass.
 - New `server/test/googleSignIn.test.ts`, with `globalThis.fetch` stubbed:
 - - Posts the exact form body to Google, including `redirect_uri=postmessage`.
 - - Maps the `id_token` claims to `GoogleIdentity`.
 - - A 400 from Google throws `GoogleSignInRejected`.
 - - A 500 from Google throws a plain `Error`.
+- New `server/test/devLogin.test.ts` (built like `signin.test.ts`, setting `NODE_ENV` before `loadConfig` and
+- restoring it after):
+- - In `development`, `POST /v1/auth/dev-login` returns 200 with a `margeToken` that verifies with `JWT_SECRET`
+- (HS256), carries `dev@marge.local` and `Dev User`, and has `exp - iat` equal to 30 days.
+- - That token is accepted by `GET /v1/me`.
+- - With `NODE_ENV=production`, and with `NODE_ENV` unset, it returns 404.
+- - In `development` with `JWT_SECRET` unset, it returns 500 `internal_error`.
 - The full existing `server/` suite (`make test-server`) and `make lint-server` pass unchanged.
 
 **Screenshots it must match**
@@ -151,6 +171,12 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - On 200 it calls `saveSession(margeToken)` and returns `'ok'`.
 - - A 403 with `error: 'not_approved'` returns `'not_approved'`.
 - - Anything else (other statuses, network failure) returns `'failed'`.
+- - It also exports `devSignIn(): Promise<void>`, which `axios.post`s to
+- `${import.meta.env.VITE_SERVER_BASE_URL}/v1/auth/dev-login` and calls `saveSession(margeToken)`. Any failure
+- rejects.
+- New `client/src/pages/DevUserPage.tsx` (Design.md decision 14; not drawn):
+- - On mount it calls `devSignIn()` once, then `navigate('/home', { replace: true })`.
+- - While waiting it shows the plain text "Signing in as the dev user…"; on failure it shows "Dev sign-in failed".
 - New `client/src/auth/redirectTo.ts`: `safeRedirectTo(value: string | null): string`. It returns `value` only when
 - it starts with `/`, does not start with `//`, and its path (the part before any `?` or `#`) is not `/`; otherwise
 - it returns `/home`. This keeps sign-in from landing back on the landing page.
@@ -158,10 +184,13 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - `<Navigate>`s to `/?redirectTo=<encoded current path>` with `replace`.
 - `client/src/main.tsx`: wrap `<App />` in
 - `<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>`.
-- `client/src/App.tsx`: three routes.
+- `client/src/App.tsx`: three routes, plus one in development builds.
 - - `/` → `LandingPage`. When `readSession()` is non-null, `<Navigate>` to `safeRedirectTo(redirectTo)` instead.
 - - `/home` → `<RequireSignIn><TitlePage/></RequireSignIn>`.
 - - `/factory` → `<RequireSignIn><FactoryPage/></RequireSignIn>`.
+- - `/dev-user` → `DevUserPage`, registered only inside an `import.meta.env.DEV` check, with the page loaded by
+- `React.lazy(() => import('./pages/DevUserPage'))` inside that same check (and a `Suspense` around it), so
+- `vite build` drops it and its `dev-login` call from the production bundle.
 - - Any other path → `<Navigate to="/" replace>`.
 - Delete `client/src/pages/Dashboard.tsx`.
 - New `client/src/pages/LandingView.tsx`: the landing page's markup only. Props:
@@ -202,7 +231,9 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - `netlify.toml`: add `VITE_GOOGLE_CLIENT_ID` under `[build.environment]` with the client ID recorded in
 - ApiContract.md → Configuration. It is public, so it lives in the file like `VITE_SERVER_BASE_URL`.
 - New `client/.env.example`: `VITE_SERVER_BASE_URL=http://localhost:3000` and `VITE_GOOGLE_CLIENT_ID=` with a
-- one-line comment.
+- one-line comment saying the Google ID is only needed to test real Google sign-in locally; `/dev-user` works
+- without it.
+- `docker-compose.yaml` `client` service: add `VITE_SERVER_BASE_URL: http://localhost:3000` to its `environment`.
 
 **Tests**
 
@@ -225,6 +256,10 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - 200 saves the session and returns `ok`.
 - - 403 `not_approved` returns `not_approved`.
 - - 401, 500 and a network error each return `failed`.
+- - `devSignIn` posts to `/v1/auth/dev-login` and saves the returned session.
+- `client/src/pages/DevUserPage.test.tsx`:
+- - A successful dev sign-in shows the title screen with `dev@marge.local`.
+- - A failed dev sign-in shows "Dev sign-in failed" and stores nothing.
 - `client/src/pages/LandingPage.test.tsx`:
 - - Shows "marge" and "Sign in with Google", and no `img`.
 - - Clicking shows "Signing in…" and a disabled button.
@@ -238,7 +273,7 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - `/home` signed out shows the landing page and the address carries `redirectTo=%2Fhome`.
 - - `/factory` signed in shows "Control panel not built yet".
 - - An expired stored token on `/home` shows the landing page.
-- - An unknown path shows the landing page.
+- - An unknown path shows the landing page when signed out, and the title screen when signed in.
 - - `/?redirectTo=/` signed in shows the title screen.
 - `client/src/pages/TitlePage.test.tsx`:
 - - Shows the stored email and the `Marge` image.
@@ -248,13 +283,13 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - Shows the "Software Factory" heading and the stored email.
 - - "← marge" goes to `/home`.
 - - "Sign out" clears `localStorage` and shows the landing page.
-- `cd client && npm run lint && npm test && npm run build` pass.
-- Browser check before opening the PR, because jsdom can't see layout. Run `npm run dev` and use the gstack
-- `/browse` tool at 1440×900 and at 390×844. Open these:
+- `cd client && npm run lint && npm test && npm run build` pass. Then, still inside `client/`, `test -d dist` succeeds
+- and `grep -r "dev-login" dist` exits with status 1 (no match); status 0 (found) or 2 (error) fails the check.
+- Browser check before opening the PR, because jsdom can't see layout. Run the local server (`NODE_ENV=development`,
+- any local `JWT_SECRET`) and `npm run dev`, and use the gstack `/browse` tool at 1440×900 and at 390×844. Open these:
 - - Landing states: `/preview.html?status=idle`, `?status=signing-in`, `?status=failed` and
 - `?status=not-approved`.
-- - Title and factory: `/home` and `/factory`, after setting `localStorage.token` in the page to an HS256 token with
-- `exp` in the future (any secret; the client only decodes it).
+- - Title and factory: open `/dev-user`, which lands on `/home`, then open `/factory`.
 - - Compare each against its screenshot.
 - - Confirm `document.documentElement.scrollWidth <= innerWidth`.
 - - Confirm every button and link is visible and tappable.
@@ -288,5 +323,6 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - 9. 9. Reloading `/home` or `/factory` while signed in keeps you signed in.
 - 10. 10. A stored token older than 30 days is treated as signed out.
 - 11. 11. Every screen fits a 390-pixel-wide phone with no sideways scrolling and every button reachable with a thumb.
+- 12. 12. On a local development machine, opening `/dev-user` signs in as `dev@marge.local` and shows the title screen; on `marge.playola.fm`, `/dev-user` signs no one in and is handled like any unknown address (landing page when signed out, title screen when signed in).
 
-<!-- factory: finished plan for design 2dcc430b5f1306a1d094428df43a895a2959ffc6e4bcd3b3aa799488306c3b0b, plan 8054ad4fab7654f13b38b9d3df2e48a3f3b791303629176ec3035b59e21ffafc. Any edit to this file or the design undoes it; run "factory finalize" again. -->
+<!-- factory: finished plan for design 9bb88a473c4fbee4ed6687604b3f874ee1bd94e8b4b437db11e21f7cacc2364d, plan 547ee66dc2a6ef6459716735703da8b5b2d35f64cbb1ab50ef0aba9b39e14b56. Any edit to this file or the design undoes it; run "factory finalize" again. -->

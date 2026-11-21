@@ -104,6 +104,17 @@ control panel replaces this body in design 002. No loading or error state: the p
     factory. The client ID is recorded in ApiContract.md → Configuration so PR 2 can put it in `netlify.toml`.
     Both PRs are built by the factory.
 
+14. **Dev sign-in for local development (copied from Playola's `/dev-user`):** in a development build, opening
+    `/dev-user` calls `POST /v1/auth/dev-login`, stores the returned token like a real sign-in, and goes to `/home`.
+    You are then signed in as `dev@marge.local` without Google or the allowlist. The page shows only "Signing in as
+    the dev user…" (or "Dev sign-in failed") as plain text; it is a developer tool, so it is not drawn.
+    - The server mounts the endpoint only when `NODE_ENV` is exactly `development` or `test`; unset counts as off.
+    - The client registers `/dev-user` only when `import.meta.env.DEV`. On `marge.playola.fm` both are absent, and
+      `/dev-user` is handled like any unknown address: it goes to `/`, which shows the landing page when signed out
+      and the title screen when signed in.
+    - Local machines (including Marge's) therefore need no Google secrets and never hold production's
+      `JWT_SECRET`.
+
 ### Stored data
 
 No stored model changes, so there is no `ModelChanges.md`. Considered and left out:
@@ -137,3 +148,4 @@ No stored model changes, so there is no `ModelChanges.md`. Considered and left o
 - [ ] 9. Reloading `/home` or `/factory` while signed in keeps you signed in.
 - [ ] 10. A stored token older than 30 days is treated as signed out.
 - [ ] 11. Every screen fits a 390-pixel-wide phone with no sideways scrolling and every button reachable with a thumb.
+- [ ] 12. On a local development machine, opening `/dev-user` signs in as `dev@marge.local` and shows the title screen; on `marge.playola.fm`, `/dev-user` signs no one in and is handled like any unknown address (landing page when signed out, title screen when signed in).
