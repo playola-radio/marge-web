@@ -39,6 +39,8 @@ services:
       DATABASE_URL: postgres://postgres:pass@postgres:5432/margedev
       JWT_SECRET: dev-secret
       PORT: "3000"
+      NODE_ENV: development
+      CLIENT_ORIGINS: http://localhost:5173
     ports:
       - "3000:3000"
     depends_on:
