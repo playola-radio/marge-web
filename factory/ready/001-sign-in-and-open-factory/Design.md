@@ -41,8 +41,9 @@ ignores further taps. **Left by:** success → `redirectTo` or `/home`; failure 
 ![Sign-in failed desktop](screenshots/landing--sign-in-failed-desktop.png)
 ![Sign-in failed mobile](screenshots/landing--sign-in-failed-mobile.png)
 
-Popup closed or errored, or the server answered 400 / 401 / 500. Banner: "Sign-in didn't finish. Try again." The
-button stays usable.
+Popup closed or errored, the Google sign-in script failed to load, or the server answered 400 / 401 / 500. Banner:
+"Sign-in didn't finish. Try again." The button stays disabled after a script-load failure; reloading the page retries
+loading Google's script. For every other failure the button stays usable.
 
 ### Landing — not approved
 ![Not approved desktop](screenshots/landing--not-approved-desktop.png)
@@ -91,7 +92,9 @@ control panel replaces this body in design 002. No loading or error state: the p
    email from the allowlist takes effect when that person's token expires, or at once for everyone by rotating
    `JWT_SECRET`.
 10. **Allowlist** lives in the `MARGE_ALLOWED_EMAILS` env var in Render, compared case-insensitively. No database
-    table and no management screen.
+    table and no management screen. Any verified Google account whose email is on the list may sign in, including a
+    non-Google-managed address. Requiring Gmail or Workspace (`hd`) was considered and left out because the allowlist
+    will include such people, accepting the small risk that a reassigned or re-registered address could still sign in.
 11. **Google client:** a new Google OAuth web client just for dashboard sign-in, in its own Google Cloud project
     "Marge Web" (so the consent popup says marge and Playola's own sign-in is untouched); the server holds its secret. Our own
     yellow button starts the popup.
@@ -127,8 +130,9 @@ No stored model changes, so there is no `ModelChanges.md`. Considered and left o
 
 1. **Consistency:** auth flow, storage keys, `redirectTo` handling and error envelope match Playola's client and
    this server's relay (`{ "error": "<code>" }`). New route lives under `/v1` like `/v1/me`.
-2. **Completeness:** every signed-in page has Sign out and a way back; every sign-in failure leaves the button
-   usable; nothing is created, so nothing needs editing or removing.
+2. **Completeness:** every signed-in page has Sign out and a way back; sign-in failures show their matching banner;
+   a failed Google-script load is retried by reloading the page; nothing is created, so nothing needs editing or
+   removing.
 3. **Fewer inputs:** one button; the email comes from Google; nothing is typed.
 4. **One source of truth:** who may sign in = `MARGE_ALLOWED_EMAILS`; who is signed in = the stored token.
 5. **Fewest fields:** token payload is `email`, `name`, `iat`, `exp` only.
@@ -140,7 +144,8 @@ No stored model changes, so there is no `ModelChanges.md`. Considered and left o
 - [ ] 1. Opening `marge.playola.fm` signed out shows the landing page with the wordmark and "Sign in with Google", and no picture, on desktop and phone.
 - [ ] 2. Signing in with an approved Google account lands on the title screen with Marge's picture, the "Software Factory" menu item and the signed-in email.
 - [ ] 3. Signing in with a Google account not on the allowlist shows "This Google account isn't approved for marge." on the landing page and stays signed out.
-- [ ] 4. Closing the Google popup without finishing shows "Sign-in didn't finish. Try again." and the button works again.
+- [ ] 4. Closing the Google popup without finishing, or failing to load the Google sign-in script, shows "Sign-in didn't
+  finish. Try again."; after a script-load failure the disabled button can be retried by reloading the page.
 - [ ] 5. While sign-in is in progress the button shows a spinner and "Signing in…" and can't be tapped twice.
 - [ ] 6. Tapping "Software Factory" opens `/factory` showing "Control panel not built yet"; "← marge" returns to the title screen.
 - [ ] 7. "Sign out" on the title screen or the factory page returns to the landing page, and reloading stays signed out.

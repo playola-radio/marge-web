@@ -178,14 +178,17 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - On mount it calls `devSignIn()` once, then `navigate('/home', { replace: true })`.
 - - While waiting it shows the plain text "Signing in as the dev user…"; on failure it shows "Dev sign-in failed".
 - New `client/src/auth/redirectTo.ts`: `safeRedirectTo(value: string | null): string`. It returns `value` only when
-- it starts with `/`, does not start with `//`, and its path (the part before any `?` or `#`) is not `/`; otherwise
+- it starts with `/`, contains no backslash, does not start with `//`, and its path (the part before any `?` or `#`) is not `/`; otherwise
 - it returns `/home`. This keeps sign-in from landing back on the landing page.
 - New `client/src/auth/RequireSignIn.tsx`: renders its children when `readSession()` is non-null. Otherwise it
 - `<Navigate>`s to `/?redirectTo=<encoded current path>` with `replace`.
-- `client/src/main.tsx`: wrap `<App />` in
-- `<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>`.
+- `client/src/main.tsx`: add a small `GoogleSignInBoundary` that wraps `<App />` in
+- `<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>`. Its `onScriptLoadError` stores one
+- `scriptLoadFailed` boolean and passes it into `App`; retrying is a browser-page reload, with no retry loop or
+- provider remount.
 - `client/src/App.tsx`: three routes, plus one in development builds.
-- - `/` → `LandingPage`. When `readSession()` is non-null, `<Navigate>` to `safeRedirectTo(redirectTo)` instead.
+- - `/` → `LandingPage`, with the Google-script-load-failed boolean from `main.tsx`. When
+- `readSession()` is non-null, `<Navigate>` to `safeRedirectTo(redirectTo)` instead.
 - - `/home` → `<RequireSignIn><TitlePage/></RequireSignIn>`.
 - - `/factory` → `<RequireSignIn><FactoryPage/></RequireSignIn>`.
 - - `/dev-user` → `DevUserPage`, registered only inside an `import.meta.env.DEV` check, with the page loaded by
@@ -194,18 +197,24 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - Any other path → `<Navigate to="/" replace>`.
 - Delete `client/src/pages/Dashboard.tsx`.
 - New `client/src/pages/LandingView.tsx`: the landing page's markup only. Props:
-- `{ status: 'idle' | 'signing-in' | 'failed' | 'not-approved'; onSignIn: () => void }`. No hooks besides rendering.
+- `{ status: 'idle' | 'signing-in' | 'failed' | 'not-approved'; disabled: boolean; onSignIn: () => void }`.
+- No hooks besides rendering.
 - New `client/src/pages/LandingPage.tsx`, matching the four landing screenshots. It owns the state and the Google
 - hook, and renders `LandingView`:
 - - Layout (in `LandingView`): the brand line top-left, the centred wordmark "marge", the one-line description, the yellow
 - "Sign in with Google" button, and the access note at the bottom. No image.
-- - The button calls `useGoogleLogin({ flow: 'auth-code', scope: 'openid email profile', onSuccess, onError, onNonOAuthError })`.
-- - Clicking it sets state `signing-in`: a spinner, "Signing in…", and the button `disabled`.
+- - It reads `scriptLoadedSuccessfully` with `useGoogleOAuth()` and calls
+- `useGoogleLogin({ flow: 'auth-code', scope: 'openid email profile', onSuccess, onError, onNonOAuthError })`.
+- - A `scriptLoadFailed` prop makes its displayed status `failed`, so the existing sign-in-failed banner is shown.
+- - It keeps the normal sign-in label and disables the button until `useGoogleOAuth().scriptLoadedSuccessfully` is
+- true. Clicking it then sets `signing-in`: a
+- spinner, "Signing in…", and the button `disabled`.
 - - `onSuccess` awaits `signIn(code)`. `'ok'` navigates to `safeRedirectTo(searchParams.get('redirectTo'))`.
 - `'not_approved'` and `'failed'` set the matching banner state.
 - - `onError` and `onNonOAuthError` (popup closed or blocked) set `failed`.
-- - Banner copy is exactly as in Design.md. The banner sits above the button with `role="alert"`. The button is
-- re-enabled whenever a banner shows.
+- - Banner copy is exactly as in Design.md. The banner sits above the button with `role="alert"`. `onScriptLoadError`
+- sets the failed banner; its button stays disabled, and reloading the page retries the script. Other banner states
+- re-enable the button.
 - New `client/src/pages/TitlePage.tsx`, matching the title screenshots:
 - - A navy panel with the brand line, the wordmark and the menu.
 - - The menu has one item: "Software Factory" / "Designs, builds and pull requests", a `<Link to="/factory">`.
@@ -224,8 +233,8 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - "Designs, builds and pull requests will show here. Until then, use the factory command line."
 - New dev-only preview harness for the browser check, outside the production build:
 - - `client/preview.html`: a copy of `index.html` whose script is `/src/preview.tsx`.
-- - `client/src/preview.tsx`: renders `<LandingView status={…} onSignIn={() => {}} />`, with `status` read from
-- `?status=` (default `idle`), and imports `styles.css`.
+- - `client/src/preview.tsx`: renders `<LandingView status={…} disabled={status === 'signing-in'} onSignIn={() => {}} />`,
+- with `status` read from `?status=` (default `idle`), and imports `styles.css`.
 - - `vite build` only builds `index.html`, so neither file ships. The dev server serves them at
 - `/preview.html?status=signing-in` and so on.
 - `netlify.toml`: add `VITE_GOOGLE_CLIENT_ID` under `[build.environment]` with the client ID recorded in
@@ -251,7 +260,7 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - `client/src/auth/redirectTo.test.ts`:
 - - `/factory` is kept.
 - - `/factory?x=1` is kept.
-- - `//evil.com`, `https://evil.com`, `/`, `/?redirectTo=/home`, `null` and `''` all give `/home`.
+- - `//evil.com`, `/\\evil.com`, `https://evil.com`, `/`, `/?redirectTo=/home`, `null` and `''` all give `/home`.
 - `client/src/auth/signIn.test.ts`:
 - - 200 saves the session and returns `ok`.
 - - 403 `not_approved` returns `not_approved`.
@@ -267,6 +276,9 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - - With `?redirectTo=/factory`, it navigates to `/factory`.
 - - `not_approved` shows the not-approved banner and re-enables the button.
 - - `onNonOAuthError` shows "Sign-in didn't finish. Try again." and re-enables the button.
+- - While the mocked Google script is loading, the sign-in button is disabled and clicking it does not enter
+- `signing-in`; after its success callback, the button starts login normally.
+- - A mocked Google script load failure shows "Sign-in didn't finish. Try again." and leaves the button disabled.
 - `client/src/App.test.tsx`, replacing the Dashboard test:
 - - `/` signed out shows the landing page.
 - - `/` signed in redirects to the title screen.
@@ -315,7 +327,7 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - 1. 1. Opening `marge.playola.fm` signed out shows the landing page with the wordmark and "Sign in with Google", and no picture, on desktop and phone.
 - 2. 2. Signing in with an approved Google account lands on the title screen with Marge's picture, the "Software Factory" menu item and the signed-in email.
 - 3. 3. Signing in with a Google account not on the allowlist shows "This Google account isn't approved for marge." on the landing page and stays signed out.
-- 4. 4. Closing the Google popup without finishing shows "Sign-in didn't finish. Try again." and the button works again.
+- 4. 4. Closing the Google popup without finishing, or failing to load the Google sign-in script, shows "Sign-in didn't
 - 5. 5. While sign-in is in progress the button shows a spinner and "Signing in…" and can't be tapped twice.
 - 6. 6. Tapping "Software Factory" opens `/factory` showing "Control panel not built yet"; "← marge" returns to the title screen.
 - 7. 7. "Sign out" on the title screen or the factory page returns to the landing page, and reloading stays signed out.
@@ -325,4 +337,4 @@ screen with Marge's picture, open the empty Software Factory page, and sign out,
 - 11. 11. Every screen fits a 390-pixel-wide phone with no sideways scrolling and every button reachable with a thumb.
 - 12. 12. On a local development machine, opening `/dev-user` signs in as `dev@marge.local` and shows the title screen; on `marge.playola.fm`, `/dev-user` signs no one in and is handled like any unknown address (landing page when signed out, title screen when signed in).
 
-<!-- factory: finished plan for design 9bb88a473c4fbee4ed6687604b3f874ee1bd94e8b4b437db11e21f7cacc2364d, plan 547ee66dc2a6ef6459716735703da8b5b2d35f64cbb1ab50ef0aba9b39e14b56. Any edit to this file or the design undoes it; run "factory finalize" again. -->
+<!-- factory: finished plan for design 3dd46bd30f6272518e34180aa9cd7f828eb1f35e6413d7516ed6660640b91bd1, plan d69e901b6cecff5b9a795ca0e7feb6195737834ca11e3e998aeb82b2e021d3b9. Any edit to this file or the design undoes it; run "factory finalize" again. -->

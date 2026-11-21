@@ -7,8 +7,8 @@ Sign-in copies the Playola web client's flow (`~/playola/playola` @ `5a2d86006`:
 1. The client opens Google's consent popup with `@react-oauth/google`'s `useGoogleLogin({ flow: "auth-code" })`,
    scopes `openid email profile`, triggered by our own button.
 2. The client posts the returned `code` to the server.
-3. The server exchanges it with Google (redirect URI `postmessage`), checks the verified email against the
-   allowlist, and returns a signed token.
+3. The server exchanges it with Google (redirect URI `postmessage`), checks the verified email against the allowlist,
+   and returns a signed token.
 4. The client stores the token and the decoded user in `localStorage` (`token`, `user`) and sends
    `Authorization: Bearer <token>` on later API calls. Sign-out removes both keys; there is no sign-out endpoint.
 
