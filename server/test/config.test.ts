@@ -90,44 +90,4 @@ describe('loadConfig', () => {
       expect(load({ NODE_ENV: 'Development' }).devLogin).to.equal(false);
     });
   });
-
-  describe('sign-in settings', () => {
-    const base = { BASE_URL: 'https://x.test', KV_BACKEND: 'memory' };
-    const load = (extra: Record<string, string>) =>
-      loadConfig({ ...base, ...extra } as NodeJS.ProcessEnv);
-
-    it('parses MARGE_ALLOWED_EMAILS into trimmed, lower-cased, non-empty entries', () => {
-      expect(load({ MARGE_ALLOWED_EMAILS: ' A@x.com, ,b@y.com ' }).allowedEmails).to.deep.equal([
-        'a@x.com',
-        'b@y.com',
-      ]);
-    });
-
-    it('treats a missing MARGE_ALLOWED_EMAILS as an empty list', () => {
-      expect(load({}).allowedEmails).to.deep.equal([]);
-    });
-
-    it('parses CLIENT_ORIGINS into trimmed, non-empty entries', () => {
-      expect(
-        load({ CLIENT_ORIGINS: ' https://a.test, ,http://localhost:5173 ' }).clientOrigins,
-      ).to.deep.equal(['https://a.test', 'http://localhost:5173']);
-    });
-
-    it('sets googleSignIn only when both Google settings are present', () => {
-      expect(load({}).googleSignIn).to.equal(null);
-      expect(load({ GOOGLE_SIGNIN_CLIENT_ID: 'id' }).googleSignIn).to.equal(null);
-      expect(load({ GOOGLE_SIGNIN_CLIENT_SECRET: 'secret' }).googleSignIn).to.equal(null);
-      expect(
-        load({ GOOGLE_SIGNIN_CLIENT_ID: 'id', GOOGLE_SIGNIN_CLIENT_SECRET: 'secret' }).googleSignIn,
-      ).to.deep.equal({ clientId: 'id', clientSecret: 'secret' });
-    });
-
-    it('turns devLogin on only for NODE_ENV exactly development or test', () => {
-      expect(load({ NODE_ENV: 'development' }).devLogin).to.equal(true);
-      expect(load({ NODE_ENV: 'test' }).devLogin).to.equal(true);
-      expect(load({ NODE_ENV: 'production' }).devLogin).to.equal(false);
-      expect(load({}).devLogin).to.equal(false);
-      expect(load({ NODE_ENV: 'Development' }).devLogin).to.equal(false);
-    });
-  });
 });
