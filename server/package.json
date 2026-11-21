@@ -16,6 +16,7 @@
     "migrate:undo": "sequelize-cli db:migrate:undo"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.0.0",
     "express-rate-limit": "^7.4.0",
     "helmet": "^8.0.0",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mocha": "^10.0.0",
