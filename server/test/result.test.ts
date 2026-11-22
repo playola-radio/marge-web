@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import request from 'supertest';
 import { buildApp } from '../src/app.js';
+import { MemoryFactoryHistory } from '../src/lib/factoryHistory.js';
 import { loadConfig } from '../src/config.js';
 import { MemoryKV } from '../src/lib/kv.js';
 import { sessionKey, type SessionRecord } from '../src/lib/session.js';
@@ -14,7 +15,7 @@ function makeApp() {
     KV_BACKEND: 'memory',
   } as NodeJS.ProcessEnv);
   const kv = new MemoryKV();
-  return { app: buildApp({ kv, config }), kv };
+  return { app: buildApp({ kv, config, factoryHistory: new MemoryFactoryHistory() }), kv };
 }
 
 function record(overrides: Partial<SessionRecord> = {}): SessionRecord {

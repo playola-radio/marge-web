@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import type { KV } from './lib/kv.js';
 import type { Config } from './config.js';
+import type { FactoryHistory } from './lib/factoryHistory.js';
 import type { ExchangeGoogleCode } from './lib/googleSignIn.js';
 import { healthRouter } from './api/health.js';
 import { sessionRouter } from './api/session.js';
@@ -17,6 +18,7 @@ import { errorHandler } from './middleware/error.js';
 export interface AppDeps {
   kv: KV;
   config: Config;
+  factoryHistory: FactoryHistory;
   rateLimit?: { windowMs: number; max: number };
   exchangeGoogleCode?: ExchangeGoogleCode;
 }

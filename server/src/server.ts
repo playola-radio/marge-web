@@ -1,13 +1,15 @@
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createKv } from './lib/kv.js';
+import { createFactoryHistory } from './lib/factoryHistory.js';
 import { initCrypto } from './lib/crypto.js';
 
 async function main(): Promise<void> {
   await initCrypto();
   const config = loadConfig(process.env);
   const kv = await createKv(config);
-  const app = buildApp({ kv, config });
+  const factoryHistory = await createFactoryHistory(config);
+  const app = buildApp({ kv, config, factoryHistory });
   app.listen(config.port, () => {
     console.log(`marge-web listening on :${config.port}`);
   });

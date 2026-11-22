@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { expect } from 'chai';
 import request from 'supertest';
 import { buildApp } from '../src/app.js';
+import { MemoryFactoryHistory } from '../src/lib/factoryHistory.js';
 
 // libsodium-wrappers ESM build is broken (missing libsodium.mjs sibling);
 // use createRequire to force the CJS path, same as in crypto.ts and crypto.test.ts.
@@ -27,7 +28,7 @@ describe('GET /callback', () => {
       KV_BACKEND: 'memory',
     } as NodeJS.ProcessEnv);
     const kv = new MemoryKV();
-    return { app: buildApp({ kv, config }), kv };
+    return { app: buildApp({ kv, config, factoryHistory: new MemoryFactoryHistory() }), kv };
   }
 
   function seededRecord(): SessionRecord {

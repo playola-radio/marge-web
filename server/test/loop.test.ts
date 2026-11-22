@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { expect } from 'chai';
 import request from 'supertest';
 import { buildApp } from '../src/app.js';
+import { MemoryFactoryHistory } from '../src/lib/factoryHistory.js';
 
 // libsodium-wrappers ESM build is broken (missing libsodium.mjs sibling);
 // force the CJS path via createRequire, same as crypto.ts and the other tests.
@@ -27,7 +28,7 @@ describe('full relay loop (session -> authorize -> callback -> result)', () => {
       BASE_URL: 'https://relay.test',
       KV_BACKEND: 'memory',
     } as NodeJS.ProcessEnv);
-    return buildApp({ kv: new MemoryKV(), config });
+    return buildApp({ kv: new MemoryKV(), config, factoryHistory: new MemoryFactoryHistory() });
   }
 
   function botPublicKey(): string {
