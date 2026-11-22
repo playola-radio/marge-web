@@ -1,0 +1,70 @@
+{
+  "rules": [
+    {
+      "id": "design-every-state-has-a-screenshot",
+      "rule": "Every screen under `## Screens` in Design.md must have one `###` entry and one linked `screenshots/<screen>--<state>.png` for EACH state the screen can be reached in. Check at least: a brand-new unsaved item (if the screen creates anything), loading, empty, error, and locked/forbidden, plus every state implied by `## Decisions` or `## Done when` (e.g. stale, offline, not connected, partial data, very long lists). If the design commits to more than one size (e.g. desktop and phone), every state needs a screenshot at every size. A reachable state with no screenshot and no explicit one-line reason why none is needed is a finding. Name the missing `<screen>--<state>` file.",
+      "scope": ["*/Design.md", "*/screenshots/**"],
+      "severity": "high"
+    },
+    {
+      "id": "design-visible-done-when-has-a-picture",
+      "rule": "Every `## Done when` item in Design.md that describes something a user can see must be traceable to at least one screenshot linked in `## Screens`. Flag visible behaviour that is only described in words.",
+      "scope": ["*/Design.md"],
+      "severity": "medium"
+    },
+    {
+      "id": "design-screenshots-linked-both-ways",
+      "rule": "Every PNG added under `screenshots/` must be linked from Design.md, every `screenshots/...png` link in Design.md must point to a file present in the folder, and file names must follow `<screen>--<state>.png`.",
+      "scope": ["*/Design.md", "*/screenshots/**"],
+      "severity": "medium"
+    },
+    {
+      "id": "design-decisions-live-in-design-md",
+      "rule": "Any choice that changes what a user can see, delete, recover or publish, implies a migration, or changes which repos are involved must be written under `## Decisions` in Design.md (and reflected in ApiContract.md / ModelChanges.md). Flag such a choice that appears only in ImplementationPlan.md, or a plan that contradicts a written decision.",
+      "scope": ["*/Design.md", "*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "design-contract-covers-every-call",
+      "rule": "Every endpoint the design or plan calls (new, changed AND unchanged ones it relies on) must appear in ApiContract.md with method, path, owning repo, `unchanged`/`changed`/`new`, and real request and response JSON. Flag any endpoint or field the plan uses that the contract lacks, and any contract entry no screen or plan step uses. Resources are REST; updates use PUT, never PATCH.",
+      "scope": ["*/ApiContract.md", "*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "design-no-excess-stored-data",
+      "rule": "Zero tolerance for excess in ModelChanges.md and in the plan's migrations: every new or changed table, column, index, constraint or enum value must map to a named `## Done when` item or decision. Flag anything derivable from existing data, any denormalized copy, any index with no query that uses it, any column nothing reads, and anything 'for later'. Every changeable value needs exactly one source of truth. ModelChanges.md should list the fields considered and left out, with why.",
+      "scope": ["*/ModelChanges.md", "*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "plan-matches-real-code",
+      "rule": "Every file, type, function, route, table, config key and pattern ImplementationPlan.md names must exist in the repo and behave as the plan assumes, or be clearly marked as new. Verify against the indexed code and flag any step that cannot work as written.",
+      "scope": ["*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "plan-is-complete",
+      "rule": "In ImplementationPlan.md: every screenshot and every `## Done when` item must be assigned to exactly one PR; every Done-when item must have at least one test line that would actually fail if the behaviour were missing; every screen state in Design.md must be built by some step; PR dependencies must be in an order that builds; each PR must leave the app building with tests passing on its own; and the plan must name its base branch.",
+      "scope": ["*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "plan-leaves-no-decisions-to-the-implementer",
+      "rule": "Each step under **Changes** must name the real files and types and say exactly what changes, so the implementer makes no design decisions. Flag vague steps ('handle errors appropriately', 'add validation as needed', 'style to match') and any behaviour the design leaves open that the plan does not settle.",
+      "scope": ["*/ImplementationPlan.md"],
+      "severity": "medium"
+    },
+    {
+      "id": "plan-is-simple",
+      "rule": "The plan must add nothing the design does not ask for. Flag: new abstractions or interfaces with a single caller, new libraries or tools when the codebase already has a way, config nothing sets, speculative generality, duplicated validation across layers, and any departure from an existing pattern in the repo without a stated reason. When a simpler approach would deliver the same Done-when items, name it.",
+      "scope": ["*/ImplementationPlan.md"],
+      "severity": "high"
+    },
+    {
+      "id": "plan-pr-sizing-and-titles",
+      "rule": "Every PR costs a paid review: flag PRs that are trivially small and should be merged into a neighbour, and any single PR too large to review well. PR titles must start with `feature:`, `bugfix:` or `chore:` and be plain English a non-engineer understands, with no code names, class, function or table names. `Hard` is `yes` only for a subtle correctness or concurrency problem.",
+      "scope": ["*/ImplementationPlan.md"],
+      "severity": "low"
+    }
+  ]
+}
