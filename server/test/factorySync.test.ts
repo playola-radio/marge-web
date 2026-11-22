@@ -159,7 +159,7 @@ describe('factory sync and snapshot', () => {
       if (auth !== null) req.set('Authorization', auth);
       return req;
     };
-    return { app, kv, history, push, read };
+    return { history, push, read };
   }
 
   const historyCopy = (history: MemoryFactoryHistory) => ({

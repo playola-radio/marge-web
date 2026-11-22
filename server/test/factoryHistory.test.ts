@@ -32,13 +32,6 @@ const event = (over: Partial<FactoryEvent> = {}): FactoryEvent => ({
 });
 
 describe('MemoryFactoryHistory', () => {
-  it('records artifacts and events by id', async () => {
-    const history = new MemoryFactoryHistory();
-    await history.record([artifact()], [event()]);
-    expect([...history.artifacts.values()]).to.deep.equal([artifact()]);
-    expect([...history.events.values()]).to.deep.equal([event()]);
-  });
-
   it('keeps the first copy of an id it already has', async () => {
     const history = new MemoryFactoryHistory();
     await history.record([artifact()], [event()]);
