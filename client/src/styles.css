@@ -943,6 +943,25 @@ button {
   display: none;
 }
 
+/* Narrow desktop: the Open PR button drops under the row so the design and
+   stage columns keep enough room before the phone card layout takes over. */
+
+@media (max-width: 1100px) {
+  .build-list__head,
+  .build-row {
+    grid-template-columns: 142px minmax(0, 1fr) minmax(0, 1fr) 96px;
+    grid-template-areas: "status design stage news";
+    row-gap: 10px;
+    column-gap: 16px;
+  }
+
+  .build-row__action {
+    grid-area: auto;
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
+
 /* Phone */
 
 @media (max-width: 768px) {
