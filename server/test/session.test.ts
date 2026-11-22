@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import request from 'supertest';
 import { buildApp } from '../src/app.js';
+import { MemoryFactoryHistory } from '../src/lib/factoryHistory.js';
 import { loadConfig } from '../src/config.js';
 import { MemoryKV } from '../src/lib/kv.js';
 import { initCrypto } from '../src/lib/crypto.js';
@@ -11,7 +12,7 @@ function makeApp() {
     KV_BACKEND: 'memory',
   } as NodeJS.ProcessEnv);
   const kv = new MemoryKV();
-  return { app: buildApp({ kv, config }), kv };
+  return { app: buildApp({ kv, config, factoryHistory: new MemoryFactoryHistory() }), kv };
 }
 
 // A real X25519 public key is exactly 32 bytes; base64-encode 32 bytes for fixtures.

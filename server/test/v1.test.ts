@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { buildApp } from '../src/app.js';
+import { MemoryFactoryHistory } from '../src/lib/factoryHistory.js';
 import { loadConfig } from '../src/config.js';
 import { MemoryKV } from '../src/lib/kv.js';
 
@@ -18,6 +19,7 @@ describe('/v1 route group', () => {
   const makeApp = () =>
     buildApp({
       kv: new MemoryKV(),
+      factoryHistory: new MemoryFactoryHistory(),
       config: loadConfig({
         BASE_URL: 'http://localhost',
         KV_BACKEND: 'memory',

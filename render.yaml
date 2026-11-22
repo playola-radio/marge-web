@@ -43,3 +43,5 @@ envVarGroups:
         sync: false
       - key: MARGE_ALLOWED_EMAILS
         sync: false
+      - key: FACTORY_REPORT_TOKEN
+        sync: false

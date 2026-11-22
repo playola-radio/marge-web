@@ -12,6 +12,7 @@ export interface Config {
   allowedEmails: string[];
   clientOrigins: string[];
   devLogin: boolean;
+  factoryReportToken: string | null;
 }
 
 function splitList(value: string | undefined): string[] {
@@ -66,5 +67,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     allowedEmails: splitList(env.MARGE_ALLOWED_EMAILS).map((email) => email.toLowerCase()),
     clientOrigins: splitList(env.CLIENT_ORIGINS),
     devLogin: env.NODE_ENV === 'development' || env.NODE_ENV === 'test',
+    // Unset means the factory machine's pushes are refused (401); the server still boots.
+    factoryReportToken: env.FACTORY_REPORT_TOKEN ? env.FACTORY_REPORT_TOKEN : null,
   };
 }
