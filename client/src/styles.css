@@ -391,12 +391,12 @@ button {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
   padding: 40px;
 }
 
 .factory__heading {
-  font-size: 48px;
+  font-size: 34px;
   letter-spacing: -1px;
 }
 
@@ -463,7 +463,7 @@ button {
 }
 
 .factory__body:has(.overview__summary) .factory__heading {
-  margin-bottom: -16px;
+  margin-bottom: -20px;
 }
 
 .overview__summary {
@@ -549,7 +549,7 @@ button {
 .overview__content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .overview__content--dimmed {
@@ -606,14 +606,14 @@ button {
 .build-list__head,
 .build-row {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 440px 150px 180px;
+  grid-template-columns: 142px minmax(0, 1fr) 424px 130px 186px;
   grid-template-areas: "status design stage news action";
   column-gap: 24px;
   align-items: center;
 }
 
 .build-list__head {
-  margin-bottom: -10px;
+  margin: -8px 0 -8px;
   padding: 0 24px;
   color: var(--text-faint);
   font-size: 11px;
@@ -1008,7 +1008,7 @@ button {
   }
 
   .factory__heading {
-    font-size: 36px;
+    font-size: 26px;
   }
 
   .factory__body {
@@ -1016,7 +1016,7 @@ button {
   }
 
   .factory__body:has(.overview__summary) .factory__heading {
-    margin-bottom: -8px;
+    margin-bottom: -12px;
   }
 
   .overview__banner {
@@ -1026,20 +1026,19 @@ button {
   .overview__summary,
   .overview__content,
   .overview__footer,
-  .overview__panel {
+  .factory__body > .overview__panel {
     order: 2;
   }
 
   .overview__updated {
     position: absolute;
-    top: 38px;
+    top: 30px;
     right: 20px;
     font-size: 14px;
   }
 
   .count-line {
-    flex-wrap: nowrap;
-    gap: 14px;
+    gap: 6px 14px;
   }
 
   .count-line__item {
@@ -1093,6 +1092,7 @@ button {
   .overview__footer {
     gap: 6px;
     padding: 12px 14px;
+    font-size: 14px;
   }
 
   .skeleton-row {
