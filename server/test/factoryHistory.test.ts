@@ -137,6 +137,24 @@ const dbUrl = process.env.DATABASE_URL;
     expect(events.filter((e) => e.id === event().id)).to.have.length(1);
   });
 
+  it('stores strings PostgreSQL cannot hold, with U+FFFD in place of NUL and lone surrogates', async () => {
+    const history = new PostgresFactoryHistory(sequelize);
+    const artifactId = '2969de36-50de-4b61-9340-408a40d162ae';
+    const eventId = '2d841412-1ae9-4af5-9c3d-a2e58a6099f0';
+    await history.record(
+      [artifact({ id: artifactId, body: { text: 'a\u0000b\ud800c', ['k\u0000']: ['\udc00'] } })],
+      [event({ id: eventId, type: 'x\u0000', details: { note: '\u0000' }, artifactId })],
+    );
+    const { artifacts, events } = await selectAll();
+    expect(artifacts.find((a) => a.id === artifactId)?.body).to.deep.equal({
+      text: 'a\ufffdb\ufffdc',
+      ['k\ufffd']: ['\ufffd'],
+    });
+    const row = events.find((e) => e.id === eventId);
+    expect(row?.type).to.equal('x\ufffd');
+    expect(row?.details).to.deep.equal({ note: '\ufffd' });
+  });
+
   it('runs no statement for record([], [])', async () => {
     const history = new PostgresFactoryHistory(sequelize);
     statements.length = 0;

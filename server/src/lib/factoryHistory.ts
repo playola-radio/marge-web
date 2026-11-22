@@ -26,6 +26,26 @@ export class MemoryFactoryHistory implements FactoryHistory {
   }
 }
 
+/**
+ * PostgreSQL's jsonb refuses NUL and unpaired UTF-16 surrogates, so a push
+ * holding one would fail on every resend. Each such character, in keys and
+ * values alike, is stored as U+FFFD instead.
+ */
+const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+
+function storable(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value.replaceAll('\u0000', '\ufffd').replace(LONE_SURROGATE, '\ufffd');
+  }
+  if (Array.isArray(value)) return value.map(storable);
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [storable(k) as string, storable(v)]),
+    );
+  }
+  return value;
+}
+
 export class PostgresFactoryHistory implements FactoryHistory {
   constructor(private sequelize: Sequelize) {}
 
@@ -37,7 +57,7 @@ export class PostgresFactoryHistory implements FactoryHistory {
          SELECT id, kind, at, body
          FROM jsonb_to_recordset($rows::jsonb) AS r(id uuid, kind text, at timestamptz, body jsonb)
          ON CONFLICT (id) DO NOTHING`,
-        { bind: { rows: JSON.stringify(rows) }, type: QueryTypes.INSERT },
+        { bind: { rows: JSON.stringify(storable(rows)) }, type: QueryTypes.INSERT },
       );
     }
     if (events.length) {
@@ -60,7 +80,7 @@ export class PostgresFactoryHistory implements FactoryHistory {
            pr integer, type text, details jsonb, artifact_id uuid
          )
          ON CONFLICT (id) DO NOTHING`,
-        { bind: { rows: JSON.stringify(rows) }, type: QueryTypes.INSERT },
+        { bind: { rows: JSON.stringify(storable(rows)) }, type: QueryTypes.INSERT },
       );
     }
   }
