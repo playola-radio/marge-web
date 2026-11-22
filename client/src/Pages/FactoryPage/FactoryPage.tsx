@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { readSession } from "../../utils/session";
 import SignOutButton from "../../Components/SignOutButton/SignOutButton";
-import { ArrowLeftIcon, FactoryIcon } from "../../Components/Icons/Icons";
+import { ArrowLeftIcon } from "../../Components/Icons/Icons";
+import FactoryOverview from "../../Components/FactoryOverview/FactoryOverview";
+import { useFactorySnapshot } from "../../hooks/useFactorySnapshot";
 
 export default function FactoryPage() {
   const email = readSession()?.email;
@@ -26,16 +28,7 @@ export default function FactoryPage() {
       </header>
       <main className="factory__body">
         <h1 className="wordmark factory__heading">Software Factory</h1>
-        <section className="empty-panel">
-          <span className="icon-tile icon-tile--large" aria-hidden="true">
-            <FactoryIcon size={28} />
-          </span>
-          <h2 className="empty-panel__title">Control panel not built yet</h2>
-          <p className="empty-panel__text">
-            Designs, builds and pull requests will show here. Until then, use
-            the factory command line.
-          </p>
-        </section>
+        <FactoryOverview {...useFactorySnapshot()} />
       </main>
     </div>
   );
