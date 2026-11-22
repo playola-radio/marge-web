@@ -4,6 +4,14 @@ import { renderApp } from "./test/renderApp";
 import { expiredToken, makeToken } from "./test/tokens";
 
 vi.mock("@react-oauth/google", () => import("./test/googleOAuthMock"));
+vi.mock("./Services/FactoryService", () => ({
+  fetchFactorySnapshot: vi.fn().mockResolvedValue({
+    catalog: null,
+    snapshot: null,
+    receivedAt: null,
+    serverNow: "2026-11-21T18:43:02.000Z",
+  }),
+}));
 
 beforeEach(() => localStorage.clear());
 
@@ -31,10 +39,10 @@ test("/home signed out shows the landing page with redirectTo in the address", (
   expect(window.location.search).toBe("?redirectTo=%2Fhome");
 });
 
-test("/factory signed in shows the not-built-yet panel", () => {
+test("/factory signed in shows the factory overview", async () => {
   saveSession(makeToken());
   renderApp("/factory");
-  expect(screen.getByText("Control panel not built yet")).toBeInTheDocument();
+  expect(await screen.findByText("Not connected yet")).toBeInTheDocument();
 });
 
 test("an expired stored token on /home shows the landing page", () => {

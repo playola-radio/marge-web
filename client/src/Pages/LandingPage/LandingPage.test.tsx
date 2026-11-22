@@ -12,6 +12,14 @@ vi.mock("../../Services/AuthService", () => ({
   signIn: vi.fn(),
   devSignIn: vi.fn(),
 }));
+vi.mock("../../Services/FactoryService", () => ({
+  fetchFactorySnapshot: vi.fn().mockResolvedValue({
+    catalog: null,
+    snapshot: null,
+    receivedAt: null,
+    serverNow: "2026-11-21T18:43:02.000Z",
+  }),
+}));
 
 const mockedSignIn = vi.mocked(signIn);
 
@@ -61,7 +69,7 @@ test("with ?redirectTo=/factory it navigates to /factory", async () => {
   renderApp("/?redirectTo=%2Ffactory");
   await finishGoogleSignIn("ok");
   expect(window.location.pathname).toBe("/factory");
-  expect(screen.getByText("Control panel not built yet")).toBeInTheDocument();
+  expect(await screen.findByText("Not connected yet")).toBeInTheDocument();
 });
 
 test("not_approved shows the not-approved banner and re-enables the button", async () => {
