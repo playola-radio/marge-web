@@ -34,7 +34,6 @@ by this design (Design.md decision 3). Until it ships, `GET` answers "never repo
     ]
   },
   "snapshot": {
-    "sequence": 42,
     "builds": [
       {
         "runId": "98093cbb-16c0-43a9-b026-cc9b1d91c47a",
@@ -117,7 +116,6 @@ The factory decides every value; marge validates the shape and never recomputes 
 
 | Field | Type | Rule | Meaning |
 |---|---|---|---|
-| `snapshot.sequence` | integer | positive safe integer; greater than the factory's last accepted sequence | The completed state scan's order. The factory persists this counter, increments it for each fresh completed scan, and reuses the same value when retrying that scan. |
 | `snapshot.builds` | array, ≤ 50 | required, may be empty | One entry per watched repo with a design in flight (claimed, or its repo paused), plus one per design the factory finished in the last 24 hours (a `complete` status, Design.md decision 19). |
 | `.runId` | string | lower-case UUID; unique within `builds` | This attempt at building the design. A design that is given up and claimed again gets a new one. |
 | `.repo` | string | non-empty, ≤ 200 chars | `owner/name`. The page shows the part after `/`. |
@@ -155,9 +153,8 @@ gets `204`.
 ### Artifacts: the reports behind events
 
 A copy of the factory's report on a PR (implementation summary, gate rounds and findings, pull request, review rounds)
-taken at the moment of an event. The factory keeps a report on the Mac until it receives `204` for a push that includes
-the event referencing it; it may delete the report only after that acknowledgement, including after a retry. Marge then
-keeps the copy after the design finishes.
+taken at the moment of an event. The factory keeps a report on the Mac until a push carrying the event that points to
+it gets `204`, and only then may delete it (when the design finishes). Marge keeps the copy after that.
 Videos and other media stay on GitHub; a report holds their URLs, never the files.
 
 | Field | Type | Rule | Meaning |
@@ -190,23 +187,19 @@ Response `204` with no body once everything is stored:
 1. **Artifacts, then events,** are added to `factory_artifacts` and `factory_events` (ModelChanges.md). An `id`
    marge already has is skipped: the first copy is kept and a later copy with the same id is ignored, even if it
    differs.
-2. **Then the latest state** replaces the `kv_store` row `factory:snapshot` (365-day TTL) only when its
-   `snapshot.sequence` is greater than the stored sequence:
+2. **Then the latest state** replaces the `kv_store` row `factory:snapshot` (365-day TTL):
 
    ```json
-   { "catalog": { "statuses": [ … ] }, "snapshot": { "sequence": 42, "builds": [ … ], "counts": { … } }, "receivedAt": "2026-11-21T18:42:31.410Z" }
+   { "catalog": { "statuses": [ … ] }, "snapshot": { "builds": [ … ], "counts": { … } }, "receivedAt": "2026-11-21T18:42:31.410Z" }
    ```
 
-   `receivedAt` is the server's own clock at that moment. A push with the stored sequence is a retry and leaves this
-   row (including `receivedAt`) unchanged; a lower sequence leaves it unchanged too. The server still records any new
-   history in either case, then answers `204`.
+   `receivedAt` is the server's own clock at that moment.
 
-**Delivery:** the factory resends the exact same completed scan, with its same `snapshot.sequence`, until it gets
-`204`; it does not rebuild a retry from a later scan. A later completed scan has a greater sequence, so a delayed
-older push cannot replace it. Resending is safe: history already stored is skipped, and a retried snapshot leaves the
-stored state and its freshness unchanged. If a push fails partway (say the history is stored but the latest state is
-not), the server answers `500` and the resend completes it. Nothing is lost as long as the factory keeps an event and
-its referenced report until a push carrying them gets `204`.
+**Delivery:** the factory resends a push until it gets `204`. Every send, first or resend, carries the factory's
+latest completed state scan, never a stored copy of an earlier one, so a resend can only make the page as fresh as a
+real scan. Resending is always safe: history already stored is skipped, and the latest state is replaced again. If a push fails partway (say the history is stored but the latest
+state is not), the server answers `500` and the resend completes it. Nothing is lost as long as the factory keeps an
+event, and the report it points to, until a push carrying them gets `204`.
 
 | Status | Body | When |
 |---|---|---|
@@ -238,10 +231,11 @@ Response `200` before the factory has ever pushed:
 { "catalog": null, "snapshot": null, "receivedAt": null, "serverNow": "2026-11-21T18:43:02.000Z" }
 ```
 
-The page measures every age against `serverNow`, so a wrong phone clock cannot affect an age and a wrong Mac clock
+The page measures every age against `serverNow`, so a wrong phone clock cannot affect any age and a wrong Mac clock
 cannot fake freshness: "Updated … ago" is `serverNow − receivedAt`, and the page is out of date when
-`serverNow − receivedAt` is more than 3 minutes. "Last news" is `serverNow − lastEventAt`; because `lastEventAt`
-comes from the factory, a wrong Mac clock can affect that display and the quiet chip.
+`serverNow − receivedAt` is more than 3 minutes. "Last news" is `serverNow − lastEventAt`; `lastEventAt` comes from the
+Mac, so a wrong Mac clock does skew "Last news" and the hours on a quiet chip. The Mac keeps its clock set by network
+time, so this is accepted.
 
 | Status | Body | When | Page shows |
 |---|---|---|---|
