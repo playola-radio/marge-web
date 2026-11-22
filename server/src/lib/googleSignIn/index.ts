@@ -1,1 +1,1 @@
-export * from './googleSignIn.lib.js';
+export * from "./googleSignIn.lib.js";

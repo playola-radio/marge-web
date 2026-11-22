@@ -22,10 +22,10 @@ planning:
 - Styling is one plain CSS file using the canvas's colours and fonts (Bricolage Grotesque and Inter from Google
   Fonts). There is no CSS framework, because the client has none today.
 
-| PR | Title | Depends on | Hard |
-|---|---|---|---|
-| 1 | feature: let approved Google accounts sign in to marge's server | — | no |
-| 2 | feature: add the marge landing page, sign-in, title screen and factory page | 1 | no |
+| PR  | Title                                                                       | Depends on | Hard |
+| --- | --------------------------------------------------------------------------- | ---------- | ---- |
+| 1   | feature: let approved Google accounts sign in to marge's server             | —          | no   |
+| 2   | feature: add the marge landing page, sign-in, title screen and factory page | 1          | no   |
 
 ## PR 1 — feature: let approved Google accounts sign in to marge's server
 

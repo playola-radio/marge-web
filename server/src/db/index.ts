@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize } from "sequelize";
 
 let cached: Sequelize | null = null;
 
@@ -13,6 +13,6 @@ export function getSequelize(): Sequelize | null {
   if (cached) return cached;
   const url = process.env.DATABASE_URL;
   if (!url) return null;
-  cached = new Sequelize(url, { dialect: 'postgres', logging: false });
+  cached = new Sequelize(url, { dialect: "postgres", logging: false });
   return cached;
 }

@@ -34,19 +34,24 @@ Response `200`:
 Token: HS256 JWT signed with the existing `JWT_SECRET`, `expiresIn: "30d"`, payload:
 
 ```json
-{ "email": "brian@playola.fm", "name": "Brian Keane", "iat": 1795289600, "exp": 1797881600 }
+{
+  "email": "brian@playola.fm",
+  "name": "Brian Keane",
+  "iat": 1795289600,
+  "exp": 1797881600
+}
 ```
 
 The existing `requireAuth` middleware (`server/src/middleware/auth.ts`) already verifies this token unchanged.
 
 Errors (same `{ "error": "<code>" }` envelope as the relay):
 
-| Status | Body | When | Client shows |
-|---|---|---|---|
-| 400 | `{ "error": "invalid_request" }` | `code` missing or not a string | Landing — Sign-in failed |
-| 401 | `{ "error": "sign_in_failed" }` | Google rejected the code, or the Google account's email is not verified | Landing — Sign-in failed |
-| 403 | `{ "error": "not_approved" }` | Verified email is not in `MARGE_ALLOWED_EMAILS` (case-insensitive) | Landing — Not approved |
-| 500 | `{ "error": "internal_error" }` | Anything else (existing `errorHandler`) | Landing — Sign-in failed |
+| Status | Body                             | When                                                                    | Client shows             |
+| ------ | -------------------------------- | ----------------------------------------------------------------------- | ------------------------ |
+| 400    | `{ "error": "invalid_request" }` | `code` missing or not a string                                          | Landing — Sign-in failed |
+| 401    | `{ "error": "sign_in_failed" }`  | Google rejected the code, or the Google account's email is not verified | Landing — Sign-in failed |
+| 403    | `{ "error": "not_approved" }`    | Verified email is not in `MARGE_ALLOWED_EMAILS` (case-insensitive)      | Landing — Not approved   |
+| 500    | `{ "error": "internal_error" }`  | Anything else (existing `errorHandler`)                                 | Landing — Sign-in failed |
 
 Server-side call to Google (external, unchanged by us):
 
@@ -85,14 +90,14 @@ The relay's root routes (`/session`, `/authorize`, `/callback`, `/result`, `/hea
 
 ## Configuration
 
-| Where | Name | Value |
-|---|---|---|
-| server (Render `production` group, `sync: false`) | `GOOGLE_SIGNIN_CLIENT_ID` | new Google OAuth **web** client, JS origins `https://marge.playola.fm` and `http://localhost:5173` |
-| server (Render `production` group, `sync: false`) | `GOOGLE_SIGNIN_CLIENT_SECRET` | that client's secret |
-| server (Render `production` group, `sync: false`) | `MARGE_ALLOWED_EMAILS` | comma-separated emails |
-| server (`render.yaml`) | `CLIENT_ORIGINS` | `https://marge.playola.fm` |
-| local only (`docker-compose.yaml`, `.env.example` files) | `NODE_ENV=development`, `CLIENT_ORIGINS=http://localhost:5173`, `VITE_SERVER_BASE_URL=http://localhost:3000` | enables dev sign-in; no Google secrets needed locally |
-| client (`netlify.toml`) | `VITE_GOOGLE_CLIENT_ID` | `360017545997-fi7r67lac1bvanjukfd77lrb27q18tet.apps.googleusercontent.com` (same as `GOOGLE_SIGNIN_CLIENT_ID`; public) |
+| Where                                                    | Name                                                                                                         | Value                                                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| server (Render `production` group, `sync: false`)        | `GOOGLE_SIGNIN_CLIENT_ID`                                                                                    | new Google OAuth **web** client, JS origins `https://marge.playola.fm` and `http://localhost:5173`                     |
+| server (Render `production` group, `sync: false`)        | `GOOGLE_SIGNIN_CLIENT_SECRET`                                                                                | that client's secret                                                                                                   |
+| server (Render `production` group, `sync: false`)        | `MARGE_ALLOWED_EMAILS`                                                                                       | comma-separated emails                                                                                                 |
+| server (`render.yaml`)                                   | `CLIENT_ORIGINS`                                                                                             | `https://marge.playola.fm`                                                                                             |
+| local only (`docker-compose.yaml`, `.env.example` files) | `NODE_ENV=development`, `CLIENT_ORIGINS=http://localhost:5173`, `VITE_SERVER_BASE_URL=http://localhost:3000` | enables dev sign-in; no Google secrets needed locally                                                                  |
+| client (`netlify.toml`)                                  | `VITE_GOOGLE_CLIENT_ID`                                                                                      | `360017545997-fi7r67lac1bvanjukfd77lrb27q18tet.apps.googleusercontent.com` (same as `GOOGLE_SIGNIN_CLIENT_ID`; public) |
 
 The Google client lives in its own Google Cloud project, "Marge Web" (decision 11). It is separate from the relay's flow: the relay still never holds a client secret.
 

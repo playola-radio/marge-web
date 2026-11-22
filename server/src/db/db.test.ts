@@ -1,7 +1,7 @@
-import { expect } from 'chai';
-import { getSequelize } from './index.js';
+import { assert } from "chai";
+import { getSequelize } from "./index.js";
 
-it('returns null when DATABASE_URL is unset (relay boots without a DB)', () => {
+it("returns null when DATABASE_URL is unset (relay boots without a DB)", () => {
   delete process.env.DATABASE_URL;
-  expect(getSequelize()).to.equal(null);
+  assert.isNull(getSequelize());
 });

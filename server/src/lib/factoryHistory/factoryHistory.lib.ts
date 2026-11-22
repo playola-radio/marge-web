@@ -1,7 +1,7 @@
-import { QueryTypes, type Sequelize } from 'sequelize';
-import type { Config } from '../config/index.js';
-import { getSequelize } from '../../db/index.js';
-import type { FactoryArtifact, FactoryEvent } from '../factorySync/index.js';
+import { QueryTypes, type Sequelize } from "sequelize";
+import type { Config } from "../config/index.js";
+import { getSequelize } from "../../db/index.js";
+import type { FactoryArtifact, FactoryEvent } from "../factorySync/index.js";
 
 /**
  * The factory machine's build history: every event and report it pushes, kept
@@ -16,9 +16,13 @@ export class MemoryFactoryHistory implements FactoryHistory {
   readonly artifacts = new Map<string, FactoryArtifact>();
   readonly events = new Map<string, FactoryEvent>();
 
-  async record(artifacts: FactoryArtifact[], events: FactoryEvent[]): Promise<void> {
+  async record(
+    artifacts: FactoryArtifact[],
+    events: FactoryEvent[],
+  ): Promise<void> {
     for (const artifact of artifacts) {
-      if (!this.artifacts.has(artifact.id)) this.artifacts.set(artifact.id, artifact);
+      if (!this.artifacts.has(artifact.id))
+        this.artifacts.set(artifact.id, artifact);
     }
     for (const event of events) {
       if (!this.events.has(event.id)) this.events.set(event.id, event);
@@ -31,16 +35,22 @@ export class MemoryFactoryHistory implements FactoryHistory {
  * holding one would fail on every resend. Each such character, in keys and
  * values alike, is stored as U+FFFD instead.
  */
-const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+const LONE_SURROGATE =
+  /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
 
 function storable(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return value.replaceAll('\u0000', '\ufffd').replace(LONE_SURROGATE, '\ufffd');
+  if (typeof value === "string") {
+    return value
+      .replaceAll("\u0000", "\ufffd")
+      .replace(LONE_SURROGATE, "\ufffd");
   }
   if (Array.isArray(value)) return value.map(storable);
-  if (value !== null && typeof value === 'object') {
+  if (value !== null && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [storable(k) as string, storable(v)]),
+      Object.entries(value).map(([k, v]) => [
+        storable(k) as string,
+        storable(v),
+      ]),
     );
   }
   return value;
@@ -49,15 +59,26 @@ function storable(value: unknown): unknown {
 export class PostgresFactoryHistory implements FactoryHistory {
   constructor(private sequelize: Sequelize) {}
 
-  async record(artifacts: FactoryArtifact[], events: FactoryEvent[]): Promise<void> {
+  async record(
+    artifacts: FactoryArtifact[],
+    events: FactoryEvent[],
+  ): Promise<void> {
     if (artifacts.length) {
-      const rows = artifacts.map(({ id, kind, at, body }) => ({ id, kind, at, body }));
+      const rows = artifacts.map(({ id, kind, at, body }) => ({
+        id,
+        kind,
+        at,
+        body,
+      }));
       await this.sequelize.query(
         `INSERT INTO factory_artifacts (id, kind, at, body)
          SELECT id, kind, at, body
          FROM jsonb_to_recordset($rows::jsonb) AS r(id uuid, kind text, at timestamptz, body jsonb)
          ON CONFLICT (id) DO NOTHING`,
-        { bind: { rows: JSON.stringify(storable(rows)) }, type: QueryTypes.INSERT },
+        {
+          bind: { rows: JSON.stringify(storable(rows)) },
+          type: QueryTypes.INSERT,
+        },
       );
     }
     if (events.length) {
@@ -80,15 +101,21 @@ export class PostgresFactoryHistory implements FactoryHistory {
            pr integer, type text, details jsonb, artifact_id uuid
          )
          ON CONFLICT (id) DO NOTHING`,
-        { bind: { rows: JSON.stringify(storable(rows)) }, type: QueryTypes.INSERT },
+        {
+          bind: { rows: JSON.stringify(storable(rows)) },
+          type: QueryTypes.INSERT,
+        },
       );
     }
   }
 }
 
-export async function createFactoryHistory(config: Config): Promise<FactoryHistory> {
-  if (config.kvBackend === 'memory') return new MemoryFactoryHistory();
+export async function createFactoryHistory(
+  config: Config,
+): Promise<FactoryHistory> {
+  if (config.kvBackend === "memory") return new MemoryFactoryHistory();
   const sequelize = getSequelize();
-  if (!sequelize) throw new Error('DATABASE_URL is required when KV_BACKEND=postgres');
+  if (!sequelize)
+    throw new Error("DATABASE_URL is required when KV_BACKEND=postgres");
   return new PostgresFactoryHistory(sequelize);
 }

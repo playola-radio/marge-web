@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * kv_store: the relay's single-use, TTL'd session/state store, moved off Redis
@@ -9,7 +9,7 @@
  */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('kv_store', {
+    await queryInterface.createTable("kv_store", {
       key: {
         type: Sequelize.TEXT,
         primaryKey: true,
@@ -24,10 +24,10 @@ module.exports = {
         allowNull: false,
       },
     });
-    await queryInterface.addIndex('kv_store', ['expires_at']);
+    await queryInterface.addIndex("kv_store", ["expires_at"]);
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('kv_store');
+    await queryInterface.dropTable("kv_store");
   },
 };

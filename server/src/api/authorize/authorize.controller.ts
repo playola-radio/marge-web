@@ -1,23 +1,31 @@
-import type { RequestHandler } from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type { AppDeps } from '../../app.js';
-import { sessionKey, type SessionRecord } from '../../lib/session/index.js';
-import { buildConsentUrl, DEFAULT_PROVIDER } from '../../lib/providers/index.js';
-import { isValidToken } from '../../lib/ids/index.js';
+import type { RequestHandler } from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { AppDeps } from "../../app.js";
+import { sessionKey, type SessionRecord } from "../../lib/session/index.js";
+import {
+  buildConsentUrl,
+  DEFAULT_PROVIDER,
+} from "../../lib/providers/index.js";
+import { isValidToken } from "../../lib/ids/index.js";
 
-const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'public');
+const publicDir = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "public",
+);
 
 export function redirect(deps: AppDeps): RequestHandler {
   return async (req, res) => {
     const session = req.query.session;
     if (!isValidToken(session)) {
-      res.status(400).json({ error: 'invalid_request' });
+      res.status(400).json({ error: "invalid_request" });
       return;
     }
     const raw = await deps.kv.get(sessionKey(session));
     if (!raw) {
-      res.status(410).sendFile(path.join(publicDir, 'expired.html'));
+      res.status(410).sendFile(path.join(publicDir, "expired.html"));
       return;
     }
     const record = JSON.parse(raw) as SessionRecord;

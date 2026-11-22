@@ -1,6 +1,6 @@
-import type { ConsentParams } from '../providers/index.js';
+import type { ConsentParams } from "../providers/index.js";
 
-export type SessionStatus = 'pending' | 'complete';
+export type SessionStatus = "pending" | "complete";
 
 export interface SessionRecord {
   consent: ConsentParams;

@@ -1,1 +1,1 @@
-export * from './factoryHistory.lib.js';
+export * from "./factoryHistory.lib.js";

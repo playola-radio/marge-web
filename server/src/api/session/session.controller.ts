@@ -1,12 +1,19 @@
-import type { RequestHandler } from 'express';
-import type { AppDeps } from '../../app.js';
-import { newToken } from '../../lib/ids/index.js';
-import { sessionKey, stateKey, type SessionRecord } from '../../lib/session/index.js';
-import { DEFAULT_PROVIDER, type ConsentParams } from '../../lib/providers/index.js';
-import { isValidSealRecipientKey } from '../../lib/crypto/index.js';
+import type { RequestHandler } from "express";
+import type { AppDeps } from "../../app.js";
+import { newToken } from "../../lib/ids/index.js";
+import {
+  sessionKey,
+  stateKey,
+  type SessionRecord,
+} from "../../lib/session/index.js";
+import {
+  DEFAULT_PROVIDER,
+  type ConsentParams,
+} from "../../lib/providers/index.js";
+import { isValidSealRecipientKey } from "../../lib/crypto/index.js";
 
 function parseConsent(body: unknown): ConsentParams | null {
-  if (typeof body !== 'object' || body === null) return null;
+  if (typeof body !== "object" || body === null) return null;
   const b = body as Record<string, unknown>;
   const c = b.consent as Record<string, unknown> | undefined;
   if (!c) return null;
@@ -14,16 +21,16 @@ function parseConsent(body: unknown): ConsentParams | null {
   // Required consent fields must be non-empty strings — a blank clientId/state
   // produces an authorization URL that the provider rejects with no useful error.
   if (
-    typeof clientId !== 'string' ||
+    typeof clientId !== "string" ||
     clientId.length === 0 ||
-    typeof scopes !== 'string' ||
+    typeof scopes !== "string" ||
     scopes.length === 0 ||
-    typeof state !== 'string' ||
+    typeof state !== "string" ||
     state.length === 0 ||
-    typeof codeChallenge !== 'string' ||
+    typeof codeChallenge !== "string" ||
     codeChallenge.length === 0 ||
-    (loginHint !== undefined && typeof loginHint !== 'string') ||
-    (provider !== undefined && typeof provider !== 'string')
+    (loginHint !== undefined && typeof loginHint !== "string") ||
+    (provider !== undefined && typeof provider !== "string")
   ) {
     return null;
   }
@@ -37,11 +44,11 @@ export function create(deps: AppDeps): RequestHandler {
     const botPublicKey = (req.body as Record<string, unknown>)?.botPublicKey;
     if (
       !consent ||
-      typeof pickupHash !== 'string' ||
-      typeof botPublicKey !== 'string' ||
+      typeof pickupHash !== "string" ||
+      typeof botPublicKey !== "string" ||
       !isValidSealRecipientKey(botPublicKey)
     ) {
-      res.status(400).json({ error: 'invalid_request' });
+      res.status(400).json({ error: "invalid_request" });
       return;
     }
 
@@ -50,7 +57,7 @@ export function create(deps: AppDeps): RequestHandler {
     // fast here rather than at /authorize. Absent provider means Google (legacy).
     const provider = consent.provider ?? DEFAULT_PROVIDER;
     if (!(provider in deps.config.providers)) {
-      res.status(400).json({ error: 'invalid_request' });
+      res.status(400).json({ error: "invalid_request" });
       return;
     }
     consent.provider = provider;
@@ -59,7 +66,7 @@ export function create(deps: AppDeps): RequestHandler {
     // reused state with 409 rather than silently overwriting the state→sessionId
     // mapping, which would seal a later callback's code into the wrong session.
     if (await deps.kv.get(stateKey(consent.state))) {
-      res.status(409).json({ error: 'state_in_use' });
+      res.status(409).json({ error: "state_in_use" });
       return;
     }
 
@@ -68,7 +75,7 @@ export function create(deps: AppDeps): RequestHandler {
       consent,
       pickupHash,
       botPublicKey,
-      status: 'pending',
+      status: "pending",
       createdAt: Date.now(),
     };
     const ttl = deps.config.sessionTtlSeconds;

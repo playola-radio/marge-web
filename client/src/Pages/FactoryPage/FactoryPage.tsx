@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
-import { readSession } from '../../utils/session';
-import SignOutButton from '../../Components/SignOutButton/SignOutButton';
-import { ArrowLeftIcon, FactoryIcon } from '../../Components/Icons/Icons';
+import { Link } from "react-router-dom";
+import { readSession } from "../../utils/session";
+import SignOutButton from "../../Components/SignOutButton/SignOutButton";
+import { ArrowLeftIcon, FactoryIcon } from "../../Components/Icons/Icons";
 
 export default function FactoryPage() {
   const email = readSession()?.email;
@@ -32,8 +32,8 @@ export default function FactoryPage() {
           </span>
           <h2 className="empty-panel__title">Control panel not built yet</h2>
           <p className="empty-panel__text">
-            Designs, builds and pull requests will show here. Until then, use the factory command
-            line.
+            Designs, builds and pull requests will show here. Until then, use
+            the factory command line.
           </p>
         </section>
       </main>

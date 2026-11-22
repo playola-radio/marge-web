@@ -3,6 +3,7 @@
 The design files beside this plan are the truth; this plan only says how to build them.
 
 **Base branch:** `main` (this repo has no `develop`). Two PRs, built in order:
+
 - PR 1 adds the sync endpoint, the history tables and the read endpoint to the Express server (`server/`).
 - PR 2 replaces the "Control panel not built yet" body of `FactoryPage` in the Vite client (`client/`) with the live
   overview.
@@ -11,6 +12,7 @@ The factory's sender is not part of either PR (Design.md decision 3). `FACTORY_R
 (Design.md decision 12); PR 1 only declares it.
 
 **Decisions made while planning:**
+
 - **Latest state:** the catalog and snapshot are stored through the existing `KV` interface (`deps.kv`), so tests
   use `MemoryKV`.
 - **History:** a new `FactoryHistory` interface with a `MemoryFactoryHistory` for tests and local dev and a
@@ -32,10 +34,10 @@ The factory's sender is not part of either PR (Design.md decision 3). `FACTORY_R
   - Every age is `serverNow − <time>` from the latest answer, so the browser's clock is never used.
   - The quiet chip's hours come from `lastEventAt`.
 
-| PR | Title | Depends on | Hard |
-|---|---|---|---|
-| 1 | feature: let the factory machine report its state and history to marge's server | — | no |
-| 2 | feature: show what the factory is building and what needs attention | 1 | no |
+| PR  | Title                                                                           | Depends on | Hard |
+| --- | ------------------------------------------------------------------------------- | ---------- | ---- |
+| 1   | feature: let the factory machine report its state and history to marge's server | —          | no   |
+| 2   | feature: show what the factory is building and what needs attention             | 1          | no   |
 
 ## PR 1 — feature: let the factory machine report its state and history to marge's server
 
@@ -109,7 +111,7 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - 1. `INSERT INTO factory_artifacts (id, kind, at, body) SELECT id, kind, at, body FROM jsonb_to_recordset($rows::jsonb) AS r(id uuid, kind text, at timestamptz, body jsonb) ON CONFLICT (id) DO NOTHING`
 - 2. The same for `factory_events` with columns `id, run_id, at, repo, design, pr, type, details, artifact_id`,
 - mapping `runId` → `run_id` and `artifactId` → `artifact_id` in the rows passed as `$rows`.
-- 
+-
 - Rows are passed with `bind: { rows: JSON.stringify(rows) }`, as `PostgresKV` binds its values.
 - - `export async function createFactoryHistory(config: Config): Promise<FactoryHistory>`: memory when
 - `config.kvBackend === 'memory'`, otherwise Postgres via `getSequelize()`, throwing the same error as `createKv`
@@ -259,7 +261,7 @@ plainly when the factory machine has stopped reporting or hasn't reported yet.
 - or `{ catalog: null; snapshot: null; receivedAt: null; serverNow: string }`
 - - `fetchFactorySnapshot(): Promise<SnapshotResponse>`. It `axios.get`s
 - `${import.meta.env.VITE_SERVER_BASE_URL}/v1/factory/snapshot` with
-- `headers: { Authorization: \`Bearer ${readToken()}\` }` and `timeout: 15_000`, and returns `data`. A request
+- `headers: { Authorization: \`Bearer ${readToken()}\` }`and`timeout: 15_000`, and returns `data`. A request
 - with no answer after 15 s fails like a network error, so the page shows "Couldn't load" (ApiContract.md, no
 - answer).
 - **New `client/src/factory/overview.ts`** (pure functions, no React). The server guarantees every build's status

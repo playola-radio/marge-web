@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
-import { readSession } from '../../utils/session';
-import BrandLine from '../../Components/BrandLine/BrandLine';
-import SignOutButton from '../../Components/SignOutButton/SignOutButton';
-import { ChevronRightIcon, FactoryIcon } from '../../Components/Icons/Icons';
-import margeFace from '../../Assets/marge-face.jpeg';
+import { Link } from "react-router-dom";
+import { readSession } from "../../utils/session";
+import BrandLine from "../../Components/BrandLine/BrandLine";
+import SignOutButton from "../../Components/SignOutButton/SignOutButton";
+import { ChevronRightIcon, FactoryIcon } from "../../Components/Icons/Icons";
+import margeFace from "../../Assets/marge-face.jpeg";
 
 export default function TitlePage() {
   const email = readSession()?.email;
@@ -24,7 +24,9 @@ export default function TitlePage() {
               </span>
               <span className="menu__text">
                 <span className="menu__title">Software Factory</span>
-                <span className="menu__subtitle">Designs, builds and pull requests</span>
+                <span className="menu__subtitle">
+                  Designs, builds and pull requests
+                </span>
               </span>
               <ChevronRightIcon size={22} className="menu__chevron" />
             </Link>
