@@ -13,6 +13,7 @@ import { connectRouter } from './api/connect.js';
 import { callbackRouter } from './api/callback.js';
 import { resultRouter } from './api/result.js';
 import { v1Router } from './v1/index.js';
+import { factoryReportRouter } from './v1/factory.js';
 import { errorHandler } from './middleware/error.js';
 
 export interface AppDeps {
@@ -28,6 +29,8 @@ export function buildApp(deps: AppDeps): Express {
   // Render's proxy appends the real client address to X-Forwarded-For; trust only that one hop.
   app.set('trust proxy', 1);
   app.use(helmet());
+  // The factory push checks its token before any body parsing, so it parses its own body.
+  app.use(factoryReportRouter(deps));
   app.use(express.json());
 
   const { windowMs, max } = deps.rateLimit ?? { windowMs: 60_000, max: 30 };
