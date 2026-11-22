@@ -9,7 +9,7 @@
 // location.replace (not assign) so the interstitial is not left in history —
 // the browser Back button skips it.
 (function () {
-  var link = document.getElementById('continue');
+  var link = document.getElementById("continue");
   if (link && link.href) {
     window.location.replace(link.href);
   }

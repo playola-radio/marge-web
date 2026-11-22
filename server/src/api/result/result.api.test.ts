@@ -1,94 +1,106 @@
-import { expect } from 'chai';
-import request from 'supertest';
-import { buildApp } from '../../app.js';
-import { MemoryFactoryHistory } from '../../lib/factoryHistory/index.js';
-import { loadConfig } from '../../lib/config/index.js';
-import { MemoryKV } from '../../lib/kv/index.js';
-import { sessionKey, type SessionRecord } from '../../lib/session/index.js';
-import { sha256Base64, initCrypto } from '../../lib/crypto/index.js';
+import { assert } from "chai";
+import request from "supertest";
+import { buildApp } from "../../app.js";
+import { MemoryFactoryHistory } from "../../lib/factoryHistory/index.js";
+import { loadConfig } from "../../lib/config/index.js";
+import { MemoryKV } from "../../lib/kv/index.js";
+import { sessionKey, type SessionRecord } from "../../lib/session/index.js";
+import { sha256Base64, initCrypto } from "../../lib/crypto/index.js";
 
-const PICKUP = 'super-secret-pickup';
+const PICKUP = "super-secret-pickup";
 
 function makeApp() {
   const config = loadConfig({
-    BASE_URL: 'https://relay.test',
-    KV_BACKEND: 'memory',
+    BASE_URL: "https://relay.test",
+    KV_BACKEND: "memory",
   } as NodeJS.ProcessEnv);
   const kv = new MemoryKV();
-  return { app: buildApp({ kv, config, factoryHistory: new MemoryFactoryHistory() }), kv };
+  return {
+    app: buildApp({ kv, config, factoryHistory: new MemoryFactoryHistory() }),
+    kv,
+  };
 }
 
 function record(overrides: Partial<SessionRecord> = {}): SessionRecord {
   return {
-    consent: { clientId: 'c1', scopes: 'openid', state: 'st1', codeChallenge: 'ch1' },
+    consent: {
+      clientId: "c1",
+      scopes: "openid",
+      state: "st1",
+      codeChallenge: "ch1",
+    },
     pickupHash: sha256Base64(PICKUP),
-    botPublicKey: 'pk',
-    status: 'complete',
-    sealedCode: 'sealed-code-b64',
+    botPublicKey: "pk",
+    status: "complete",
+    sealedCode: "sealed-code-b64",
     createdAt: Date.now(),
     ...overrides,
   };
 }
 
-describe('POST /result', () => {
+describe("POST /result", () => {
   before(async () => {
     await initCrypto();
   });
 
-  it('returns the sealed code once, then 404 (single-use)', async () => {
+  it("returns the sealed code once, then 404 (single-use)", async () => {
     const { app, kv } = makeApp();
-    await kv.put(sessionKey('s1'), JSON.stringify(record()), 600);
+    await kv.put(sessionKey("s1"), JSON.stringify(record()), 600);
 
     const first = await request(app)
-      .post('/result')
-      .send({ sessionId: 's1', pickup_secret: PICKUP });
-    expect(first.status).to.equal(200);
-    expect(first.body.sealedCode).to.equal('sealed-code-b64');
+      .post("/result")
+      .send({ sessionId: "s1", pickup_secret: PICKUP });
+    assert.strictEqual(first.status, 200);
+    assert.strictEqual(first.body.sealedCode, "sealed-code-b64");
 
     const second = await request(app)
-      .post('/result')
-      .send({ sessionId: 's1', pickup_secret: PICKUP });
-    expect(second.status).to.equal(404);
+      .post("/result")
+      .send({ sessionId: "s1", pickup_secret: PICKUP });
+    assert.strictEqual(second.status, 404);
   });
 
-  it('returns 204 while still pending', async () => {
+  it("returns 204 while still pending", async () => {
     const { app, kv } = makeApp();
     await kv.put(
-      sessionKey('s2'),
-      JSON.stringify(record({ status: 'pending', sealedCode: undefined })),
+      sessionKey("s2"),
+      JSON.stringify(record({ status: "pending", sealedCode: undefined })),
       600,
     );
-    const res = await request(app).post('/result').send({ sessionId: 's2', pickup_secret: PICKUP });
-    expect(res.status).to.equal(204);
-  });
-
-  it('returns 403 for a bad pickup secret (and does not consume)', async () => {
-    const { app, kv } = makeApp();
-    await kv.put(sessionKey('s3'), JSON.stringify(record()), 600);
     const res = await request(app)
-      .post('/result')
-      .send({ sessionId: 's3', pickup_secret: 'wrong' });
-    expect(res.status).to.equal(403);
-    expect(await kv.get(sessionKey('s3'))).to.be.a('string'); // still present
+      .post("/result")
+      .send({ sessionId: "s2", pickup_secret: PICKUP });
+    assert.strictEqual(res.status, 204);
   });
 
-  it('returns 404 for an unknown session', async () => {
+  it("returns 403 for a bad pickup secret (and does not consume)", async () => {
+    const { app, kv } = makeApp();
+    await kv.put(sessionKey("s3"), JSON.stringify(record()), 600);
+    const res = await request(app)
+      .post("/result")
+      .send({ sessionId: "s3", pickup_secret: "wrong" });
+    assert.strictEqual(res.status, 403);
+    assert.typeOf(await kv.get(sessionKey("s3")), "string"); // still present
+  });
+
+  it("returns 404 for an unknown session", async () => {
     const { app } = makeApp();
     const res = await request(app)
-      .post('/result')
-      .send({ sessionId: 'nope', pickup_secret: PICKUP });
-    expect(res.status).to.equal(404);
+      .post("/result")
+      .send({ sessionId: "nope", pickup_secret: PICKUP });
+    assert.strictEqual(res.status, 404);
   });
 
-  it('returns the error payload once when callback recorded an error', async () => {
+  it("returns the error payload once when callback recorded an error", async () => {
     const { app, kv } = makeApp();
     await kv.put(
-      sessionKey('s4'),
-      JSON.stringify(record({ sealedCode: undefined, error: 'access_denied' })),
+      sessionKey("s4"),
+      JSON.stringify(record({ sealedCode: undefined, error: "access_denied" })),
       600,
     );
-    const res = await request(app).post('/result').send({ sessionId: 's4', pickup_secret: PICKUP });
-    expect(res.status).to.equal(200);
-    expect(res.body.error).to.equal('access_denied');
+    const res = await request(app)
+      .post("/result")
+      .send({ sessionId: "s4", pickup_secret: PICKUP });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.error, "access_denied");
   });
 });

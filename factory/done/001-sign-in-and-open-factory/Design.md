@@ -23,6 +23,7 @@ config), sign-in providers other than Google.
 Canvas: `design/marge.pen`. Every screen is drawn at desktop (1440×900) and phone (390×844).
 
 ### Landing — default
+
 ![Landing desktop](screenshots/landing--default-desktop.png)
 ![Landing mobile](screenshots/landing--default-mobile.png)
 
@@ -31,6 +32,7 @@ out (redirects to `/?redirectTo=<path>`); a stored token that has expired. **Lef
 Google's consent popup. A signed-in visitor to `/` is sent straight to `/home` (or `redirectTo`).
 
 ### Landing — signing in
+
 ![Signing in desktop](screenshots/landing--signing-in-desktop.png)
 ![Signing in mobile](screenshots/landing--signing-in-mobile.png)
 
@@ -38,6 +40,7 @@ While the Google popup is open and while the code is exchanged: the button shows
 ignores further taps. **Left by:** success → `redirectTo` or `/home`; failure → one of the two error states.
 
 ### Landing — sign-in failed
+
 ![Sign-in failed desktop](screenshots/landing--sign-in-failed-desktop.png)
 ![Sign-in failed mobile](screenshots/landing--sign-in-failed-mobile.png)
 
@@ -46,6 +49,7 @@ Popup closed or errored, the Google sign-in script failed to load, or the server
 loading Google's script. For every other failure the button stays usable.
 
 ### Landing — not approved
+
 ![Not approved desktop](screenshots/landing--not-approved-desktop.png)
 ![Not approved mobile](screenshots/landing--not-approved-mobile.png)
 
@@ -53,6 +57,7 @@ Server answered 403 `not_approved`. Banner: "This Google account isn't approved 
 account." The button stays usable so another account can be tried.
 
 ### Title screen — default
+
 ![Title desktop](screenshots/title--default-desktop.png)
 ![Title mobile](screenshots/title--default-mobile.png)
 
@@ -61,6 +66,7 @@ account." The button stays usable so another account can be tried.
 email from the stored token. No loading or error state: the page makes no server call.
 
 ### Software Factory — not built yet
+
 ![Factory desktop](screenshots/factory--not-built-yet-desktop.png)
 ![Factory mobile](screenshots/factory--not-built-yet-mobile.png)
 
@@ -145,7 +151,7 @@ No stored model changes, so there is no `ModelChanges.md`. Considered and left o
 - [ ] 2. Signing in with an approved Google account lands on the title screen with Marge's picture, the "Software Factory" menu item and the signed-in email.
 - [ ] 3. Signing in with a Google account not on the allowlist shows "This Google account isn't approved for marge." on the landing page and stays signed out.
 - [ ] 4. Closing the Google popup without finishing, or failing to load the Google sign-in script, shows "Sign-in didn't
-  finish. Try again."; after a script-load failure the disabled button can be retried by reloading the page.
+     finish. Try again."; after a script-load failure the disabled button can be retried by reloading the page.
 - [ ] 5. While sign-in is in progress the button shows a spinner and "Signing in…" and can't be tapped twice.
 - [ ] 6. Tapping "Software Factory" opens `/factory` showing "Control panel not built yet"; "← marge" returns to the title screen.
 - [ ] 7. "Sign out" on the title screen or the factory page returns to the landing page, and reloading stays signed out.

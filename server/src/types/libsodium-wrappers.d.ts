@@ -19,7 +19,7 @@ declare namespace sodium {
   }
 }
 
-declare module 'libsodium-wrappers' {
+declare module "libsodium-wrappers" {
   export type Base64Variant = number;
 
   // Re-export KeyPair from the global namespace so it is also accessible as
@@ -35,8 +35,14 @@ declare module 'libsodium-wrappers' {
 
   export const ready: Promise<void>;
 
-  export function from_base64(input: string, variant?: Base64Variant): Uint8Array;
-  export function to_base64(input: Uint8Array | string, variant?: Base64Variant): string;
+  export function from_base64(
+    input: string,
+    variant?: Base64Variant,
+  ): Uint8Array;
+  export function to_base64(
+    input: Uint8Array | string,
+    variant?: Base64Variant,
+  ): string;
 
   export function crypto_box_keypair(): KeyPair;
   export function crypto_box_seal(
@@ -49,6 +55,6 @@ declare module 'libsodium-wrappers' {
     recipientPrivateKey: Uint8Array,
   ): Uint8Array;
 
-  const sodium: typeof import('libsodium-wrappers');
+  const sodium: typeof import("libsodium-wrappers");
   export default sodium;
 }

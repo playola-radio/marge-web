@@ -13,12 +13,12 @@ the factory already has is the factory's job: it sends those old events like new
 
 One row per report the factory sends. A report never changes once sent.
 
-| Column | Type | Null | Comes from | Why |
-|---|---|---|---|---|
-| `id` | `uuid` primary key | no | `artifacts[].id` | Identity; a resent report with the same id is skipped. |
-| `kind` | `text` | no | `artifacts[].kind` | Tells 003 how to read `body` (`pr_report` today). |
-| `at` | `timestamptz` | no | `artifacts[].at` | When the report was captured, for showing alongside it. |
-| `body` | `jsonb` | no | `artifacts[].body` | The report itself, as sent. |
+| Column | Type               | Null | Comes from         | Why                                                     |
+| ------ | ------------------ | ---- | ------------------ | ------------------------------------------------------- |
+| `id`   | `uuid` primary key | no   | `artifacts[].id`   | Identity; a resent report with the same id is skipped.  |
+| `kind` | `text`             | no   | `artifacts[].kind` | Tells 003 how to read `body` (`pr_report` today).       |
+| `at`   | `timestamptz`      | no   | `artifacts[].at`   | When the report was captured, for showing alongside it. |
+| `body` | `jsonb`            | no   | `artifacts[].body` | The report itself, as sent.                             |
 
 Created first, because `factory_events.artifact_id` points at it.
 
@@ -26,17 +26,17 @@ Created first, because `factory_events.artifact_id` points at it.
 
 One row per event the factory reports.
 
-| Column | Type | Null | Comes from | Why |
-|---|---|---|---|---|
-| `id` | `uuid` primary key | no | `events[].id` | Identity; a resent event with the same id is skipped. |
-| `run_id` | `uuid` | no | `events[].runId` | The build attempt, which is how 003 finds one build's events. |
-| `at` | `timestamptz` | no | `events[].at` | When it happened, for the timeline. |
-| `repo` | `text` | no | `events[].repo` | Which repo, as the factory's event already says. |
-| `design` | `text` | no | `events[].design` | Which design folder, as the factory's event already says. |
-| `pr` | `integer` | yes | `events[].pr` | The PR's position in the plan; null for design-level events. |
-| `type` | `text` | no | `events[].type` | What happened. |
-| `details` | `jsonb` | no, default `'{}'` | `events[].details` | Facts that belong to this one event (the PR's number and URL, the design's name and planned PRs). |
-| `artifact_id` | `uuid` | yes, foreign key to `factory_artifacts(id)` | `events[].artifactId` | The report captured at this moment. |
+| Column        | Type               | Null                                        | Comes from            | Why                                                                                               |
+| ------------- | ------------------ | ------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- |
+| `id`          | `uuid` primary key | no                                          | `events[].id`         | Identity; a resent event with the same id is skipped.                                             |
+| `run_id`      | `uuid`             | no                                          | `events[].runId`      | The build attempt, which is how 003 finds one build's events.                                     |
+| `at`          | `timestamptz`      | no                                          | `events[].at`         | When it happened, for the timeline.                                                               |
+| `repo`        | `text`             | no                                          | `events[].repo`       | Which repo, as the factory's event already says.                                                  |
+| `design`      | `text`             | no                                          | `events[].design`     | Which design folder, as the factory's event already says.                                         |
+| `pr`          | `integer`          | yes                                         | `events[].pr`         | The PR's position in the plan; null for design-level events.                                      |
+| `type`        | `text`             | no                                          | `events[].type`       | What happened.                                                                                    |
+| `details`     | `jsonb`            | no, default `'{}'`                          | `events[].details`    | Facts that belong to this one event (the PR's number and URL, the design's name and planned PRs). |
+| `artifact_id` | `uuid`             | yes, foreign key to `factory_artifacts(id)` | `events[].artifactId` | The report captured at this moment.                                                               |
 
 ## Considered and left out
 

@@ -113,19 +113,28 @@ The relay seals the authorization code using libsodium's `crypto_box_seal` with 
 **Bot-side decryption (Node.js + libsodium-wrappers):**
 
 ```js
-import sodium from 'libsodium-wrappers';
+import sodium from "libsodium-wrappers";
 await sodium.ready;
 
-const sealedBytes = sodium.from_base64(sealedCode, sodium.base64_variants.ORIGINAL);
-const plaintext = sodium.crypto_box_seal_open(sealedBytes, botPublicKey, botPrivateKey);
+const sealedBytes = sodium.from_base64(
+  sealedCode,
+  sodium.base64_variants.ORIGINAL,
+);
+const plaintext = sodium.crypto_box_seal_open(
+  sealedBytes,
+  botPublicKey,
+  botPrivateKey,
+);
 const code = sodium.to_string(plaintext);
 ```
 
 **Deriving `pickupHash`:**
 
 ```js
-import { createHash } from 'node:crypto';
-const pickupHash = createHash('sha256').update(pickupSecret, 'utf8').digest('base64');
+import { createHash } from "node:crypto";
+const pickupHash = createHash("sha256")
+  .update(pickupSecret, "utf8")
+  .digest("base64");
 ```
 
 This matches the relay's `sha256Base64` function. The hash uses standard base64 with padding — do not strip `=`.

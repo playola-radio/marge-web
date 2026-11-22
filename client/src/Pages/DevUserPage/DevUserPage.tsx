@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { devSignIn } from '../../Services/AuthService';
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { devSignIn } from "../../Services/AuthService";
 
 export default function DevUserPage() {
   const [failed, setFailed] = useState(false);
@@ -11,10 +11,10 @@ export default function DevUserPage() {
     if (started.current) return;
     started.current = true;
     devSignIn().then(
-      () => navigate('/home', { replace: true }),
+      () => navigate("/home", { replace: true }),
       () => setFailed(true),
     );
   }, [navigate]);
 
-  return <p>{failed ? 'Dev sign-in failed' : 'Signing in as the dev user…'}</p>;
+  return <p>{failed ? "Dev sign-in failed" : "Signing in as the dev user…"}</p>;
 }

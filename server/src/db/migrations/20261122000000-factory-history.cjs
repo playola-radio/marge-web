@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * factory_artifacts and factory_events: the factory machine's build history,
@@ -9,13 +9,13 @@
  */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('factory_artifacts', {
+    await queryInterface.createTable("factory_artifacts", {
       id: { type: Sequelize.UUID, primaryKey: true, allowNull: false },
       kind: { type: Sequelize.TEXT, allowNull: false },
       at: { type: Sequelize.DATE, allowNull: false },
       body: { type: Sequelize.JSONB, allowNull: false },
     });
-    await queryInterface.createTable('factory_events', {
+    await queryInterface.createTable("factory_events", {
       id: { type: Sequelize.UUID, primaryKey: true, allowNull: false },
       run_id: { type: Sequelize.UUID, allowNull: false },
       at: { type: Sequelize.DATE, allowNull: false },
@@ -27,13 +27,13 @@ module.exports = {
       artifact_id: {
         type: Sequelize.UUID,
         allowNull: true,
-        references: { model: 'factory_artifacts', key: 'id' },
+        references: { model: "factory_artifacts", key: "id" },
       },
     });
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('factory_events');
-    await queryInterface.dropTable('factory_artifacts');
+    await queryInterface.dropTable("factory_events");
+    await queryInterface.dropTable("factory_artifacts");
   },
 };

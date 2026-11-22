@@ -1,6 +1,6 @@
-import { QueryTypes, type Sequelize } from 'sequelize';
-import type { Config } from '../config/index.js';
-import { getSequelize } from '../../db/index.js';
+import { QueryTypes, type Sequelize } from "sequelize";
+import type { Config } from "../config/index.js";
+import { getSequelize } from "../../db/index.js";
 
 export interface KV {
   put(key: string, val: string, ttlSeconds: number): Promise<void>;
@@ -75,8 +75,9 @@ export class PostgresKV implements KV {
 }
 
 export async function createKv(config: Config): Promise<KV> {
-  if (config.kvBackend === 'memory') return new MemoryKV();
+  if (config.kvBackend === "memory") return new MemoryKV();
   const sequelize = getSequelize();
-  if (!sequelize) throw new Error('DATABASE_URL is required when KV_BACKEND=postgres');
+  if (!sequelize)
+    throw new Error("DATABASE_URL is required when KV_BACKEND=postgres");
   return new PostgresKV(sequelize);
 }

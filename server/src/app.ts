@@ -1,11 +1,11 @@
-import express, { type Express } from 'express';
-import helmet from 'helmet';
-import type { KV } from './lib/kv/index.js';
-import type { Config } from './lib/config/index.js';
-import type { FactoryHistory } from './lib/factoryHistory/index.js';
-import type { ExchangeGoogleCode } from './lib/googleSignIn/index.js';
-import { addRoutes } from './api/routes.js';
-import { errorHandler } from './api/apiError.js';
+import express, { type Express } from "express";
+import helmet from "helmet";
+import type { KV } from "./lib/kv/index.js";
+import type { Config } from "./lib/config/index.js";
+import type { FactoryHistory } from "./lib/factoryHistory/index.js";
+import type { ExchangeGoogleCode } from "./lib/googleSignIn/index.js";
+import { addRoutes } from "./api/routes.js";
+import { errorHandler } from "./api/apiError.js";
 
 export interface AppDeps {
   kv: KV;
@@ -18,7 +18,7 @@ export interface AppDeps {
 export function buildApp(deps: AppDeps): Express {
   const app = express();
   // Render's proxy appends the real client address to X-Forwarded-For; trust only that one hop.
-  app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
   app.use(helmet());
   addRoutes(app, deps);
   app.use(errorHandler);

@@ -22,7 +22,12 @@ export interface FactoryBuild {
   stages: string[];
   currentStage: number;
   reason: string;
-  pr: { position: number; total: number; number: number | null; url: string | null };
+  pr: {
+    position: number;
+    total: number;
+    number: number | null;
+    url: string | null;
+  };
   lastEventAt: string;
   [extra: string]: unknown;
 }
@@ -59,7 +64,7 @@ export interface SyncBody {
   artifacts: FactoryArtifact[];
 }
 
-export const FACTORY_SNAPSHOT_KEY = 'factory:snapshot';
+export const FACTORY_SNAPSHOT_KEY = "factory:snapshot";
 export const FACTORY_SNAPSHOT_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 const UTC_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
@@ -70,24 +75,27 @@ const MAX_ARTIFACT_BODY_BYTES = 262144;
 
 /** An ISO 8601 UTC time ending `Z` that names a real calendar moment. */
 export function isUtcTime(value: unknown): value is string {
-  if (typeof value !== 'string' || !UTC_TIME.test(value)) return false;
+  if (typeof value !== "string" || !UTC_TIME.test(value)) return false;
   const t = Date.parse(value);
   // Month 13 or hour 25 parse to NaN; 30 February rolls into March and fails the round trip.
-  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 19) === value.slice(0, 19);
+  return (
+    Number.isFinite(t) &&
+    new Date(t).toISOString().slice(0, 19) === value.slice(0, 19)
+  );
 }
 
 export function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID.test(value);
+  return typeof value === "string" && UUID.test(value);
 }
 
 type Obj = Record<string, unknown>;
 
 function isPlainObject(value: unknown): value is Obj {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isText(value: unknown, max: number): value is string {
-  return typeof value === 'string' && value.length >= 1 && value.length <= max;
+  return typeof value === "string" && value.length >= 1 && value.length <= max;
 }
 
 function isInt(value: unknown, min: number): value is number {
@@ -109,7 +117,7 @@ function isCatalog(catalog: unknown): catalog is FactoryCatalog {
   const valid = statuses.every(
     (s) =>
       isPlainObject(s) &&
-      typeof s.key === 'string' &&
+      typeof s.key === "string" &&
       STATUS_KEY.test(s.key) &&
       isText(s.label, 30) &&
       isText(s.shortLabel, 12) &&
@@ -120,9 +128,14 @@ function isCatalog(catalog: unknown): catalog is FactoryCatalog {
 
 function isBuildPr(pr: unknown): boolean {
   if (!isPlainObject(pr)) return false;
-  if (!isInt(pr.position, 1) || !isInt(pr.total, 1) || pr.position > pr.total) return false;
+  if (!isInt(pr.position, 1) || !isInt(pr.total, 1) || pr.position > pr.total)
+    return false;
   if (pr.number === null && pr.url === null) return true;
-  return isInt(pr.number, 1) && typeof pr.url === 'string' && pr.url.startsWith('https://');
+  return (
+    isInt(pr.number, 1) &&
+    typeof pr.url === "string" &&
+    pr.url.startsWith("https://")
+  );
 }
 
 function isBuild(b: unknown, statusKeys: Set<unknown>): boolean {
@@ -130,7 +143,7 @@ function isBuild(b: unknown, statusKeys: Set<unknown>): boolean {
   return (
     isUuid(b.runId) &&
     isText(b.repo, 200) &&
-    typeof b.designNumber === 'string' &&
+    typeof b.designNumber === "string" &&
     DESIGN_NUMBER.test(b.designNumber) &&
     isText(b.designName, 120) &&
     statusKeys.has(b.status) &&
@@ -138,18 +151,22 @@ function isBuild(b: unknown, statusKeys: Set<unknown>): boolean {
     b.stages.every((stage) => isText(stage, Infinity)) &&
     isInt(b.currentStage, 0) &&
     b.currentStage < b.stages.length &&
-    typeof b.reason === 'string' &&
+    typeof b.reason === "string" &&
     b.reason.length <= 300 &&
     isBuildPr(b.pr) &&
     isUtcTime(b.lastEventAt)
   );
 }
 
-function isSnapshot(snapshot: unknown, catalog: FactoryCatalog): snapshot is FactorySnapshot {
+function isSnapshot(
+  snapshot: unknown,
+  catalog: FactoryCatalog,
+): snapshot is FactorySnapshot {
   if (!isPlainObject(snapshot)) return false;
   const { builds, counts } = snapshot;
   const statusKeys = new Set(catalog.statuses.map((s) => s.key));
-  if (!isArray(builds, 0, 50) || !builds.every((b) => isBuild(b, statusKeys))) return false;
+  if (!isArray(builds, 0, 50) || !builds.every((b) => isBuild(b, statusKeys)))
+    return false;
   if (!allUnique(builds.map((b) => (b as Obj).runId))) return false;
   return (
     isPlainObject(counts) &&
@@ -165,14 +182,26 @@ function parseArtifacts(artifacts: unknown): FactoryArtifact[] | null {
   for (const a of artifacts) {
     if (!isPlainObject(a)) return null;
     const { id, kind, at, body } = a;
-    if (!isUuid(id) || !isText(kind, 40) || !isUtcTime(at) || !isPlainObject(body)) return null;
-    if (Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_ARTIFACT_BODY_BYTES) return null;
+    if (
+      !isUuid(id) ||
+      !isText(kind, 40) ||
+      !isUtcTime(at) ||
+      !isPlainObject(body)
+    )
+      return null;
+    if (
+      Buffer.byteLength(JSON.stringify(body), "utf8") > MAX_ARTIFACT_BODY_BYTES
+    )
+      return null;
     parsed.push({ id, kind, at, body });
   }
   return allUnique(parsed.map((a) => a.id)) ? parsed : null;
 }
 
-function parseEvents(events: unknown, artifactIds: Set<string>): FactoryEvent[] | null {
+function parseEvents(
+  events: unknown,
+  artifactIds: Set<string>,
+): FactoryEvent[] | null {
   if (!isArray(events, 0, 500)) return null;
   const parsed: FactoryEvent[] = [];
   for (const e of events) {
@@ -190,7 +219,10 @@ function parseEvents(events: unknown, artifactIds: Set<string>): FactoryEvent[] 
       !isText(type, 60) ||
       !(pr === null || isInt(pr, 1)) ||
       !isPlainObject(details) ||
-      !(artifactId === null || (typeof artifactId === 'string' && artifactIds.has(artifactId)))
+      !(
+        artifactId === null ||
+        (typeof artifactId === "string" && artifactIds.has(artifactId))
+      )
     ) {
       return null;
     }

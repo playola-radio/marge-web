@@ -1,8 +1,12 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 type IconProps = { size: number; className?: string };
 
-function Icon({ size, className, children }: IconProps & { children: ReactNode }) {
+function Icon({
+  size,
+  className,
+  children,
+}: IconProps & { children: ReactNode }) {
   return (
     <svg
       className={className}

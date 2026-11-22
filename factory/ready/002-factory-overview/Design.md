@@ -12,6 +12,7 @@ factory is building, so one glance answers "what's in flight, and does any of it
 that would cloud that answer waits for a later design.
 
 **Out of scope:**
+
 - **Design 003:** a detail screen for one build (event history, review findings, videos). It reads the history 002
   starts keeping (decision 20).
 - **Design 004:** actions (restart a paused repo, give up a design) and any command from marge back to the factory
@@ -21,6 +22,7 @@ that would cloud that answer waits for a later design.
 - No "coming soon" placeholders for any of these.
 
 **Realistic sizes:**
+
 - Builds in flight: ≤ 8 today (one per watched repo); the server accepts up to 50.
 - Stages per build: 5 today, up to about 7.
 - The not-in-flight counts reach the hundreds for "Done".
@@ -35,11 +37,13 @@ phone (390 wide). All states share the 001 header ("← marge / Software Factory
 **Address:** `/factory` (signed in only, as in 001).
 **Reached by:** the title screen's "Software Factory" item, or the address directly.
 **Left by:**
+
 - "← marge" goes to `/home`.
 - "Sign out" goes to `/`.
 - "Open PR #N ↗" opens the pull request on GitHub in a new tab.
 
 **What a build row shows:**
+
 - A status chip.
 - The design: number and name.
 - The repo's short name and "PR x of y".
@@ -56,6 +60,7 @@ On phone each build is a card. The track drops its labels there, and the reason 
 "<Stage> · PR x of y — <reason>".
 
 ### Overview — normal
+
 ![Normal desktop](screenshots/overview--normal-desktop.png)
 ![Normal mobile](screenshots/overview--normal-mobile.png)
 
@@ -67,20 +72,21 @@ because the line answers "what's in flight?".
 **Rows** are sorted by decision 7. Each status's look comes from its role in the factory's status list (decision 5).
 The factory's statuses today:
 
-| Status (role) | Chip | Row edge |
-|---|---|---|
-| Needs you (`attention`) | yellow | yellow |
-| Stopped (`failure`) | red | red |
-| No progress (`quiet`) | orange, reading "No progress 1 h" (the time since last news) | orange |
-| Running (`active`) | blue, with a pulsing dot; the current segment shimmers | none |
-| Done (`complete`) | soft green ("Done"); every segment of the track is green | none |
+| Status (role)           | Chip                                                         | Row edge |
+| ----------------------- | ------------------------------------------------------------ | -------- |
+| Needs you (`attention`) | yellow                                                       | yellow   |
+| Stopped (`failure`)     | red                                                          | red      |
+| No progress (`quiet`)   | orange, reading "No progress 1 h" (the time since last news) | orange   |
+| Running (`active`)      | blue, with a pulsing dot; the current segment shimmers       | none     |
+| Done (`complete`)       | soft green ("Done"); every segment of the track is green     | none     |
 
 Done rows are builds the factory finished in the last 24 hours (decision 19). They sit last and never show a
 button.
 
-**The footer** "NOT IN FLIGHT  Up next 3 · Plan not finished 1 · Done 22" closes the list.
+**The footer** "NOT IN FLIGHT Up next 3 · Plan not finished 1 · Done 22" closes the list.
 
 ### Overview — busy
+
 ![Busy desktop](screenshots/overview--busy-desktop.png)
 ![Busy mobile](screenshots/overview--busy-mobile.png)
 
@@ -88,10 +94,12 @@ Eight builds at once, two of them needing you. This is the realistic upper size:
 paginate, and there is no search.
 
 ### Overview — out of date
+
 ![Out of date desktop](screenshots/overview--out-of-date-desktop.png)
 ![Out of date mobile](screenshots/overview--out-of-date-mobile.png)
 
 Shown when the latest report reached marge more than 3 minutes ago (decision 8).
+
 - **Banner:** "The factory machine hasn't reported for 14 min." with "This is what it said last. Builds may have
   moved on since."
 - **Banner on phone:** "Factory machine silent for 14 min" with "Showing its last report. Builds may have moved on
@@ -102,10 +110,12 @@ Shown when the latest report reached marge more than 3 minutes ago (decision 8).
   moving.
 
 ### Overview — nothing in flight
+
 ![Nothing in flight desktop](screenshots/overview--nothing-in-flight-desktop.png)
 ![Nothing in flight mobile](screenshots/overview--nothing-in-flight-mobile.png)
 
 The factory reported no builds except done ones.
+
 - Under the heading it reads "Nothing running".
 - The panel reads "Nothing in flight" with "No design is being built right now. A design starts here once its plan
   is finished and merged."
@@ -114,6 +124,7 @@ The factory reported no builds except done ones.
 - The footer counts still show.
 
 ### Overview — not connected yet
+
 ![Not connected desktop](screenshots/overview--not-connected-desktop.png)
 ![Not connected mobile](screenshots/overview--not-connected-mobile.png)
 
@@ -122,6 +133,7 @@ The factory has never reported (`snapshot: null`), for example before its sender
 page fills in once it does." There is no "Updated" time and no footer.
 
 ### Overview — loading
+
 ![Loading desktop](screenshots/overview--loading-desktop.png)
 ![Loading mobile](screenshots/overview--loading-mobile.png)
 
@@ -129,6 +141,7 @@ Shown only on the page's first fetch: a placeholder bar for the count line and t
 happen without it.
 
 ### Overview — couldn't load
+
 ![Error desktop](screenshots/overview--error-desktop.png)
 ![Error mobile](screenshots/overview--error-mobile.png)
 
@@ -137,6 +150,7 @@ server didn't answer. Nothing has changed in the factory itself." and a "Try aga
 once. Polling also keeps going, so the page recovers by itself.
 
 **Not drawn:**
+
 - **A status whose role marge doesn't know:** the same row as running, with the factory's label on a grey chip, no
   coloured edge and no motion (decision 6).
 - **Signed out or expired:** handled by design 001's redirect. A 401 from the server is treated the same way
@@ -166,6 +180,7 @@ once. Polling also keeps going, so the page recovers by itself.
    Marge never works a status out from events and never recomputes any of these. A PR's or design's status is not
    "whatever the latest event says": the factory's own log has retries and repeated review rounds, so the factory's
    state machine decides and marge shows the result. Marge computes only how fresh the report is (decision 8).
+
 5. **The factory owns the status list.** Every push carries the list (ApiContract.md → Catalog): each status's key,
    label, phone label and role, in sort order. To add, rename or reorder a status, the owner changes the factory, and
    the page follows on the next push. Marge has no status list of its own and no screen for editing one: a status
@@ -179,6 +194,7 @@ once. Polling also keeps going, so the page recovers by itself.
      count line (decision 19)
 
    Chosen by the owner over a list marge keeps and edits itself.
+
 6. **A role marge doesn't know shows grey.** If the factory sends a role marge has no look for (say a future
    `waiting`), the status still shows with the factory's label, on a grey chip (`$muted` on `$ink`) with no coloured
    edge and no motion, in the factory's order, and is counted in the count line. A build can never carry a status
@@ -215,6 +231,7 @@ once. Polling also keeps going, so the page recovers by itself.
     - keeps the same value for the factory machine's `~/.factory/env`.
 
     The PRs only declare the setting.
+
 13. **Not-in-flight footer: Up next, Plan not finished, Done.** The factory can count these from `factory/ready/` and
     `factory/done/`. "Designing" and "Idle repos" from the drafts were dropped: the factory can't see a design that
     is still being drawn, and an idle repo isn't news.

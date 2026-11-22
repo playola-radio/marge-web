@@ -1,5 +1,5 @@
-import type { Request, RequestHandler } from 'express';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import type { Request, RequestHandler } from "express";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
 export interface AuthedRequest extends Request {
   auth?: JwtPayload | string;
@@ -11,13 +11,15 @@ export const authenticate: RequestHandler = (req, res, next) => {
   const header = req.headers.authorization;
   const match = header ? /^Bearer (\S+)$/.exec(header) : null;
   if (!secret || !match) {
-    res.status(401).json({ error: 'unauthorized' });
+    res.status(401).json({ error: "unauthorized" });
     return;
   }
   try {
-    (req as AuthedRequest).auth = jwt.verify(match[1], secret, { algorithms: ['HS256'] });
+    (req as AuthedRequest).auth = jwt.verify(match[1], secret, {
+      algorithms: ["HS256"],
+    });
   } catch {
-    res.status(401).json({ error: 'unauthorized' });
+    res.status(401).json({ error: "unauthorized" });
     return;
   }
   next();

@@ -1,13 +1,14 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
-import { type ErrorRequestHandler, type RequestHandler } from 'express';
-import type { AppDeps } from '../../app.js';
+import { createHash, timingSafeEqual } from "node:crypto";
+import { type ErrorRequestHandler, type RequestHandler } from "express";
+import type { AppDeps } from "../../app.js";
 import {
   FACTORY_SNAPSHOT_KEY,
   FACTORY_SNAPSHOT_TTL_SECONDS,
   parseSync,
-} from '../../lib/factorySync/index.js';
+} from "../../lib/factorySync/index.js";
 
-const sha256 = (value: string) => createHash('sha256').update(value, 'utf8').digest();
+const sha256 = (value: string) =>
+  createHash("sha256").update(value, "utf8").digest();
 
 /**
  * The factory machine's push: POST /v1/factory/sync, authorised by
@@ -19,8 +20,12 @@ export function requireFactoryToken(deps: AppDeps): RequestHandler {
     const expected = deps.config.factoryReportToken;
     const header = req.headers.authorization;
     const match = header ? /^Bearer (\S+)$/.exec(header) : null;
-    if (!expected || !match || !timingSafeEqual(sha256(match[1]), sha256(expected))) {
-      res.status(401).json({ error: 'unauthorized' });
+    if (
+      !expected ||
+      !match ||
+      !timingSafeEqual(sha256(match[1]), sha256(expected))
+    ) {
+      res.status(401).json({ error: "unauthorized" });
       return;
     }
     next();
@@ -31,7 +36,7 @@ export function sync(deps: AppDeps): RequestHandler {
   return async (req, res, next) => {
     const parsed = parseSync(req.body);
     if (!parsed) {
-      res.status(400).json({ error: 'invalid_sync' });
+      res.status(400).json({ error: "invalid_sync" });
       return;
     }
     try {
@@ -56,12 +61,12 @@ export function sync(deps: AppDeps): RequestHandler {
 
 export const bodyErrors: ErrorRequestHandler = (err, _req, res, next) => {
   const type = (err as { type?: unknown } | null)?.type;
-  if (type === 'entity.parse.failed') {
-    res.status(400).json({ error: 'invalid_sync' });
+  if (type === "entity.parse.failed") {
+    res.status(400).json({ error: "invalid_sync" });
     return;
   }
-  if (type === 'entity.too.large') {
-    res.status(413).json({ error: 'invalid_sync' });
+  if (type === "entity.too.large") {
+    res.status(413).json({ error: "invalid_sync" });
     return;
   }
   next(err);
@@ -74,7 +79,12 @@ export function snapshot(deps: AppDeps): RequestHandler {
       const row = await deps.kv.get(FACTORY_SNAPSHOT_KEY);
       const serverNow = new Date().toISOString();
       if (!row) {
-        res.json({ catalog: null, snapshot: null, receivedAt: null, serverNow });
+        res.json({
+          catalog: null,
+          snapshot: null,
+          receivedAt: null,
+          serverNow,
+        });
         return;
       }
       res.json({ ...JSON.parse(row), serverNow });

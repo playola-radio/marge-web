@@ -1,1 +1,1 @@
-export * from './factorySync.lib.js';
+export * from "./factorySync.lib.js";

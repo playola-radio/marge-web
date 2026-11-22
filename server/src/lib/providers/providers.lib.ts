@@ -24,7 +24,7 @@ export interface OAuthProvider {
   supportsLoginHint: boolean;
 }
 
-export const DEFAULT_PROVIDER = 'google';
+export const DEFAULT_PROVIDER = "google";
 
 export function buildConsentUrl(args: {
   provider: OAuthProvider;
@@ -33,18 +33,18 @@ export function buildConsentUrl(args: {
 }): string {
   const { provider, redirectUri, consent } = args;
   const url = new URL(provider.authorizeEndpoint);
-  url.searchParams.set('client_id', consent.clientId);
-  url.searchParams.set('redirect_uri', redirectUri);
-  url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', consent.scopes);
-  url.searchParams.set('state', consent.state);
-  url.searchParams.set('code_challenge', consent.codeChallenge);
-  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set("client_id", consent.clientId);
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope", consent.scopes);
+  url.searchParams.set("state", consent.state);
+  url.searchParams.set("code_challenge", consent.codeChallenge);
+  url.searchParams.set("code_challenge_method", "S256");
   for (const [key, value] of Object.entries(provider.extraAuthParams)) {
     url.searchParams.set(key, value);
   }
   if (provider.supportsLoginHint && consent.loginHint) {
-    url.searchParams.set('login_hint', consent.loginHint);
+    url.searchParams.set("login_hint", consent.loginHint);
   }
   return url.toString();
 }

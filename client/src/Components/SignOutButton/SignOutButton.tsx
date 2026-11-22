@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
-import { clearSession } from '../../utils/session';
-import { SignOutIcon } from '../Icons/Icons';
+import { useNavigate } from "react-router-dom";
+import { clearSession } from "../../utils/session";
+import { SignOutIcon } from "../Icons/Icons";
 
 export default function SignOutButton() {
   const navigate = useNavigate();
 
   function signOut() {
     clearSession();
-    navigate('/');
+    navigate("/");
   }
 
   return (

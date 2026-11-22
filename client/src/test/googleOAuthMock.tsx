@@ -1,5 +1,11 @@
 /* eslint-disable react-refresh/only-export-components -- mirrors @react-oauth/google, which exports hooks beside its provider */
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 type LoginOptions = {
   onSuccess: (response: { code: string }) => void | Promise<void>;
@@ -38,7 +44,9 @@ export function GoogleOAuthProvider({
   }, [onScriptLoadError]);
 
   return (
-    <ScriptContext.Provider value={{ scriptLoadedSuccessfully }}>{children}</ScriptContext.Provider>
+    <ScriptContext.Provider value={{ scriptLoadedSuccessfully }}>
+      {children}
+    </ScriptContext.Provider>
   );
 }
 

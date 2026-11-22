@@ -1,19 +1,30 @@
-import type { RequestHandler } from 'express';
-import path from 'node:path';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import type { AppDeps } from '../../app.js';
-import { sessionKey, type SessionRecord } from '../../lib/session/index.js';
-import { DEFAULT_PROVIDER } from '../../lib/providers/index.js';
-import { isValidToken } from '../../lib/ids/index.js';
+import type { RequestHandler } from "express";
+import path from "node:path";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import type { AppDeps } from "../../app.js";
+import { sessionKey, type SessionRecord } from "../../lib/session/index.js";
+import { DEFAULT_PROVIDER } from "../../lib/providers/index.js";
+import { isValidToken } from "../../lib/ids/index.js";
 
-const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'public');
+const publicDir = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "public",
+);
 // Read the interstitial template and its auto-advance script ONCE at module load.
 // The raw content is constant; only per-session values are substituted per request.
 // Reading here (rather than per request) avoids file I/O on every link tap and turns
 // a missing/mis-deployed asset into a startup crash instead of a runtime 500.
-const connectHtmlTemplate = readFileSync(path.join(publicDir, 'connect.html'), 'utf8');
-const connectAdvanceJs = readFileSync(path.join(publicDir, 'connect-advance.js'), 'utf8');
+const connectHtmlTemplate = readFileSync(
+  path.join(publicDir, "connect.html"),
+  "utf8",
+);
+const connectAdvanceJs = readFileSync(
+  path.join(publicDir, "connect-advance.js"),
+  "utf8",
+);
 
 /**
  * GET /connect?session=X — the static interstitial "bounce" page.
@@ -34,12 +45,12 @@ export function show(deps: AppDeps): RequestHandler {
   return async (req, res) => {
     const session = req.query.session;
     if (!isValidToken(session)) {
-      res.status(400).json({ error: 'invalid_request' });
+      res.status(400).json({ error: "invalid_request" });
       return;
     }
     const raw = await deps.kv.get(sessionKey(session));
     if (!raw) {
-      res.status(410).sendFile(path.join(publicDir, 'expired.html'));
+      res.status(410).sendFile(path.join(publicDir, "expired.html"));
       return;
     }
     // Show the provider's name on the page. The provider was validated against the
@@ -47,16 +58,17 @@ export function show(deps: AppDeps): RequestHandler {
     // for any legacy record written before providers, and to the raw key defensively.
     const record = JSON.parse(raw) as SessionRecord;
     const providerKey = record.consent.provider ?? DEFAULT_PROVIDER;
-    const providerName = deps.config.providers[providerKey]?.displayName ?? providerKey;
+    const providerName =
+      deps.config.providers[providerKey]?.displayName ?? providerKey;
 
     // `session` has passed isValidToken (strict ^[A-Za-z0-9_-]{43}$), so it is safe
     // to interpolate into the href. providerName comes from our own config, not user
     // input. replaceAll (not replace) so every placeholder is substituted and none
     // can silently survive as a literal string.
     const html = connectHtmlTemplate
-      .replaceAll('__AUTHORIZE_URL__', `/authorize?session=${session}`)
-      .replaceAll('__PROVIDER_NAME__', providerName);
-    res.status(200).type('html').send(html);
+      .replaceAll("__AUTHORIZE_URL__", `/authorize?session=${session}`)
+      .replaceAll("__PROVIDER_NAME__", providerName);
+    res.status(200).type("html").send(html);
   };
 }
 
@@ -64,5 +76,5 @@ export function show(deps: AppDeps): RequestHandler {
 // asset (not inline) so helmet's CSP script-src 'self' allows it; crawlers fetch
 // but don't execute it, so the interstitial still protects the single-use token.
 export const advance: RequestHandler = (_req, res) => {
-  res.status(200).type('application/javascript').send(connectAdvanceJs);
+  res.status(200).type("application/javascript").send(connectAdvanceJs);
 };
