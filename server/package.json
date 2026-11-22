@@ -10,7 +10,8 @@
     "build": "rm -rf dist && tsc -p tsconfig.json && cp -r src/public dist/public",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "lint": "eslint . --ext .ts && prettier --check .",
+    "lint": "eslint . --ext .ts --max-warnings 0 && prettier --check .",
+    "prettier:write": "prettier --write .",
     "test": "mocha --extension ts --require tsx/esm --timeout 10000 \"src/**/*.test.ts\"",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo"
@@ -38,7 +39,7 @@
     "chai": "^4.5.0",
     "eslint": "^8.57.0",
     "mocha": "^10.7.0",
-    "prettier": "^3.3.0",
+    "prettier": "3.6.2",
     "sequelize-cli": "^6.6.5",
     "supertest": "^7.0.0",
     "tsx": "^4.19.0",

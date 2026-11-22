@@ -151,7 +151,7 @@ No stored model changes, so there is no `ModelChanges.md`. Considered and left o
 - [ ] 2. Signing in with an approved Google account lands on the title screen with Marge's picture, the "Software Factory" menu item and the signed-in email.
 - [ ] 3. Signing in with a Google account not on the allowlist shows "This Google account isn't approved for marge." on the landing page and stays signed out.
 - [ ] 4. Closing the Google popup without finishing, or failing to load the Google sign-in script, shows "Sign-in didn't
-      finish. Try again."; after a script-load failure the disabled button can be retried by reloading the page.
+     finish. Try again."; after a script-load failure the disabled button can be retried by reloading the page.
 - [ ] 5. While sign-in is in progress the button shows a spinner and "Signing in…" and can't be tapped twice.
 - [ ] 6. Tapping "Software Factory" opens `/factory` showing "Control panel not built yet"; "← marge" returns to the title screen.
 - [ ] 7. "Sign out" on the title screen or the factory page returns to the landing page, and reloading stays signed out.
