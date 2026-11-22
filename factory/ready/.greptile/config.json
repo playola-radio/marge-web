@@ -27,7 +27,7 @@
     {
       "id": "design-contract-covers-every-call",
       "rule": "Every endpoint the design or plan calls (new, changed AND unchanged ones it relies on) must appear in ApiContract.md with method, path, owning repo, `unchanged`/`changed`/`new`, and real request and response JSON. Flag any endpoint or field the plan uses that the contract lacks, and any contract entry no screen or plan step uses. Resources are REST; updates use PUT, never PATCH.",
-      "scope": ["*/ApiContract.md", "*/ImplementationPlan.md"],
+      "scope": ["*/Design.md", "*/ApiContract.md", "*/ImplementationPlan.md"],
       "severity": "high"
     },
     {
