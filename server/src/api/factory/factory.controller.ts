@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
+import { type ErrorRequestHandler, type RequestHandler } from 'express';
 import type { AppDeps } from '../../app.js';
 import {
   FACTORY_SNAPSHOT_KEY,
@@ -26,8 +26,6 @@ export function requireFactoryToken(deps: AppDeps): RequestHandler {
     next();
   };
 }
-
-export const parseSyncBody = express.json({ limit: '5mb' });
 
 export function sync(deps: AppDeps): RequestHandler {
   return async (req, res, next) => {

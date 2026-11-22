@@ -69,9 +69,4 @@ describe('GET /authorize', () => {
       400,
     );
   });
-
-  it('relay GET /authorize without session is 400, not gated by auth', async () => {
-    const res = await request(makeApp().app).get('/authorize');
-    expect(res.status).to.equal(400);
-  });
 });

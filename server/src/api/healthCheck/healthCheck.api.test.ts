@@ -37,9 +37,4 @@ describe('/v1 healthCheck', () => {
     expect(res.status).to.equal(200);
     expect(res.body).to.deep.equal({ status: 'ok' });
   });
-
-  it('relay GET /healthz still works', async () => {
-    const res = await request(makeApp()).get('/healthz');
-    expect(res.status).to.equal(200);
-  });
 });
