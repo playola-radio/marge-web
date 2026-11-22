@@ -9,6 +9,9 @@ Migration: `server/src/db/migrations/20261122000000-factory-history.cjs`, in the
 `20261121000000-kv-store.cjs`. Both tables start empty; there is no backfill on marge's side. Bringing over the history
 the factory already has is the factory's job: it sends those old events like new ones (see "Not here" below).
 
+Strings are stored as sent, except that NUL and lone surrogates, which PostgreSQL refuses, become U+FFFD in every
+string of both tables, object keys included (ApiContract.md, "Characters PostgreSQL cannot hold").
+
 ## `factory_artifacts` (new)
 
 One row per report the factory sends. A report never changes once sent.
