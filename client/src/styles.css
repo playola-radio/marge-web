@@ -606,7 +606,7 @@ button {
 .build-list__head,
 .build-row {
   display: grid;
-  grid-template-columns: 142px minmax(0, 1fr) 424px 130px 186px;
+  grid-template-columns: 142px minmax(0, 338fr) minmax(0, 424fr) 130px 186px;
   grid-template-areas: "status design stage news action";
   column-gap: 24px;
   align-items: center;
@@ -892,7 +892,7 @@ button {
 
 .skeleton-row {
   display: grid;
-  grid-template-columns: 90px 260px minmax(0, 1fr) 440px 110px 1fr;
+  grid-template-columns: 90px minmax(0, 260px) 1fr minmax(0, 440px) 110px 1fr;
   grid-template-areas: "chip design . stage news .";
   column-gap: 24px;
   align-items: center;

@@ -116,11 +116,11 @@ function Footer({ counts }: { counts: FactorySnapshot["counts"] }) {
     <footer className="overview__footer">
       <span className="overview__footer-label desktop-only">Not in flight</span>
       <span>{`Up next ${counts.upNext}`}</span>
-      <span className="overview__footer-sep mobile-only" aria-hidden="true">
+      <span className="mobile-only" aria-hidden="true">
         ·
       </span>
       <span>{`Plan not finished ${counts.planNotFinished}`}</span>
-      <span className="overview__footer-sep mobile-only" aria-hidden="true">
+      <span className="mobile-only" aria-hidden="true">
         ·
       </span>
       <span>{`Done ${counts.done}`}</span>
@@ -237,7 +237,6 @@ export default function FactoryOverview({ state, retry }: Props) {
         </div>
         <Panel
           icon={<UnplugIcon size={28} />}
-          className="overview__panel--waiting"
           title="Not connected yet"
           text="The factory machine hasn't sent its first report. This page fills in once it does."
         />

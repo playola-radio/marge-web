@@ -45,8 +45,7 @@ export default function BuildRow({
       : status.label;
   const title = `${build.designNumber} ${build.designName}`;
   const prText = `PR ${build.pr.position} of ${build.pr.total}`;
-  const showLink =
-    status.role === "attention" && build.pr.url !== null && !complete;
+  const showLink = status.role === "attention" && build.pr.url !== null;
 
   const className = [
     "build-row",
