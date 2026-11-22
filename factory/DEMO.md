@@ -57,7 +57,8 @@ database (free plan), so the copy is read from the primary:
 - The copy streams straight into the local `marge_demo` database inside the demo Postgres container; nothing
   is written to disk in the repo.
 - The relay's pending sign-in sessions in `kv_store` (sealed OAuth codes) are left out. Only the
-  `factory:snapshot` row is copied, so `/factory` shows the real latest factory state.
+  `factory:snapshot` row is copied and available through `GET /v1/factory/snapshot` after sign-in.
+  The `/factory` page is still a placeholder and does not display this data.
 - Migrations then run on top, so a branch with a new migration demos against production data plus its change.
 
 **Without it: sample data.** After the server starts, the script sends `scripts/demo-seed.json` (the example
