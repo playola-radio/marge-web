@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { devSignIn, signIn } from './signIn';
-import { readSession } from './session';
+import { devSignIn, signIn } from './AuthService';
+import { readSession } from '../utils/session';
 import { httpError, networkError } from '../test/axios';
 import { makeToken } from '../test/tokens';
 

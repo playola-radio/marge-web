@@ -1,15 +1,15 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
-import { readSession } from './auth/session';
-import { safeRedirectTo } from './auth/redirectTo';
-import RequireSignIn from './auth/RequireSignIn';
-import LandingPage from './pages/LandingPage';
-import TitlePage from './pages/TitlePage';
-import FactoryPage from './pages/FactoryPage';
+import { readSession } from './utils/session';
+import { safeRedirectTo } from './utils/redirectTo';
+import ProtectedRoute from './Routes/ProtectedRoute';
+import LandingPage from './Pages/LandingPage/LandingPage';
+import TitlePage from './Pages/TitlePage/TitlePage';
+import FactoryPage from './Pages/FactoryPage/FactoryPage';
 
 function devUserRoute() {
   if (!import.meta.env.DEV) return null;
-  const DevUserPage = lazy(() => import('./pages/DevUserPage'));
+  const DevUserPage = lazy(() => import('./Pages/DevUserPage/DevUserPage'));
   return (
     <Route
       path="/dev-user"
@@ -40,17 +40,17 @@ export default function App({ scriptLoadFailed }: { scriptLoadFailed: boolean })
         <Route
           path="/home"
           element={
-            <RequireSignIn>
+            <ProtectedRoute>
               <TitlePage />
-            </RequireSignIn>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/factory"
           element={
-            <RequireSignIn>
+            <ProtectedRoute>
               <FactoryPage />
-            </RequireSignIn>
+            </ProtectedRoute>
           }
         />
         {devUser}

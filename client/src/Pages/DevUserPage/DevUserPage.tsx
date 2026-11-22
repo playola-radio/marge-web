@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { devSignIn } from '../auth/signIn';
+import { devSignIn } from '../../Services/AuthService';
 
 export default function DevUserPage() {
   const [failed, setFailed] = useState(false);

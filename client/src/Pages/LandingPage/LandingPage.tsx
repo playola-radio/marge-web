@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGoogleLogin, useGoogleOAuth } from '@react-oauth/google';
-import { signIn } from '../auth/signIn';
-import { safeRedirectTo } from '../auth/redirectTo';
+import { signIn } from '../../Services/AuthService';
+import { safeRedirectTo } from '../../utils/redirectTo';
 import LandingView, { type LandingStatus } from './LandingView';
 
 export default function LandingPage({ scriptLoadFailed }: { scriptLoadFailed: boolean }) {

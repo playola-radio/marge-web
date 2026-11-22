@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { readSession } from '../auth/session';
-import BrandLine from '../components/BrandLine';
-import SignOutButton from '../components/SignOutButton';
-import { ChevronRightIcon, FactoryIcon } from '../components/Icons';
-import margeFace from '../assets/marge-face.jpeg';
+import { readSession } from '../../utils/session';
+import BrandLine from '../../Components/BrandLine/BrandLine';
+import SignOutButton from '../../Components/SignOutButton/SignOutButton';
+import { ChevronRightIcon, FactoryIcon } from '../../Components/Icons/Icons';
+import margeFace from '../../Assets/marge-face.jpeg';
 
 export default function TitlePage() {
   const email = readSession()?.email;

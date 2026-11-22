@@ -1,5 +1,5 @@
-import BrandLine from '../components/BrandLine';
-import { AlertIcon, LockIcon, SpinnerIcon } from '../components/Icons';
+import BrandLine from '../../Components/BrandLine/BrandLine';
+import { AlertIcon, LockIcon, SpinnerIcon } from '../../Components/Icons/Icons';
 
 export type LandingStatus = 'idle' | 'signing-in' | 'failed' | 'not-approved';
 

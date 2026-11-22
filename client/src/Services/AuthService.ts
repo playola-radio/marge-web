@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { saveSession } from './session';
+import { saveSession } from '../utils/session';
 
 export type SignInResult = 'ok' | 'failed' | 'not_approved';
 

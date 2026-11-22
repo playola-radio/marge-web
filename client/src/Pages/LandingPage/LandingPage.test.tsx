@@ -1,14 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 
-import { signIn } from '../auth/signIn';
-import { saveSession } from '../auth/session';
-import GoogleSignInBoundary from '../GoogleSignInBoundary';
-import { google } from '../test/googleOAuthMock';
-import { renderApp } from '../test/renderApp';
-import { makeToken } from '../test/tokens';
+import { signIn } from '../../Services/AuthService';
+import { saveSession } from '../../utils/session';
+import GoogleSignInBoundary from '../../GoogleSignInBoundary';
+import { google } from '../../test/googleOAuthMock';
+import { renderApp } from '../../test/renderApp';
+import { makeToken } from '../../test/tokens';
 
-vi.mock('@react-oauth/google', () => import('../test/googleOAuthMock'));
-vi.mock('../auth/signIn', () => ({ signIn: vi.fn(), devSignIn: vi.fn() }));
+vi.mock('@react-oauth/google', () => import('../../test/googleOAuthMock'));
+vi.mock('../../Services/AuthService', () => ({ signIn: vi.fn(), devSignIn: vi.fn() }));
 
 const mockedSignIn = vi.mocked(signIn);
 

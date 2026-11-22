@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { screen } from '@testing-library/react';
-import { renderApp } from '../test/renderApp';
-import { httpError } from '../test/axios';
-import { makeToken } from '../test/tokens';
+import { renderApp } from '../../test/renderApp';
+import { httpError } from '../../test/axios';
+import { makeToken } from '../../test/tokens';
 
-vi.mock('@react-oauth/google', () => import('../test/googleOAuthMock'));
+vi.mock('@react-oauth/google', () => import('../../test/googleOAuthMock'));
 vi.mock('axios', async (importOriginal) => {
   const actual = await importOriginal<typeof import('axios')>();
   return { ...actual, default: { ...actual.default, post: vi.fn() } };

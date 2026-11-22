@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { readSession } from '../auth/session';
-import SignOutButton from '../components/SignOutButton';
-import { ArrowLeftIcon, FactoryIcon } from '../components/Icons';
+import { readSession } from '../../utils/session';
+import SignOutButton from '../../Components/SignOutButton/SignOutButton';
+import { ArrowLeftIcon, FactoryIcon } from '../../Components/Icons/Icons';
 
 export default function FactoryPage() {
   const email = readSession()?.email;

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { clearSession } from '../auth/session';
-import { SignOutIcon } from './Icons';
+import { clearSession } from '../../utils/session';
+import { SignOutIcon } from '../Icons/Icons';
 
 export default function SignOutButton() {
   const navigate = useNavigate();

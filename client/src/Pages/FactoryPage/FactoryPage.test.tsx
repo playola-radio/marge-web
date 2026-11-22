@@ -1,9 +1,9 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { saveSession } from '../auth/session';
-import { renderApp } from '../test/renderApp';
-import { makeToken } from '../test/tokens';
+import { saveSession } from '../../utils/session';
+import { renderApp } from '../../test/renderApp';
+import { makeToken } from '../../test/tokens';
 
-vi.mock('@react-oauth/google', () => import('../test/googleOAuthMock'));
+vi.mock('@react-oauth/google', () => import('../../test/googleOAuthMock'));
 
 beforeEach(() => {
   localStorage.clear();
