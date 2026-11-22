@@ -39,4 +39,4 @@ demo-env:
 	./scripts/demo-env.sh
 
 demo-env-down:
-	docker compose -f docker-compose.demo.yml down -v --remove-orphans
+	docker compose -p marge-demo -f docker-compose.demo.yml down -v --remove-orphans

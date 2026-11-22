@@ -15,7 +15,7 @@ if [ -z "${MARGE_PROD_DATABASE_URL:-}" ] && [ -f "$SECRETS_FILE" ]; then
   set +a
 fi
 
-compose() { docker compose -f docker-compose.demo.yml "$@"; }
+compose() { docker compose -p marge-demo -f docker-compose.demo.yml "$@"; }
 
 echo "==> Starting demo Postgres (localhost:5433)"
 compose up -d --wait postgres

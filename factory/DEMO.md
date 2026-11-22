@@ -45,7 +45,7 @@ the Software Factory is at http://localhost:5180/factory.
 | API      | http://localhost:3030 (health: `/v1/healthCheck`)    |
 | Postgres | `postgres://postgres:demo@localhost:5433/marge_demo` |
 
-Logs: `docker compose -f docker-compose.demo.yml logs -f`.
+Logs: `docker compose -p marge-demo -f docker-compose.demo.yml logs -f`.
 
 ## Data
 
