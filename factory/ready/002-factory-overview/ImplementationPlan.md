@@ -21,8 +21,13 @@ The factory's sender is not part of either PR (Design.md decision 3). `FACTORY_R
 - **Order of checks on `POST`:** the factory token is checked before the body is even parsed, so a caller without
   the token learns nothing about the shape and always gets 401. The app parses JSON for every route in `app.ts`, so
   the sync route is mounted ahead of that parser and parses its own body (5 MB limit) after the token check.
-- **Order of writes:** artifacts, then events, then the latest state, with no transaction. Each write skips ids it
-  already has, so the factory's resend after any failure finishes the job (ModelChanges.md).
+- **Order of writes:** artifacts, then events, then the latest state, with no transaction. Each history write skips
+  ids it already has. The sender retries the same completed scan with its same persisted `snapshot.sequence`; the
+  latest state changes only for a higher sequence, so an old retry cannot refresh or replace a newer snapshot.
+- **Ordered snapshot write:** `KV.putIfSequenceGreater` compares and writes in one operation. The Postgres version
+  uses one conditional `INSERT … ON CONFLICT … DO UPDATE … WHERE` against the sequence in `val`; the memory version
+  performs the same comparison before setting its map entry. A route-level read followed by `put` is not sufficient,
+  because overlapping requests could race.
 - **Bearer header:** the client sends it explicitly on the one call that needs it. There is no global axios
   interceptor, because no other call in the client is authenticated.
 - **One markup for both sizes:** each build row is a single block of markup that CSS lays out as a table row on
@@ -56,11 +61,16 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - - `down`: drop `factory_events`, then `factory_artifacts`.
 - - No other index.
 - **New `server/src/lib/factorySync.ts`:**
-- - Types matching ApiContract.md: `FactoryCatalog`, `FactorySnapshot`, `FactoryEvent` (`id`, `runId`, `at`, `repo`,
+- - Types matching ApiContract.md: `FactoryCatalog`, `FactorySnapshot` (including `sequence: number`), `FactoryEvent` (`id`, `runId`, `at`, `repo`,
 - `design`, `pr: number | null`, `type`, `details: Record<string, unknown>`, `artifactId: string | null`),
 - `FactoryArtifact` (`id`, `kind`, `at`, `body`), and `SyncBody` (`catalog`, `snapshot`, `events`, `artifacts`).
 - - `export const FACTORY_SNAPSHOT_KEY = 'factory:snapshot'`
 - - `export const FACTORY_SNAPSHOT_TTL_SECONDS = 365 * 24 * 60 * 60`
+- **`server/src/lib/kv.ts`:** add `putIfSequenceGreater(key, val, sequence, ttlSeconds): Promise<boolean>` to `KV`.
+- `MemoryKV` returns `true` and stores when the key is absent or its stored snapshot sequence is lower, otherwise
+- returns `false` without changing the entry. `PostgresKV` uses `INSERT INTO kv_store … ON CONFLICT (key) DO UPDATE`
+- with a `WHERE (kv_store.val::jsonb #>> '{snapshot,sequence}')::bigint < $sequence` condition, returning whether a
+- row was inserted or updated. The first write wins for an equal sequence and the TTL changes only when it wins.
 - - `isUtcTime(value)`: a string matching `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/` where
 - `const t = Date.parse(value)` is finite (month 13 or hour 25 give `NaN`) and
 - `new Date(t).toISOString().slice(0, 19) === value.slice(0, 19)` (30 February rolls into March and fails).
@@ -72,6 +82,7 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - `/^[a-z][a-z0-9_]{0,39}$/` and no two are equal; `label` is a non-empty string ≤ 30 chars; `shortLabel` a
 - non-empty string ≤ 12 chars; `role` a non-empty string ≤ 20 chars.
 - - **Snapshot:** `snapshot.builds` is an array of ≤ 50 plain objects:
+- - `snapshot.sequence` is a positive safe integer.
 - - `runId` passes `isUuid`, and no two builds share one.
 - - `repo` is a non-empty string ≤ 200 chars.
 - - `designNumber` matches `/^\d{3}$/`.
@@ -109,7 +120,7 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - 1. `INSERT INTO factory_artifacts (id, kind, at, body) SELECT id, kind, at, body FROM jsonb_to_recordset($rows::jsonb) AS r(id uuid, kind text, at timestamptz, body jsonb) ON CONFLICT (id) DO NOTHING`
 - 2. The same for `factory_events` with columns `id, run_id, at, repo, design, pr, type, details, artifact_id`,
 - mapping `runId` → `run_id` and `artifactId` → `artifact_id` in the rows passed as `$rows`.
-- 
+
 - Rows are passed with `bind: { rows: JSON.stringify(rows) }`, as `PostgresKV` binds its values.
 - - `export async function createFactoryHistory(config: Config): Promise<FactoryHistory>`: memory when
 - `config.kvBackend === 'memory'`, otherwise Postgres via `getSequelize()`, throwing the same error as `createKv`
@@ -127,7 +138,9 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - when `err.type === 'entity.too.large'`, and passes any other error to `next(err)`.
 - 3. `const sync = parseSync(req.body)`; if it is `null`, send `400 { error: 'invalid_sync' }` and store nothing.
 - 4. `await deps.factoryHistory.record(sync.artifacts, sync.events)`.
-- 5. `await deps.kv.put(FACTORY_SNAPSHOT_KEY, JSON.stringify({ catalog: sync.catalog, snapshot: sync.snapshot, receivedAt: new Date().toISOString() }), FACTORY_SNAPSHOT_TTL_SECONDS)`.
+- 5. Build `{ catalog, snapshot, receivedAt: new Date().toISOString() }` and pass it to
+- `deps.kv.putIfSequenceGreater(FACTORY_SNAPSHOT_KEY, value, sync.snapshot.sequence, FACTORY_SNAPSHOT_TTL_SECONDS)`.
+- For the same or a lower sequence, it leaves the stored row and its `receivedAt` unchanged.
 - 6. Send `204`. A thrown error goes to `next(err)`.
 - - **`v1FactoryRouter(deps: AppDeps): Router`** with one route, `GET /factory/snapshot`, behind the existing
 - `requireAuth`:
@@ -162,7 +175,9 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - including an extra unknown field on a build. `receivedAt` lies between the times before and after the `POST`.
 - `serverNow` is an ISO string no earlier than `receivedAt`.
 - - `GET` before any `POST` returns 200 `{ catalog: null, snapshot: null, receivedAt: null }` and a `serverNow`.
-- - A second `POST` replaces the latest state: the `GET` returns only the second snapshot.
+- - A second `POST` with a higher sequence replaces the latest state: the `GET` returns only the second snapshot.
+- A resend with the same sequence, and a delayed push with a lower sequence, both return 204 but leave the latest
+- snapshot and its `receivedAt` unchanged.
 - - `POST` with no `Authorization` header, with a wrong token, or with a valid marge token returns 401
 - `unauthorized`.
 - - With `FACTORY_REPORT_TOKEN` unset, `POST` with `Bearer factory-token` returns 401 `unauthorized`.
@@ -178,7 +193,8 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - - Sending the same body twice returns 204 both times and leaves exactly one event and one artifact.
 - - Resending an event id with a different `type` keeps the first `type`.
 - - An event without `pr`, `details` or `artifactId` is stored with `null`, `{}` and `null`.
-- - A heartbeat (`events: []`, `artifacts: []`) returns 204, updates `receivedAt` and adds nothing.
+- - A heartbeat (`events: []`, `artifacts: []`) with a higher sequence returns 204, updates `receivedAt` and adds
+- nothing.
 - **Validation:** after a valid `POST`, each of the following bodies returns 400 `invalid_sync`, and `GET` still
 - returns the first snapshot with the history unchanged (table-driven `it` per case):
 - - no `catalog`, `catalog.statuses: []`, 21 statuses
@@ -206,12 +222,17 @@ marge user can read the latest state back. Nothing a user sees changes yet.
 - - A catalog status with `role: "waiting"` (one marge has no look for) returns 204 and comes back unchanged.
 - - Two builds with the same `repo` and `designNumber` but different `runId` return 204.
 - - `lastEventAt: "2026-11-21T17:32:10.123456Z"` returns 204, and `GET` returns that exact string.
-- **Storage:** with a `MemoryKV` whose `put` is wrapped to record its arguments, a valid `POST` stores key
+- **Storage:** with a `MemoryKV` whose `putIfSequenceGreater` is wrapped to record its arguments, a valid `POST` stores key
 - `factory:snapshot` with TTL `31536000`.
+- **Snapshot ordering:** an initial sequence 1, then sequence 2, then a delayed sequence 1 leaves the sequence-2
+- snapshot and its `receivedAt`; an equal-sequence retry does the same. The `PostgresKV` test runs concurrent writes
+- for sequence 1 and 2 and always leaves sequence 2 stored.
 - **Failed push, then resend:** after one good push (body A), push body B with a `MemoryKV` whose `put` throws once.
 - The answer is 500 with the app's usual error body, `GET` still returns body A's snapshot, and B's event and
 - artifact are already in the history. Sending B again returns 204, `GET` returns B's snapshot, and the history holds
 - exactly one copy of B's event and artifact.
+- **Report retention:** the sender keeps a report until a `204` for a push containing the event that references it;
+- this is a factory-repo responsibility specified by ApiContract.md, so this repo has no code or test for deletion.
 - **New `server/test/factoryHistory.test.ts`**, run only when `DATABASE_URL` is set, like `PostgresKV` in
 - `kv.test.ts`. It never touches the real tables or the migration records:
 - - `before` creates a throwaway schema `factory_history_test_<random>`, opens a `Sequelize` on `DATABASE_URL` with

@@ -191,13 +191,15 @@ once. Polling also keeps going, so the page recovers by itself.
    - Then `repo`, then `designNumber`.
 8. **Freshness belongs to marge.** The factory pushes on every change, plus a heartbeat every 60 seconds that it sends
    only after a completed state scan, so a stuck watcher goes quiet instead of looking healthy. Marge stamps each
-   report with its own `receivedAt`, and the page is out of date when `serverNow − receivedAt` passes **3 minutes**.
-   All ages use the server's clock (ApiContract.md → GET).
+   accepted new report with its own `receivedAt`, and the page is out of date when `serverNow − receivedAt` passes
+   **3 minutes**. The browser's clock is never used; the factory's `lastEventAt` can still make a build's Last news
+   age and quiet chip wrong if the Mac clock is wrong (ApiContract.md → GET).
 9. **Transport: the Mac pushes; marge keeps the latest state and the history.**
    - `POST /v1/factory/sync` with a dedicated bearer token. A shared token is enough for one sender of read-only
      status; HMAC and replay checks were considered and left out.
    - The latest state and status list go in one `kv_store` row (`factory:snapshot`, 365-day TTL, so the last report
-     survives any realistic outage), replaced on every push.
+     survives any realistic outage). Each completed scan gets a persisted, increasing sequence; retries reuse that
+     sequence, and only a higher sequence replaces the row.
    - New events and reports are added to two tables (ModelChanges.md, decision 20).
 10. **Refreshing:**
     - The page fetches every 30 seconds while the tab is visible, stops while it is hidden, and fetches at once when it
@@ -245,13 +247,15 @@ once. Polling also keeps going, so the page recovers by itself.
 20. **Marge keeps the build history from now on, but shows none of it yet.** Every event the factory reports, and
     every report (implementation, review gate, reviews) those events point to, is stored in marge
     (ModelChanges.md). Design 003's detail screen reads it. It is stored now, not in 003, because the factory's
-    sender is built once against this endpoint, and the factory deletes a design's reports from the Mac when the
-    design finishes. Each push of a build carries a `runId` for its attempt, so a design that is restarted gets a
-    separate history. Chosen by the owner over keeping only the latest state until 003.
-21. **Delivery: ids, not sequence numbers.** Every event and report carries an id the factory sets once. Marge skips
-    any id it already has, and the factory resends a push until it gets `204`, so nothing is lost or counted twice.
-    Gap detection with numbered events was considered and left out as more machinery than one owner's dashboard
-    needs. Chosen by the owner.
+   sender is built once against this endpoint. The factory keeps a report until a push containing its referencing event
+   receives `204`, then may delete it when the design finishes. Each push of a build carries a `runId` for its attempt,
+   so a design that is restarted gets a separate history. Chosen by the owner over keeping only the latest state until
+   003.
+21. **Delivery: history ids and snapshot order.** Every event and report carries an id the factory sets once. Marge
+    skips any id it already has, and the factory resends the same completed scan until it gets `204`, so nothing is
+    lost or counted twice. Each completed scan also carries a persisted increasing snapshot sequence, so a delayed
+    retry cannot replace a newer state or refresh it. Gap detection with numbered events was considered and left out
+    as more machinery than one owner's dashboard needs. Chosen by the owner.
 
 ### Stored data
 
