@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { saveSession } from './auth/session';
+import { saveSession } from './utils/session';
 import { renderApp } from './test/renderApp';
 import { expiredToken, makeToken } from './test/tokens';
 

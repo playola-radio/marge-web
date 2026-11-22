@@ -154,8 +154,8 @@ The backend relay now lives in `server/`. Run it directly:
 
 ```bash
 cd server
-cp .env.example .env
-# .env.example already sets KV_BACKEND=memory (no database needed for local dev)
+cp .env-example .env
+# .env-example already sets KV_BACKEND=memory (no database needed for local dev)
 npm install
 npm run dev      # tsx watch — auto-reloads on file changes
 npm test         # runs the full test suite against an in-memory KV

@@ -1,8 +1,8 @@
 import { buildApp } from './app.js';
-import { loadConfig } from './config.js';
-import { createKv } from './lib/kv.js';
-import { createFactoryHistory } from './lib/factoryHistory.js';
-import { initCrypto } from './lib/crypto.js';
+import { loadConfig } from './lib/config/index.js';
+import { createKv } from './lib/kv/index.js';
+import { createFactoryHistory } from './lib/factoryHistory/index.js';
+import { initCrypto } from './lib/crypto/index.js';
 
 async function main(): Promise<void> {
   await initCrypto();
