@@ -286,8 +286,8 @@ Also considered and left out:
 1. **Consistency:**
    - The header, navigation and sign-out are 001's, unchanged.
    - The endpoints live under `/v1` with the `{ "error": "<code>" }` envelope.
-   - The read uses the existing `requireAuth`.
-   - The client calls the server with axios and `VITE_SERVER_BASE_URL`, like `signIn.ts`.
+   - The read uses the existing `authenticate` middleware.
+   - The client calls the server with axios and `VITE_SERVER_BASE_URL`, like `Services/AuthService.ts`.
 2. **Completeness:**
    - Every state is drawn or described: normal, busy, out of date, nothing in flight, never reported, loading,
      error, a status role marge doesn't know, and signed out or expired.
