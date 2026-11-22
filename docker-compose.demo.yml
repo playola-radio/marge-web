@@ -1,0 +1,74 @@
+# Local demo environment for recording factory demo videos (factory/DEMO.md).
+# Its own project name, volume, database and host ports, so it never collides
+# with `make launch` or other repos' local stacks. Bring up with `make demo-env`.
+name: marge-demo
+
+services:
+  postgres:
+    # Newest major so a dump of production (whatever its version) always restores.
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: marge_demo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d marge_demo"]
+      interval: 1s
+      retries: 30
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  migrate:
+    build:
+      context: ./server
+    command: ["npm", "run", "migrate"]
+    environment:
+      DATABASE_URL: postgres://postgres:demo@postgres:5432/marge_demo
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    build:
+      context: ./server
+    command: ["npm", "run", "dev"]
+    environment:
+      BASE_URL: http://localhost:3030
+      KV_BACKEND: postgres
+      DATABASE_URL: postgres://postgres:demo@postgres:5432/marge_demo
+      JWT_SECRET: demo-secret
+      FACTORY_REPORT_TOKEN: demo-factory-token
+      PORT: "3000"
+      NODE_ENV: development
+      CLIENT_ORIGINS: http://localhost:5180
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/v1/healthCheck"]
+      interval: 1s
+      retries: 60
+    ports:
+      - "127.0.0.1:3030:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  client:
+    build:
+      context: ./client
+    command: ["npm", "run", "dev", "--", "--host", "--port", "5173"]
+    environment:
+      VITE_SERVER_BASE_URL: http://localhost:3030
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ > /dev/null"]
+      interval: 1s
+      retries: 60
+    ports:
+      - "127.0.0.1:5180:5173"
+    depends_on:
+      server:
+        condition: service_healthy
+
+volumes:
+  pgdata:

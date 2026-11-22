@@ -1,4 +1,4 @@
-.PHONY: install lint-server test-server build-server prettier-all launch launch-detached terminate logs migrate
+.PHONY: install lint-server test-server build-server prettier-all launch launch-detached terminate logs migrate demo-env demo-env-down
 
 install:
 	npm ci
@@ -33,3 +33,10 @@ logs:
 
 migrate:
 	docker compose run --rm migrate
+
+# Local demo environment for factory demo videos (see factory/DEMO.md).
+demo-env:
+	./scripts/demo-env.sh
+
+demo-env-down:
+	docker compose -p marge-demo -f docker-compose.demo.yml down -v --remove-orphans
