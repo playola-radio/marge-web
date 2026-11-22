@@ -1,0 +1,99 @@
+{
+  "catalog": {
+    "statuses": [
+      {
+        "key": "needs_you",
+        "label": "Needs you",
+        "shortLabel": "You",
+        "role": "attention"
+      },
+      {
+        "key": "stopped",
+        "label": "Stopped",
+        "shortLabel": "Stopped",
+        "role": "failure"
+      },
+      {
+        "key": "no_progress",
+        "label": "No progress",
+        "shortLabel": "Quiet",
+        "role": "quiet"
+      },
+      {
+        "key": "running",
+        "label": "Running",
+        "shortLabel": "Running",
+        "role": "active"
+      },
+      {
+        "key": "done",
+        "label": "Done",
+        "shortLabel": "Done",
+        "role": "complete"
+      }
+    ]
+  },
+  "snapshot": {
+    "builds": [
+      {
+        "runId": "98093cbb-16c0-43a9-b026-cc9b1d91c47a",
+        "repo": "playola-radio/playola",
+        "designNumber": "014",
+        "designName": "Recorded shows",
+        "status": "needs_you",
+        "stages": ["Implement", "Review gate", "PR open", "Reviewers", "Merge"],
+        "currentStage": 4,
+        "reason": "Reviews answered. Ready for you to merge.",
+        "pr": {
+          "position": 2,
+          "total": 3,
+          "number": 812,
+          "url": "https://github.com/playola-radio/playola/pull/812"
+        },
+        "lastEventAt": "2026-11-21T18:34:04.801Z"
+      },
+      {
+        "runId": "3f0e2a51-7b8c-4d2e-9a61-0c5d8e7f1b24",
+        "repo": "playola-radio/factory",
+        "designNumber": "004",
+        "designName": "Notify on pause",
+        "status": "no_progress",
+        "stages": ["Implement", "Review gate", "PR open", "Reviewers", "Merge"],
+        "currentStage": 0,
+        "reason": "Still implementing. Nothing new for 1 h 10 min.",
+        "pr": { "position": 1, "total": 1, "number": null, "url": null },
+        "lastEventAt": "2026-11-21T17:32:10.000Z"
+      }
+    ],
+    "counts": { "upNext": 3, "planNotFinished": 1, "done": 22 }
+  },
+  "events": [
+    {
+      "id": "0d841412-1ae9-4af5-9c3d-a2e58a6099f0",
+      "runId": "98093cbb-16c0-43a9-b026-cc9b1d91c47a",
+      "at": "2026-11-21T18:34:04.801Z",
+      "repo": "playola-radio/playola",
+      "design": "014-recorded-shows",
+      "pr": 2,
+      "type": "pr waiting on owner",
+      "details": {
+        "number": 812,
+        "url": "https://github.com/playola-radio/playola/pull/812"
+      },
+      "artifactId": "0969de36-50de-4b61-9340-408a40d162ae"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "0969de36-50de-4b61-9340-408a40d162ae",
+      "kind": "pr_report",
+      "at": "2026-11-21T18:34:04.801Z",
+      "body": {
+        "implementation": {},
+        "gate": {},
+        "pullRequest": {},
+        "review": {}
+      }
+    }
+  ]
+}
