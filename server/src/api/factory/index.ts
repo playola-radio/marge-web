@@ -6,7 +6,7 @@ import {
   requireFactoryToken,
   snapshot,
   sync,
-} from "./factory.controller.js";
+} from "./factory.api.js";
 
 export function factorySyncRouter(deps: AppDeps): Router {
   const router = Router();

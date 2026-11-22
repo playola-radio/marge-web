@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { AppDeps } from "../../app.js";
-import { advance, show } from "./connect.controller.js";
+import { advance, show } from "./connect.api.js";
 
 export function connectRouter(deps: AppDeps): Router {
   const router = Router();
