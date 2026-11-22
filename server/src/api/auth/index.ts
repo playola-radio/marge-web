@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { AppDeps } from '../../app.js';
-import { devLogin, googleSignIn } from './auth.controller.js';
+import { devLogin, googleSignIn } from './auth.api.js';
 
 export function authRouter(deps: AppDeps): Router {
   const router = Router();
