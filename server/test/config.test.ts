@@ -90,4 +90,19 @@ describe('loadConfig', () => {
       expect(load({ NODE_ENV: 'Development' }).devLogin).to.equal(false);
     });
   });
+
+  describe('factory report token', () => {
+    const base = { BASE_URL: 'https://x.test', KV_BACKEND: 'memory' };
+    const load = (env: Record<string, string>) =>
+      loadConfig({ ...base, ...env } as NodeJS.ProcessEnv);
+
+    it('reads FACTORY_REPORT_TOKEN', () => {
+      expect(load({ FACTORY_REPORT_TOKEN: 'abc' }).factoryReportToken).to.equal('abc');
+    });
+
+    it('gives null when FACTORY_REPORT_TOKEN is unset or empty', () => {
+      expect(load({}).factoryReportToken).to.equal(null);
+      expect(load({ FACTORY_REPORT_TOKEN: '' }).factoryReportToken).to.equal(null);
+    });
+  });
 });
