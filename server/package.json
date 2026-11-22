@@ -11,7 +11,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint . --ext .ts && prettier --check \"**/*.ts\"",
-    "test": "mocha",
+    "test": "mocha --extension ts --require tsx/esm --timeout 10000 \"src/**/*.test.ts\"",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo"
   },
