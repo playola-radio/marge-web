@@ -2,6 +2,11 @@
   base = "client"
   command = "npm run build"
   publish = "dist"
+  # Always build. When Netlify's base-directory change detection skips a build,
+  # it leaves its "Header rules" / "Redirect rules" GitHub checks stuck in
+  # progress, and on cache eviction it falsely cancels real deploys.
+  # Non-zero exit → never ignore → always build (same as playola's client).
+  ignore = "/bin/false"
 
 [build.environment]
   NODE_VERSION = "22.15.0"
