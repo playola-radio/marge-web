@@ -160,16 +160,6 @@ describe("GitHubApp", () => {
       );
     });
 
-    it("hands out a token source that asks for a current token on every call", async () => {
-      let now = Date.parse("2026-11-23T12:00:00Z");
-      const clock = () => now;
-      const gh = fakeGitHub(standardRoutes({ clock }));
-      const source = makeApp(gh.fetchFn, clock).tokenSource("acme", "widgets");
-      assert.strictEqual(await source(), "ghs_token1");
-      now += 2 * 60 * 60 * 1000;
-      assert.strictEqual(await source(), "ghs_token2");
-    });
-
     it("answers pr_not_found when the App is not installed on the repo", async () => {
       const gh = fakeGitHub(() => undefined);
       const app = makeApp(gh.fetchFn, () => Date.now());

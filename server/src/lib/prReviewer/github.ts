@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
  * Reads from GitHub as the marge-reviewer GitHub App: App JWT → installation
  * token (cached until shortly before its ~1 h expiry), then PR resolution over
  * the REST API. The same installation token also authenticates git fetches
- * (see gitCache.ts), which ask `tokenSource` for a current token every time.
+ * (see gitCache.ts), which ask `installationToken` for a current token every time.
  */
 
 export type GitHubErrorCode = "pr_not_found" | "github_error";
@@ -97,11 +97,6 @@ export class GitHubApp {
       this.minting.set(installationId, pending);
     }
     return (await pending).token;
-  }
-
-  /** A function the git helper calls before each network operation. */
-  tokenSource(org: string, repo: string): () => Promise<string> {
-    return () => this.installationToken(org, repo);
   }
 
   async resolvePullRequest(

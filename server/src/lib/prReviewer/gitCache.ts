@@ -31,16 +31,6 @@ export type GitSpawn = (
   opts: GitSpawnOptions,
 ) => Promise<Buffer>;
 
-class GitProcessError extends Error {
-  constructor(
-    message: string,
-    readonly exitCode: number | null,
-    readonly stderr: string,
-  ) {
-    super(message);
-  }
-}
-
 export const spawnGit: GitSpawn = (argv, opts) =>
   new Promise((resolve, reject) => {
     const child = spawn("git", argv, {
@@ -59,31 +49,19 @@ export const spawnGit: GitSpawn = (argv, opts) =>
       if (code === 0) return resolve(Buffer.concat(out));
       const stderr = Buffer.concat(err).toString("utf8");
       reject(
-        new GitProcessError(
+        new Error(
           `git ${argv.join(" ")} failed (${code ?? signal}): ${stderr.trim()}`,
-          code,
-          stderr,
         ),
       );
     });
     child.stdin.end(opts.input ?? "");
   });
 
-/** A git failure whose message and properties have every credential redacted. */
+/** A git failure whose message has every credential redacted. */
 export class GitError extends Error {
-  readonly args: string[];
-  readonly stderr: string;
-  readonly exitCode: number | null;
-
-  constructor(
-    message: string,
-    details: { args: string[]; stderr: string; exitCode: number | null },
-  ) {
+  constructor(message: string) {
     super(message);
     this.name = "GitError";
-    this.args = details.args;
-    this.stderr = details.stderr;
-    this.exitCode = details.exitCode;
   }
 }
 
@@ -164,12 +142,8 @@ export class Git {
     } catch (err) {
       // Rebuilt from scratch rather than wrapped: the original error (and its
       // `cmd`/`spawnargs`) embeds the full command line, extraHeader included.
-      const e = err as Partial<GitProcessError> & { message?: string };
-      throw new GitError(redact(String(e.message ?? err), secrets), {
-        args: argv.map((a) => redact(a, secrets)),
-        stderr: redact(String(e.stderr ?? ""), secrets),
-        exitCode: typeof e.exitCode === "number" ? e.exitCode : null,
-      });
+      const message = (err as { message?: unknown }).message ?? err;
+      throw new GitError(redact(String(message), secrets));
     }
   }
 }
@@ -225,17 +199,17 @@ export interface PrSource {
   prCommits: () => Promise<PrCommit[]>;
 }
 
-export type CacheMode = "blobless" | "pr-only";
+type CacheMode = "blobless" | "pr-only";
 
 export interface CacheLease {
   /** The bare repository; stays pinned (never evicted) until `release()`. */
   dir: string;
-  mode: CacheMode;
-  headRef: string;
-  baseRef: string;
   /** Runs `work` (e.g. extraction's blob hydration) under the per-PR size cap. */
   withSizeCap<T>(work: (signal: AbortSignal) => Promise<T>): Promise<T>;
-  /** Unpins the directory and evicts down to the total cap. */
+  /**
+   * Unpins the directory and evicts down to the total cap; the last lease
+   * out drops a directory left over the per-PR cap (e.g. by hydration).
+   */
   release(): void;
 }
 
@@ -312,20 +286,23 @@ export class GitCache {
     };
     this.pin(dir);
     try {
-      const mode = await this.withLock(dir, () => this.prepare(src, dir, refs));
+      await this.withLock(dir, () => this.prepare(src, dir, refs));
       this.touch(dir);
       await this.evict();
       let released = false;
       return {
         dir,
-        mode,
-        ...refs,
         withSizeCap: (work) => this.withSizeCap(dir, work),
         release: () => {
           if (released) return;
           released = true;
           this.touch(dir);
           this.unpin(dir);
+          if (
+            !this.pins.get(dir) &&
+            GitCache.sizeOf(dir) > this.limits.perPrBytes
+          )
+            rmSync(dir, { recursive: true, force: true });
           // Best effort: the next checkout evicts again.
           this.evict().catch(() => undefined);
         },
@@ -361,7 +338,7 @@ export class GitCache {
     src: PrSource,
     dir: string,
     refs: { headRef: string; baseRef: string },
-  ): Promise<CacheMode> {
+  ): Promise<void> {
     if (existsSync(dir)) {
       const shallow = await this.git.run(
         ["rev-parse", "--is-shallow-repository"],
@@ -380,7 +357,7 @@ export class GitCache {
           rmSync(dir, { recursive: true, force: true });
         throw err;
       }
-      return mode;
+      return;
     }
 
     const parent = dirname(dir);
@@ -425,7 +402,6 @@ export class GitCache {
         await this.pinCommits(src, partial, mode, refs, signal);
       });
       renameSync(partial, dir);
-      return mode;
     } catch (err) {
       rmSync(partial, { recursive: true, force: true });
       throw err;

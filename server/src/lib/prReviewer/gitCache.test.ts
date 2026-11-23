@@ -1,7 +1,14 @@
 import { assert } from "chai";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import {
+  CacheTooLargeError,
   Git,
   GitCache,
   GitCacheError,
@@ -88,15 +95,22 @@ describe("GitCache", () => {
     const first = await cache.checkout(
       source(up, { headSha: head, baseSha: base }),
     );
-    assert.strictEqual(first.mode, "blobless");
     const clone = calls.find((c) => c.includes("clone"))!;
     assert.include(clone, "--filter=blob:none");
     assert.strictEqual(
-      (await git.run(["rev-parse", first.headRef], { cwd: first.dir })).trim(),
+      (
+        await git.run(["rev-parse", "refs/chapters/pr/7/head"], {
+          cwd: first.dir,
+        })
+      ).trim(),
       head,
     );
     assert.strictEqual(
-      (await git.run(["rev-parse", first.baseRef], { cwd: first.dir })).trim(),
+      (
+        await git.run(["rev-parse", "refs/chapters/pr/7/base"], {
+          cwd: first.dir,
+        })
+      ).trim(),
       base,
     );
     first.release();
@@ -156,6 +170,29 @@ describe("GitCache", () => {
     assert.instanceOf(err, GitCacheError);
     assert.match((err as Error).message, /too large/);
     assert.deepEqual(allFiles(root), []);
+  });
+
+  it("drops a directory that hydration left over the per-PR cap once its last lease is released", async () => {
+    const { up, base, head } = smallUpstream();
+    upstreams.push(up);
+    const cache = new GitCache({ root });
+    const lease = await cache.checkout(
+      source(up, { headSha: head, baseSha: base }),
+    );
+    cache.limits.perPrBytes = GitCache.sizeOf(lease.dir) + 1024;
+
+    const err = await lease
+      .withSizeCap(async () =>
+        writeFileSync(join(lease.dir, "big"), Buffer.alloc(4096)),
+      )
+      .then(
+        () => null,
+        (e: unknown) => e,
+      );
+    assert.instanceOf(err, CacheTooLargeError);
+    assert.isTrue(existsSync(lease.dir), "kept while still leased");
+    lease.release();
+    assert.isFalse(existsSync(lease.dir), "dropped once released");
   });
 
   describe("git authentication", () => {
@@ -258,7 +295,6 @@ describe("GitCache", () => {
       const lease = await cache.checkout(
         source(up, { headSha: head, baseSha: base, repoSizeKb: huge }),
       );
-      assert.strictEqual(lease.mode, "pr-only");
       const shallow = await git.run(["rev-parse", "--is-shallow-repository"], {
         cwd: lease.dir,
       });
