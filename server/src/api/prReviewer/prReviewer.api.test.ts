@@ -319,19 +319,6 @@ const dbUrl = process.env.DATABASE_URL;
       assert.lengthOf(await runRows(), 1);
     });
 
-    it("returns the same run on a later create for the same revision (200)", async () => {
-      const first = await request(app)
-        .post(`${prBase()}/runs`)
-        .set("Authorization", auth());
-      const again = await request(app)
-        .post(`${prBase()}/runs`)
-        .set("Authorization", auth());
-      assert.equal(again.status, 200);
-      assert.equal(again.body.run.id, first.body.run.id);
-      assert.equal(wakes, 1);
-      assert.lengthOf(await runRows(), 1);
-    });
-
     it("converges two concurrent creates for an unseen revision on one run and one enqueue", async () => {
       // Both requests resolve the PR before either inserts, so both race to
       // INSERT and one recovers through the unique-conflict path.

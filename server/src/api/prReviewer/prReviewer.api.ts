@@ -36,7 +36,7 @@ interface RunRecord {
 }
 
 /** The `run` JSON every endpoint that returns a run shares. */
-export function runJson(r: RunRecord) {
+function runJson(r: RunRecord) {
   return {
     id: r.id,
     org: r.org,
@@ -300,8 +300,7 @@ export function chapters(deps: AppDeps): RequestHandler {
     const marks = await select<{ chapter_key: string }>(
       reviewer.sequelize,
       `SELECT chapter_key FROM pr_reviewer_chapter_reviews
-        WHERE run_id = $runId AND user_email = $email
-        ORDER BY created_at, chapter_key`,
+        WHERE run_id = $runId AND user_email = $email`,
       { runId: run.id, email: userEmail(req) ?? "" },
     );
     res.json({
