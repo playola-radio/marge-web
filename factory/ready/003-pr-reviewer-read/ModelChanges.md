@@ -25,6 +25,8 @@ One row per generation of one PR revision. The row is also the job: its status, 
 | `pr_meta` | JSONB | no | GitHub at creation: `{ title, url, baseRef, headRef, commits }` — returned on every run response so non-ready screens can render their header |
 | `created_at` / `updated_at` | TIMESTAMPTZ | no | standard |
 
+Lowercase `org` and `repo` before storing or looking them up, including find-or-create and `runs/latest`, so GitHub repository name case variants share runs.
+
 Unique index on `(org, repo, pr_number, head_sha, base_sha, pipeline_version)` — this is the find-or-create key that makes two visitors share one run. Index on `(status, lease_expires_at)` for the runner's claim query.
 
 ## `pr_reviewer_stage_outputs` — new

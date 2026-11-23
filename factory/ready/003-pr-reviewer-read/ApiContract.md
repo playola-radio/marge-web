@@ -60,7 +60,7 @@ Response `200`:
 }
 ```
 
-The page compares `run.headSha` with `pr.currentHeadSha`: equal → the run is current; different → show the superseded banner with **Generate for latest**. When `newerRun` is present the banner instead reports that run's status (generating / failed) with **View latest**, which opens it — the displayed run never changes without that explicit action. The client re-checks on page load and when the window regains focus.
+The page compares `run.headSha` with `pr.currentHeadSha` and `run.baseSha` with `pr.currentBaseSha`: the run is current only when both match; otherwise show the superseded banner with **Generate for latest**. Offer **View latest** instead only when the newer run matches both current SHAs; report its status and open it on that explicit action. An outdated newer run does not replace **Generate for latest**. The client re-checks on page load and when the window regains focus.
 
 Errors: `404 { "error": "pr_not_found" }` (no such open PR, or repo not readable by the App installation); `401` from middleware.
 
@@ -128,7 +128,7 @@ Idempotently clear the mark. Response `204`. Errors: `404` (run or chapter unkno
 
 ## Existing endpoints the page uses — unchanged
 
-- `POST /v1/auth/google/signin` — existing Google sign-in; issues the marge JWT. Unchanged.
+- `POST /v1/auth/google/signin` — existing Google sign-in; issues the marge JWT. Unchanged. Request: `{ "code": "google-authorization-code" }`. Response `200`: `{ "margeToken": "<JWT>" }`. Errors: `400 { "error": "invalid_request" }` (missing or invalid code); `401 { "error": "sign_in_failed" }` (Google rejects the code or email is unverified); `403 { "error": "not_approved" }` (email not allowlisted); `500 { "error": "internal_error" }` (configuration or unexpected exchange failure).
 - `GET /v1/me` — existing identity check used by `ProtectedRoute`. Response: `{ "user": { "email": "user@playola.fm", "name": "User Name", "iat": 1795380000, "exp": 1795989600 } }`. Unchanged.
 
 ## Client-side model changes
