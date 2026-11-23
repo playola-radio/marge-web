@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
+import jwt from "jsonwebtoken";
 import { Sequelize } from "sequelize";
 import { startPrReviewer } from "./index.js";
 import { refuseLiveRuns } from "./runner.test.js";
@@ -21,6 +22,9 @@ const github = {
   installationToken: async () => "t",
   repoSizeKb: async () => 1,
   compareCommits: async () => [],
+  resolvePullRequest: async () => {
+    throw new Error("unused");
+  },
 };
 
 describe("PR reviewer startup", () => {
@@ -65,6 +69,7 @@ describe("PR reviewer startup", () => {
       BASE_URL: `http://localhost:${port}`,
       KV_BACKEND: "memory",
       PORT: String(port),
+      JWT_SECRET: "startup-secret",
     });
     const child = spawn(
       process.execPath,
@@ -86,6 +91,17 @@ describe("PR reviewer startup", () => {
       assert.notInclude(out, "startup_failed");
       const res = await fetch(`http://localhost:${port}/healthz`);
       assert.equal(res.status, 200);
+      const token = jwt.sign({ email: "a@playola.fm" }, "startup-secret", {
+        algorithm: "HS256",
+      });
+      const reviewer = await fetch(
+        `http://localhost:${port}/v1/pr-reviewer/runs/0d4f8a1e-6c2b-4b4e-9a1a-2f6f1f1f9b3c`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      assert.equal(reviewer.status, 503);
+      assert.deepEqual(await reviewer.json(), {
+        error: "pr_reviewer_unavailable",
+      });
     } finally {
       child.kill();
       await once(child, "exit");

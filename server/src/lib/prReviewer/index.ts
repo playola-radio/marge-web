@@ -15,8 +15,14 @@ import {
 
 export { PIPELINE_VERSION, Runner } from "./runner.js";
 
+/** What the reviewer's GitHub client must do: resolve PRs for the API, fetch for the runner. */
+export type ReviewerGitHub = ExecutorDeps["github"] &
+  Pick<GitHubApp, "resolvePullRequest">;
+
 export interface PrReviewer {
   runner: Runner;
+  sequelize: Sequelize;
+  github: ReviewerGitHub;
 }
 
 export interface StartOptions {
@@ -24,7 +30,7 @@ export interface StartOptions {
   /** Injected in tests; otherwise from DATABASE_URL. */
   sequelize?: Sequelize | null;
   /** Injected in tests; otherwise the GitHub App from GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY. */
-  github?: ExecutorDeps["github"];
+  github?: ReviewerGitHub;
 }
 
 /**
@@ -83,5 +89,5 @@ export function startPrReviewer(
   });
   runner.start();
   log(`pr_reviewer_on model=${llm.model}`);
-  return { runner };
+  return { runner, sequelize, github };
 }

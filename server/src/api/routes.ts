@@ -11,6 +11,7 @@ import { resultRouter } from "./result/index.js";
 import { authRouter } from "./auth/index.js";
 import { factoryRouter, factorySyncRouter } from "./factory/index.js";
 import { userRouter } from "./user/index.js";
+import { prReviewerRouter } from "./prReviewer/index.js";
 
 export function addRoutes(app: Express, deps: AppDeps): void {
   // The factory push checks its token before any body parsing, so it parses its own body.
@@ -48,5 +49,6 @@ export function addRoutes(app: Express, deps: AppDeps): void {
   app.use("/v1/healthCheck", healthCheckRouter);
   app.use("/v1/auth", authRouter(deps));
   app.use("/v1/factory", factoryRouter(deps));
+  app.use("/v1/pr-reviewer", prReviewerRouter(deps));
   app.use("/v1/me", userRouter);
 }
