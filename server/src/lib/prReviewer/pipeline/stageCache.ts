@@ -3,6 +3,16 @@ import type { LlmStage } from "../llm/LlmClient.js";
 import type { StageCache, StageCacheEntry } from "./stage.js";
 
 /**
+ * JSON for a jsonb column. PostgreSQL's jsonb refuses NUL, and a diff line (or
+ * an LLM answer quoting one) can still carry it past git's binary check.
+ */
+export function storable(value: unknown): string {
+  return JSON.stringify(value, (_key, v: unknown) =>
+    typeof v === "string" ? v.replaceAll("\0", "\ufffd") : v,
+  );
+}
+
+/**
  * The stage cache in `pr_reviewer_stage_outputs`: content-addressed, shared by
  * every attempt and run. Each row stores `{ output, fallbackUsed }` so a hit
  * restores the result and its fallback provenance.
@@ -30,7 +40,7 @@ export class PostgresStageCache implements StageCache {
         bind: {
           key,
           stage,
-          output: JSON.stringify({
+          output: storable({
             output: entry.output,
             fallbackUsed: entry.fallbackUsed,
           }),

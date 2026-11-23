@@ -5,6 +5,7 @@ import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import { Sequelize } from "sequelize";
 import { startPrReviewer } from "./index.js";
+import { refuseLiveRuns } from "./runner.test.js";
 
 const serverDir = fileURLToPath(new URL("../../..", import.meta.url));
 
@@ -100,11 +101,13 @@ describe("PR reviewer startup", () => {
         logging: false,
       });
       const logs: string[] = [];
-      const reviewer = startPrReviewer(
-        { PR_REVIEWER_LLM: "fake" },
-        { log: (m) => logs.push(m), sequelize, github },
-      );
+      let reviewer: ReturnType<typeof startPrReviewer> | undefined;
       try {
+        await refuseLiveRuns(sequelize);
+        reviewer = startPrReviewer(
+          { PR_REVIEWER_LLM: "fake" },
+          { log: (m) => logs.push(m), sequelize, github },
+        );
         assert.isNotNull(reviewer);
         assert.include(logs, "pr_reviewer_on model=fake");
       } finally {

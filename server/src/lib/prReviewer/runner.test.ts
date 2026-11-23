@@ -39,6 +39,23 @@ import {
 // and deleted too. It never drops anything.
 const dbUrl = process.env.DATABASE_URL;
 
+/**
+ * The runner claims from the whole queue, so a test against a database holding
+ * someone's live runs would consume them. Refuse instead: use a scratch database.
+ */
+export async function refuseLiveRuns(sequelize: Sequelize): Promise<void> {
+  const rows = await sequelize.query<{ id: string }>(
+    `SELECT id FROM pr_reviewer_runs
+      WHERE status IN ('queued', 'generating') AND org NOT LIKE 'test-runner-%'
+      LIMIT 1`,
+    { type: QueryTypes.SELECT },
+  );
+  if (rows.length)
+    throw new Error(
+      "DATABASE_URL holds queued or generating PR reviewer runs the tests would claim; run them against a scratch database",
+    );
+}
+
 /** The Postgres stage cache, remembering its keys for cleanup. */
 class TrackedCache implements StageCache {
   readonly keys: string[] = [];
@@ -71,11 +88,12 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
   const logs: string[] = [];
   const log = (m: string) => logs.push(m);
 
-  before(() => {
+  before(async () => {
     sequelize = new Sequelize(dbUrl as string, {
       dialect: "postgres",
       logging: false,
     });
+    await refuseLiveRuns(sequelize);
   });
   beforeEach(async () => {
     cache = new TrackedCache(new PostgresStageCache(sequelize));

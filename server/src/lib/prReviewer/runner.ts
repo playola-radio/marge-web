@@ -9,9 +9,9 @@ import {
   generateChapters,
   StageFailure,
   type Assembled,
-  type ChaptersDocument,
   type StageCache,
 } from "./pipeline/index.js";
+import { storable } from "./pipeline/stageCache.js";
 
 /**
  * The in-process job runner (D8). `pr_reviewer_runs` rows are the queue: a
@@ -79,13 +79,6 @@ interface RunRecord {
   attempt: number;
   pr_meta: PrMeta;
   lease_token: string;
-}
-
-/** PostgreSQL's jsonb refuses NUL; a diff line can still carry one past git's binary check. */
-function storable(document: ChaptersDocument): string {
-  return JSON.stringify(document, (_key, v) =>
-    typeof v === "string" ? v.replaceAll("\0", "\ufffd") : v,
-  );
 }
 
 export class RunStore {

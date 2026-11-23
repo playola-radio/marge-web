@@ -55,4 +55,17 @@ const dbUrl = process.env.DATABASE_URL;
     )) as [{ stage: string }[], unknown];
     assert.equal(row[0].stage, "outline");
   });
+
+  it("stores an output carrying NUL, as U+FFFD", async () => {
+    const cache = new PostgresStageCache(sequelize);
+    const k = key();
+    await cache.put(k, "summarize", {
+      output: { intro: "a\u0000b" },
+      fallbackUsed: false,
+    });
+    assert.deepEqual(await cache.get(k), {
+      output: { intro: "a\ufffdb" },
+      fallbackUsed: false,
+    });
+  });
 });
