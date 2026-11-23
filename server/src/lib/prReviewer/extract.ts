@@ -112,12 +112,13 @@ export interface ExtractOptions {
   repo: string;
   /** Token for the one hydration fetch a partial clone needs. */
   auth?: () => Promise<string>;
+  /** Aborts the hydration fetch (see `CacheLease.withSizeCap`). */
+  signal?: AbortSignal;
 }
 
 interface RawEntry {
   oldMode: string;
   newMode: string;
-  oldSha: string;
   newSha: string;
   status: string;
   path: string;
@@ -410,7 +411,12 @@ async function hydrate(opts: ExtractOptions): Promise<void> {
       "--stdin",
       "origin",
     ],
-    { cwd, auth: opts.auth, input: missing.join("\n") + "\n" },
+    {
+      cwd,
+      auth: opts.auth,
+      signal: opts.signal,
+      input: missing.join("\n") + "\n",
+    },
   );
 }
 
@@ -543,23 +549,34 @@ function parseRaw(out: string): RawEntry[] {
       i += 1;
       continue;
     }
-    const [oldMode, newMode, oldSha, newSha, status] = meta.slice(1).split(" ");
-    if (status.startsWith("R") || status.startsWith("C")) {
+    const [oldMode, newMode, , newSha, status] = meta.slice(1).split(" ");
+    if (status.startsWith("R")) {
       entries.push({
         oldMode,
         newMode,
-        oldSha,
         newSha,
         status,
         oldPath: parts[i + 1],
         path: parts[i + 2],
       });
       i += 3;
+    } else if (status === "T") {
+      // A type change (file ↔ symlink ↔ submodule) is patched as a deletion
+      // then a creation, so it becomes those two entries.
+      const path = parts[i + 1];
+      entries.push({
+        oldMode,
+        newMode: "000000",
+        newSha: "0",
+        status: "D",
+        path,
+      });
+      entries.push({ oldMode: "000000", newMode, newSha, status: "A", path });
+      i += 2;
     } else {
       entries.push({
         oldMode,
         newMode,
-        oldSha,
         newSha,
         status,
         path: parts[i + 1],

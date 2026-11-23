@@ -1,7 +1,15 @@
 import { assert } from "chai";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import { existsSync, symlinkSync } from "node:fs";
+import { join } from "node:path";
 import { extract, unitsOf, type ExtractResult } from "./extract.js";
-import { Git, GitCache, spawnGit, type GitSpawn } from "./gitCache.js";
+import {
+  CacheTooLargeError,
+  Git,
+  GitCache,
+  spawnGit,
+  type GitSpawn,
+} from "./gitCache.js";
 import { FixtureRepo, lines, removeDir, tempDir } from "./repoFixtures.test.js";
 
 const git = new Git();
@@ -302,6 +310,30 @@ describe("extract", () => {
     ]);
   });
 
+  it("a file replaced by a symlink: a deletion and a creation, both owned by the replacing commit", async () => {
+    base({ "conf.txt": lines("a", "b") });
+    up.git("rm", "-q", "--", "conf.txt");
+    symlinkSync("target.txt", join(up.dir, "conf.txt"));
+    const c1 = up.commit("link conf");
+
+    const { result } = await extractFrom(up, up.mergeBase("main", c1), c1);
+
+    assert.deepEqual(
+      result.files.map((f) => [f.path, f.status]),
+      [
+        ["conf.txt", "deleted"],
+        ["conf.txt", "added"],
+      ],
+    );
+    assert.deepEqual(
+      runsOf(result, "conf.txt").map((r) => [r.commitSha, r.removed, r.added]),
+      [
+        [c1, 2, 0],
+        [c1, 0, 1],
+      ],
+    );
+  });
+
   it("8. a binary file: one content-less run owned by the last commit touching it", async () => {
     const b = base({ "README.md": lines("hi") });
     up.commit("logo", { "logo.png": Buffer.from([0x89, 0x50, 0, 1, 2]) });
@@ -523,6 +555,51 @@ describe("extract", () => {
       assert.deepEqual(markdownSources, [
         { path: "docs/x.md", text: lines("# x", "more") },
       ]);
+    });
+
+    it("caps the hydration fetch at the per-PR size and evicts down to the total cap on release", async () => {
+      const b = base({ "a.txt": lines("1") });
+      const c1 = up.commit("asset", { "big.bin": randomBytes(256 * 1024) });
+      up.checkout("main");
+
+      const cache = new GitCache({ root });
+      const lease = await cache.checkout({
+        org: "acme",
+        repo: "widgets",
+        prNumber: 4,
+        headSha: c1,
+        baseSha: b,
+        remoteUrl: up.url,
+        token: async () => "ghs_token",
+        repoSizeKb: async () => 10,
+        prCommits: async () => up.prCommits(b, c1),
+      });
+      cache.limits.perPrBytes = GitCache.sizeOf(lease.dir) + 64 * 1024;
+
+      const err = await lease
+        .withSizeCap((signal) =>
+          extract({
+            git,
+            gitDir: lease.dir,
+            baseSha: b,
+            headSha: c1,
+            baseRef: "main",
+            branch: "feature",
+            repo: "widgets",
+            auth: async () => "ghs_token",
+            signal,
+          }),
+        )
+        .then(
+          () => null,
+          (e: unknown) => e,
+        );
+      assert.instanceOf(err, CacheTooLargeError);
+
+      cache.limits.totalBytes = 0;
+      lease.release();
+      await new Promise((resolve) => setImmediate(resolve));
+      assert.isFalse(existsSync(lease.dir), "evicted once released");
     });
   });
 });

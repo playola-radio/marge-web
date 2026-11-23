@@ -106,7 +106,6 @@ function makeApp(fetchFn: typeof fetch, clock: () => number) {
     appId: "12345",
     // Render stores multi-line secrets with literal "\n"; the app accepts either form.
     privateKey: privateKey.replace(/\n/g, "\\n"),
-    apiBaseUrl: "https://api.github.test",
     fetch: fetchFn,
     now: clock,
   });

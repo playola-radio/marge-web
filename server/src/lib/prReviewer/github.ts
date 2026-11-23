@@ -44,7 +44,6 @@ export interface GitHubAppOptions {
   appId: string;
   /** PEM private key; literal "\n" sequences (as env vars often carry) are accepted. */
   privateKey: string;
-  apiBaseUrl?: string;
   fetch?: typeof fetch;
   /** Milliseconds since the epoch; injectable for tests. */
   now?: () => number;
@@ -70,7 +69,6 @@ function checkName(org: string, repo: string): void {
 export class GitHubApp {
   private readonly appId: string;
   private readonly privateKey: string;
-  private readonly apiBaseUrl: string;
   private readonly fetchFn: typeof fetch;
   private readonly now: () => number;
   private readonly installations = new Map<string, number>();
@@ -80,10 +78,6 @@ export class GitHubApp {
   constructor(options: GitHubAppOptions) {
     this.appId = options.appId;
     this.privateKey = options.privateKey.replace(/\\n/g, "\n");
-    this.apiBaseUrl = (options.apiBaseUrl ?? "https://api.github.com").replace(
-      /\/$/,
-      "",
-    );
     this.fetchFn = options.fetch ?? fetch;
     this.now = options.now ?? Date.now;
   }
@@ -245,7 +239,7 @@ export class GitHubApp {
   ): Promise<unknown> {
     let res: Response;
     try {
-      res = await this.fetchFn(`${this.apiBaseUrl}${path}`, {
+      res = await this.fetchFn(`https://api.github.com${path}`, {
         method,
         headers: {
           Accept: "application/vnd.github+json",

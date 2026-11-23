@@ -233,6 +233,9 @@ export interface CacheLease {
   mode: CacheMode;
   headRef: string;
   baseRef: string;
+  /** Runs `work` (e.g. extraction's blob hydration) under the per-PR size cap. */
+  withSizeCap<T>(work: (signal: AbortSignal) => Promise<T>): Promise<T>;
+  /** Unpins the directory and evicts down to the total cap. */
   release(): void;
 }
 
@@ -317,11 +320,14 @@ export class GitCache {
         dir,
         mode,
         ...refs,
+        withSizeCap: (work) => this.withSizeCap(dir, work),
         release: () => {
           if (released) return;
           released = true;
           this.touch(dir);
           this.unpin(dir);
+          // Best effort: the next checkout evicts again.
+          this.evict().catch(() => undefined);
         },
       };
     } catch (err) {
@@ -530,10 +536,10 @@ export class GitCache {
     }
   }
 
-  private async withSizeCap(
+  private async withSizeCap<T>(
     dir: string,
-    work: (signal: AbortSignal) => Promise<void>,
-  ): Promise<void> {
+    work: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
     const cap = this.limits.perPrBytes;
     const controller = new AbortController();
     let over = false;
@@ -547,8 +553,9 @@ export class GitCache {
       new CacheTooLargeError(
         `This pull request's repository is too large for the review cache (over ${formatBytes(cap)})`,
       );
+    let result: T;
     try {
-      await work(controller.signal);
+      result = await work(controller.signal);
     } catch (err) {
       if (over) throw tooLarge();
       throw err;
@@ -556,6 +563,7 @@ export class GitCache {
       clearInterval(timer);
     }
     if (GitCache.sizeOf(dir) > cap) throw tooLarge();
+    return result;
   }
 
   private async withLock<T>(key: string, work: () => Promise<T>): Promise<T> {
