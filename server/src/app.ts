@@ -5,6 +5,7 @@ import type { Config } from "./lib/config/index.js";
 import type { FactoryHistory } from "./lib/factoryHistory/index.js";
 import type { ExchangeGoogleCode } from "./lib/googleSignIn/index.js";
 import { addRoutes } from "./api/routes.js";
+import type { PrReviewerDeps } from "./api/prReviewer/index.js";
 import { errorHandler } from "./api/apiError.js";
 
 export interface AppDeps {
@@ -13,6 +14,8 @@ export interface AppDeps {
   factoryHistory: FactoryHistory;
   rateLimit?: { windowMs: number; max: number };
   exchangeGoogleCode?: ExchangeGoogleCode;
+  /** The PR reviewer, when configured; without it every /v1/pr-reviewer route answers 503. */
+  prReviewer?: PrReviewerDeps | null;
 }
 
 export function buildApp(deps: AppDeps): Express {
