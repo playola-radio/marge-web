@@ -23,7 +23,16 @@ export interface GitSpawnOptions {
   input?: string;
   signal?: AbortSignal;
   env: NodeJS.ProcessEnv;
+  /** Kills git past this deadline (default GIT_TIMEOUT_MS). */
+  timeoutMs?: number;
 }
+
+/**
+ * No git command may outlive this: a stalled network transfer would otherwise
+ * keep the run's lease alive forever and block the serial runner. A killed
+ * fetch fails like any git error, so the run is retried.
+ */
+export const GIT_TIMEOUT_MS = 15 * 60_000;
 
 /** Runs `git <argv>` and resolves with stdout; rejects on a non-zero exit. */
 export type GitSpawn = (
@@ -33,12 +42,25 @@ export type GitSpawn = (
 
 export const spawnGit: GitSpawn = (argv, opts) =>
   new Promise((resolve, reject) => {
+    // Its own process group, so a kill reaches git's children too (the
+    // remote helper doing the transfer): a surviving child would hold the
+    // output pipes open and `close` would never fire.
     const child = spawn("git", argv, {
       cwd: opts.cwd,
       env: opts.env,
-      signal: opts.signal,
+      detached: true,
       stdio: ["pipe", "pipe", "pipe"],
     });
+    const killGroup = () => {
+      try {
+        process.kill(-child.pid!, "SIGKILL");
+      } catch {
+        // already gone
+      }
+    };
+    const timer = setTimeout(killGroup, opts.timeoutMs ?? GIT_TIMEOUT_MS);
+    if (opts.signal?.aborted) killGroup();
+    opts.signal?.addEventListener("abort", killGroup, { once: true });
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     child.stdout.on("data", (d: Buffer) => out.push(d));
@@ -49,6 +71,10 @@ export const spawnGit: GitSpawn = (argv, opts) =>
     let spawnError: Error | undefined;
     child.on("error", (e) => (spawnError ??= e));
     child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      opts.signal?.removeEventListener("abort", killGroup);
+      if (opts.signal?.aborted)
+        return reject(opts.signal.reason ?? new Error("git aborted"));
       if (spawnError) return reject(spawnError);
       if (code === 0) return resolve(Buffer.concat(out));
       const stderr = Buffer.concat(err).toString("utf8");

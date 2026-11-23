@@ -74,6 +74,23 @@ function source(
   };
 }
 
+describe("spawnGit", () => {
+  it("kills a git process that outlives its deadline, so a stalled fetch fails and can be retried", async () => {
+    const started = Date.now();
+    let caught: unknown;
+    try {
+      await spawnGit(["-c", "alias.stall=!sleep 30", "stall"], {
+        env: process.env,
+        timeoutMs: 200,
+      });
+    } catch (err) {
+      caught = err;
+    }
+    assert.instanceOf(caught, Error);
+    assert.isBelow(Date.now() - started, 5_000);
+  });
+});
+
 describe("GitCache", () => {
   let root: string;
   const upstreams: FixtureRepo[] = [];
