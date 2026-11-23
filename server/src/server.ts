@@ -10,13 +10,23 @@ async function main(): Promise<void> {
   const config = loadConfig(process.env);
   const kv = await createKv(config);
   const factoryHistory = await createFactoryHistory(config);
-  const app = buildApp({ kv, config, factoryHistory });
+  // Optional: runs only with a database plus LLM and GitHub App credentials;
+  // otherwise it logs one line, every /v1/pr-reviewer route answers 503, and
+  // the rest of the server is exactly as before.
+  const reviewer = startPrReviewer(process.env);
+  const app = buildApp({
+    kv,
+    config,
+    factoryHistory,
+    prReviewer: reviewer && {
+      sequelize: reviewer.sequelize,
+      github: reviewer.github,
+      wake: () => reviewer.runner.wake(),
+    },
+  });
   app.listen(config.port, () => {
     console.log(`marge-web listening on :${config.port}`);
   });
-  // Optional: runs only with a database plus LLM and GitHub App credentials;
-  // otherwise it logs one line and the server is exactly as before.
-  startPrReviewer(process.env);
 }
 
 main().catch((err) => {
