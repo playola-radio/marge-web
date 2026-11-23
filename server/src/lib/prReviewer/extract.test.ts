@@ -334,6 +334,22 @@ describe("extract", () => {
     );
   });
 
+  it("an empty file replaced by a symlink: each run lands in exactly one unit", async () => {
+    base({ "conf.txt": "" });
+    up.git("rm", "-q", "--", "conf.txt");
+    symlinkSync("target.txt", join(up.dir, "conf.txt"));
+    const c1 = up.commit("link conf");
+
+    const { result } = await extractFrom(up, up.mergeBase("main", c1), c1);
+
+    const unitRuns = unitsOf(result).flatMap((u) => u.runIds);
+    assert.sameMembers(
+      unitRuns,
+      result.runs.map((r) => r.id),
+    );
+    assert.lengthOf(unitRuns, result.runs.length);
+  });
+
   it("8. a binary file: one content-less run owned by the last commit touching it", async () => {
     const b = base({ "README.md": lines("hi") });
     up.commit("logo", { "logo.png": Buffer.from([0x89, 0x50, 0, 1, 2]) });

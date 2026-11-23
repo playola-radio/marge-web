@@ -351,13 +351,16 @@ export class GitCache {
         await this.withSizeCap(dir, (signal) =>
           this.pinCommits(src, dir, mode, refs, signal),
         );
+        return;
       } catch (err) {
-        // An over-cap directory is dropped unless another lease is reading it.
-        if (err instanceof CacheTooLargeError && this.pins.get(dir) === 1)
-          rmSync(dir, { recursive: true, force: true });
-        throw err;
+        // An over-cap or incomplete directory (e.g. a stacked PR retargeted
+        // past its shallow boundary) is dropped unless another lease is
+        // reading it; an incomplete one is then rebuilt from scratch below.
+        const sole = this.pins.get(dir) === 1;
+        if (!sole || !(err instanceof GitCacheError)) throw err;
+        rmSync(dir, { recursive: true, force: true });
+        if (err instanceof CacheTooLargeError) throw err;
       }
-      return;
     }
 
     const parent = dirname(dir);
@@ -426,10 +429,9 @@ export class GitCache {
         await this.git.run(["update-ref", ref, sha], { cwd: dir });
       else missing.add(sha);
     }
-    if (missing.size === 0) return;
-
+    // Even with both commits cached, the history between them is validated below.
     let prCommits: PrCommit[] | null = null;
-    if (mode === "blobless") {
+    if (missing.size > 0 && mode === "blobless") {
       await this.fetch(
         src,
         dir,
@@ -439,7 +441,7 @@ export class GitCache {
           .map(([sha, ref]) => `+${sha}:${ref}`),
         signal,
       );
-    } else {
+    } else if (missing.size > 0) {
       // No deepening, ever: a PR whose history doesn't connect to the merge
       // base fails here, before anything big is fetched.
       prCommits = await src.prCommits();

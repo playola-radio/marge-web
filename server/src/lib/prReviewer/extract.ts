@@ -328,7 +328,10 @@ export function unitsOf(result: ExtractResult): Unit[] {
   const units: Unit[] = [];
   for (const file of result.files) {
     if (file.hunks.length === 0) {
-      for (const r of result.runs.filter((r) => r.path === file.path))
+      // Only content-less runs: a type change gives another entry this path.
+      for (const r of result.runs.filter(
+        (r) => r.path === file.path && !r.oldRange && !r.newRange,
+      ))
         units.push({ id: r.id, path: file.path, runIds: [r.id] });
       continue;
     }

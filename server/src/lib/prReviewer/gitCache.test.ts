@@ -306,6 +306,32 @@ describe("GitCache", () => {
       lease.release();
     });
 
+    it("rebuilds the cache when a stacked PR is retargeted past its shallow boundary", async () => {
+      const up = FixtureRepo.create();
+      upstreams.push(up);
+      const main = up.commit("m1", { "a.txt": lines("1") });
+      up.checkout("parent", true);
+      const parentTip = up.commit("p1", { "p.txt": lines("p") });
+      up.checkout("feature", true);
+      const head = up.commit("f1", { "f.txt": lines("f") });
+      up.checkout("main");
+      const cache = new GitCache({ root });
+
+      const first = await cache.checkout(
+        source(up, { headSha: head, baseSha: parentTip, repoSizeKb: huge }),
+      );
+      first.release();
+      const retargeted = await cache.checkout(
+        source(up, { headSha: head, baseSha: main, repoSizeKb: huge }),
+      );
+      const count = await new Git().run(
+        ["rev-list", "--count", `${main}..${head}`],
+        { cwd: retargeted.dir },
+      );
+      assert.strictEqual(count.trim(), "2");
+      retargeted.release();
+    });
+
     it("fails a PR that merges its base branch into itself before fetching anything", async () => {
       const up = FixtureRepo.create();
       upstreams.push(up);
