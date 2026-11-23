@@ -28,6 +28,8 @@ export const PIPELINE_VERSION = "1";
 export const DEFAULT_MAX_ATTEMPTS = 3;
 export const DEFAULT_LEASE_MS = 60_000;
 export const DEFAULT_POLL_MS = 2_000;
+/** An automatic retry waits this long, doubling per attempt, so a provider outage can pass. */
+export const DEFAULT_RETRY_DELAY_MS = 15_000;
 
 export interface PrMeta {
   title: string;
@@ -90,6 +92,7 @@ export class RunStore {
   constructor(
     private readonly sequelize: Sequelize,
     private readonly leaseMs = DEFAULT_LEASE_MS,
+    private readonly retryDelayMs = DEFAULT_RETRY_DELAY_MS,
   ) {}
 
   private async rows<T>(
@@ -103,7 +106,8 @@ export class RunStore {
 
   /**
    * Claims the oldest runnable run within the attempt budget: mints a fresh
-   * lease token, bumps `attempt` and starts the lease.
+   * lease token, bumps `attempt` and starts the lease. A requeued run
+   * (attempt > 0) waits out its backoff first.
    */
   async claimNext(maxAttempts: number): Promise<Claim | null> {
     const token = randomUUID();
@@ -115,14 +119,22 @@ export class RunStore {
               failure = NULL, failure_detail = NULL, updated_at = now()
         WHERE r.id = (
           SELECT id FROM pr_reviewer_runs
-           WHERE (status = 'queued'
+           WHERE ((status = 'queued'
+                   AND (attempt = 0
+                        OR updated_at <= now() - $retryDelayMs
+                           * power(2, attempt - 1) * interval '1 millisecond'))
                   OR (status = 'generating' AND lease_expires_at < now()))
              AND attempt < $maxAttempts
            ORDER BY created_at
            LIMIT 1
            FOR UPDATE SKIP LOCKED)
        RETURNING r.*`,
-      { token, leaseMs: this.leaseMs, maxAttempts },
+      {
+        token,
+        leaseMs: this.leaseMs,
+        retryDelayMs: this.retryDelayMs,
+        maxAttempts,
+      },
     );
     if (!row) return null;
     return {

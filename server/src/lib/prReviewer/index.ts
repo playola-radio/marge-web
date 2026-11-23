@@ -70,7 +70,7 @@ export function startPrReviewer(
     execute: createExecutor({
       github,
       gitCache: new GitCache({
-        root: env.PR_REVIEWER_CACHE_DIR || join(tmpdir(), "marge-pr-reviewer"),
+        root: join(tmpdir(), "marge-pr-reviewer"),
       }),
       llm,
       cache: new PostgresStageCache(sequelize),

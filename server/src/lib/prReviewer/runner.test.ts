@@ -102,7 +102,7 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
     new FakeLlmClient({ model, script });
 
   async function insertRun(
-    overrides: { prNumber?: number; headSha?: string; baseSha?: string } = {},
+    overrides: { prNumber?: number } = {},
   ): Promise<string> {
     const [row] = await sequelize.query<{ id: string }>(
       `INSERT INTO pr_reviewer_runs
@@ -115,8 +115,8 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
         bind: {
           org,
           pr: overrides.prNumber ?? 7,
-          head: overrides.headSha ?? extracted.result.headSha,
-          base: overrides.baseSha ?? extracted.result.baseSha,
+          head: extracted.result.headSha,
+          base: extracted.result.baseSha,
           version: PIPELINE_VERSION,
           meta: JSON.stringify({
             title: "Add a greeting",
@@ -383,6 +383,13 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
     assert.equal(state.attempt, 1);
     assert.isNull(state.failure);
 
+    // The requeued run waits out its backoff instead of being reclaimed at once.
+    assert.isFalse(await r.runOnce());
+    await sequelize.query(
+      `UPDATE pr_reviewer_runs SET updated_at = now() - interval '1 minute'
+        WHERE id = $id`,
+      { bind: { id } },
+    );
     assert.isTrue(await r.runOnce());
     state = await runState(id);
     assert.equal(state.status, "failed");

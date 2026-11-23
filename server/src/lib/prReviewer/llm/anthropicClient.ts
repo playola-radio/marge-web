@@ -28,18 +28,7 @@ export interface AnthropicLlmClientOptions {
 
 // Strict tool schemas accept only a subset of JSON Schema; the zod schema
 // still enforces every dropped constraint when the response is validated.
-const UNSUPPORTED = new Set([
-  "$schema",
-  "minLength",
-  "maxLength",
-  "pattern",
-  "format",
-  "maxItems",
-  "minimum",
-  "maximum",
-  "exclusiveMinimum",
-  "exclusiveMaximum",
-]);
+const UNSUPPORTED = new Set(["$schema", "minLength"]);
 
 function strip(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(strip);
@@ -47,7 +36,6 @@ function strip(node: unknown): unknown {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node)) {
     if (UNSUPPORTED.has(key)) continue;
-    if (key === "minItems" && typeof value === "number" && value > 1) continue;
     out[key] = strip(value);
   }
   return out;
