@@ -204,6 +204,9 @@ export class GitCacheError extends Error {
   }
 }
 
+/** A fetch pushed the PR's directory over the per-PR size cap. */
+export class CacheTooLargeError extends GitCacheError {}
+
 export interface PrSource {
   org: string;
   repo: string;
@@ -332,6 +335,8 @@ export class GitCache {
     const entries = this.cachedDirs().map((dir) => ({
       dir,
       size: GitCache.sizeOf(dir),
+      // Directories this process hasn't used (left by an earlier boot) rank
+      // older than any it has, in the order their mtimes give.
       lastUsed: this.lastUsed.get(dir) ?? lstatSync(dir).mtimeMs - Date.now(),
     }));
     let total = entries.reduce((sum, e) => sum + e.size, 0);
@@ -364,7 +369,8 @@ export class GitCache {
           this.pinCommits(src, dir, mode, refs, signal),
         );
       } catch (err) {
-        if (err instanceof GitCacheError && this.pins.get(dir) === 1)
+        // An over-cap directory is dropped unless another lease is reading it.
+        if (err instanceof CacheTooLargeError && this.pins.get(dir) === 1)
           rmSync(dir, { recursive: true, force: true });
         throw err;
       }
@@ -538,7 +544,7 @@ export class GitCache {
       }
     }, SIZE_POLL_MS);
     const tooLarge = () =>
-      new GitCacheError(
+      new CacheTooLargeError(
         `This pull request's repository is too large for the review cache (over ${formatBytes(cap)})`,
       );
     try {
