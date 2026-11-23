@@ -242,6 +242,7 @@ export class GitHubApp {
           "User-Agent": "marge-pr-reviewer",
           "X-GitHub-Api-Version": "2022-11-28",
         },
+        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
       });
     } catch (err) {
       throw new GitHubError(
@@ -264,6 +265,9 @@ export class GitHubApp {
     return res.json();
   }
 }
+
+/** A stalled GitHub call fails after this long instead of hanging the run. */
+const GITHUB_TIMEOUT_MS = 30_000;
 
 /** A branch name for a URL path: each segment encoded, slashes kept. */
 function encodeRef(ref: string): string {

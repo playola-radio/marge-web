@@ -275,19 +275,27 @@ export async function extract(opts: ExtractOptions): Promise<ExtractOutput> {
     for (const hunk of file.hunks) {
       const changed = hunk.lines.filter((l) => l.kind !== " ");
       const found = changed.map(ownerOf);
+      // Nearest known owner after each line, computed in one backward pass.
+      const nextOwner: (string | null)[] = new Array(changed.length);
+      for (
+        let j = changed.length - 1, next: string | null = null;
+        j >= 0;
+        j -= 1
+      ) {
+        nextOwner[j] = next;
+        next = found[j].sha ?? next;
+      }
       const resolved: string[] = [];
+      let prevOwner: string | null = null;
       for (let j = 0; j < changed.length; j += 1) {
         if (found[j].sha) {
-          resolved.push(found[j].sha!);
+          prevOwner = found[j].sha!;
+          resolved.push(prevOwner);
           continue;
         }
         // Disagreement: nearest preceding changed line in the hunk, else the
         // nearest following, else the last commit that touched the file.
-        let owner: string | null = null;
-        for (let k = j - 1; k >= 0 && !owner; k -= 1) owner = found[k].sha;
-        for (let k = j + 1; k < changed.length && !owner; k += 1)
-          owner = found[k].sha;
-        owner ??= await lastTouch(entry);
+        const owner = prevOwner ?? nextOwner[j] ?? (await lastTouch(entry));
         resolved.push(owner);
         const line = changed[j];
         ownerFallbacks.push({

@@ -44,8 +44,12 @@ export const spawnGit: GitSpawn = (argv, opts) =>
     child.stdout.on("data", (d: Buffer) => out.push(d));
     child.stderr.on("data", (d: Buffer) => err.push(d));
     child.stdin.on("error", () => undefined); // git may exit before reading stdin
-    child.on("error", reject);
+    // Settle only on `close`, so a caller cleaning up after an abort never
+    // races a git process that is still shutting down.
+    let spawnError: Error | undefined;
+    child.on("error", (e) => (spawnError ??= e));
     child.on("close", (code, signal) => {
+      if (spawnError) return reject(spawnError);
       if (code === 0) return resolve(Buffer.concat(out));
       const stderr = Buffer.concat(err).toString("utf8");
       reject(
