@@ -6,6 +6,8 @@ COPY . .
 RUN npm run build
 
 FROM node:20-alpine
+# The PR reviewer pipeline shells out to git.
+RUN apk add --no-cache git
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 COPY --from=builder /usr/src/app/node_modules ./node_modules
