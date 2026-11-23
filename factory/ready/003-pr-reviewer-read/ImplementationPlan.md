@@ -1,0 +1,141 @@
+# 003-pr-reviewer-read — Implementation plan
+
+The design files beside this plan are the truth; this plan only says how to build them.
+
+The work re-implements the proven "chapters" app inside marge-web. The chapters source code is **not** in this repository: the bundled specs in `reference/` beside this plan (pipeline, extraction rules, chapter schema, PR mode, markdown diff rendering) are the implementation source — every "per reference §N" instruction below means building from that spec text, and the reference's own Tests sections are the test lists to implement. The build order: storage and deploy plumbing first, then reading PRs out of GitHub and attributing their changed lines, then the generation engine, then the API, then the page. Decisions made while planning: repository access/extraction and generation are separate PRs — they meet at one explicit intermediate type (`ExtractResult`, reference §5) and each has independently passing tests; the API and the page are separate PRs so each gets a focused review. The PR reviewer is optional at boot: with no database (marge-web's supported `KV_BACKEND=memory` mode without `DATABASE_URL`) or missing reviewer credentials, the server boots exactly as today with the feature off. Base branch: `main`, deliberately — marge-web has no `develop`; `main` is its only long-lived branch and its deployable trunk (every push deploys to production), and the repo's previous factory builds (001, 002) merged each PR to `main` sequentially. The multi-PR feature-branch rule exists to keep the trunk shippable, and each of these PRs satisfies that on its own: PRs 1–4 are inert without the reviewer env vars (the startup guard keeps the runner off and every reviewer route answers 503), and PR 5's page sits behind the existing sign-in and shows the unavailable state on an unconfigured server. Each merge is an independently safe deploy.
+
+| PR | Title | Depends on | Hard |
+|---|---|---|---|
+| 1 | chore: add storage and deploy settings for the PR reviewer | — | no |
+| 2 | chore: fetch pull request changes and work out which commit wrote each line | 1 | no |
+| 3 | chore: build the engine that turns a pull request into readable chapters | 2 | yes |
+| 4 | chore: add the web endpoints that start and serve chapter generation | 3 | no |
+| 5 | feature: read a pull request as narrated chapters and mark them reviewed | 4 | no |
+
+## PR 1 — chore: add storage and deploy settings for the PR reviewer
+
+Pure plumbing: the database tables, the database plan upgrade, git in the production image, and the new secrets. Nothing reads the tables yet; the deploy stays green.
+
+**Changes**
+
+- Add `server/src/db/migrations/20261123000000-pr-reviewer.cjs` creating `pr_reviewer_runs`, `pr_reviewer_stage_outputs`, `pr_reviewer_documents`, `pr_reviewer_run_files`, `pr_reviewer_chapter_reviews` exactly as specified in `ModelChanges.md` (columns, PKs, FKs with ON DELETE CASCADE, the unique index on runs' find-or-create key, and the `(status, lease_expires_at)` index), with a `down` dropping all five.
+- In `render.yaml`, change `marge-api-db` from `plan: free` to `plan: basic-256mb`.
+- In `render.yaml`, add `ANTHROPIC_API_KEY`, `GITHUB_APP_ID`, and `GITHUB_APP_PRIVATE_KEY` to the `production` env var group with `sync: false`, following the existing secret entries.
+- In the production Dockerfile (`server/Dockerfile.production`), install `git` in the runtime image.
+
+**Tests**
+
+- Gated on `DATABASE_URL` in the repo's existing `(dbUrl ? describe : describe.skip)` style (see `server/src/lib/kv/kv.lib.test.ts`): against the already-migrated database — CI's `server-db` job runs `npm run migrate` before `npm test`, and the DB-less `server` job skips the suite — assert the five tables exist with their expected columns, primary keys, FKs and the runs unique index. The migration's `up` is exercised by `npm run migrate` itself in CI and on deploy; no test runs `down` or drops tables, so the other suites sharing the job's database are untouched.
+
+**Screenshots it must match**
+
+- none
+
+**"Done when" items it delivers**
+
+- none
+
+## PR 2 — chore: fetch pull request changes and work out which commit wrote each line
+
+Repository access and extraction, with no LLM and no HTTP surface: GitHub App reads, the bounded git cache, and diff extraction implemented from reference §5. Output is the explicit handoff PR 3 consumes: `ExtractResult` (reference §5: `{ baseRef, baseSha, headSha, branch, repo, commits[], files[], runs[], ownerFallbacks[] }`) plus the captured `markdownSources`. All tests run against a mocked GitHub API and local fixture git repositories — no network.
+
+**Changes**
+
+- Add `server/src/lib/prReviewer/github.ts`: marge-reviewer GitHub App auth (JWT from `GITHUB_APP_PRIVATE_KEY`, installation token minting and caching, honoring the token's ~1 h expiry) and PR resolution (title, url, refs, `head_sha`, merge-base `base_sha`, commit count, and `hasNetDiff`) via the GitHub REST API. The merge base and `hasNetDiff` come from the one `base…head` compare call, whose response carries both the merge-base commit and the net changed-file list — so a branch whose commits cancel out (a change followed by its revert) resolves with `hasNetDiff: false` even though its commit count is positive; commit count never decides diff emptiness (reference §5). This is what PR 4's POST consults before creating a run; no git work happens in the request path. The same minted installation token also authenticates git.
+- Add `server/src/lib/prReviewer/gitCache.ts`: per-(org, repo, PR) bare-repo directories under a configurable cache root; repo setup and PR fetch per the PR-mode reference §3/§8: a blobless full clone (`--filter=blob:none`) for repos up to the reference's size threshold — all playola repos in practice — and PR-only shallow fetch above it, pinned to the run's SHAs (merge base + PR head). **No deepening, ever:** in PR-only mode the reference §8 connectivity check runs *before* the head fetch, and a PR that merges its base branch into itself fails fast with a plain-English error (surfaced as the run's failure by PR 3) instead of fetching unbounded base history; per-directory locking; in-use pinning; LRU eviction with a per-PR and total size cap (defaults 512 MiB / 1 GiB). **Git authentication:** every fetch/deepening subprocess runs over HTTPS with a current installation token passed per invocation as `git -c http.extraHeader="Authorization: Basic <base64(x-access-token:TOKEN)>"` — never written into the remote URL, git config, or disk, and never relying on `gh` or a credential helper; each operation asks `github.ts` for a token, so an expired one is re-minted.
+- Add `server/src/lib/prReviewer/extract.ts`: implement chapters' extraction per reference §5 — diff between pinned SHAs into runs/units/owners with its blame rules, reading only git objects (never a work tree). **Before any blame or object read, extraction batch-hydrates the partial clone in one authenticated fetch of both sides of every file change the commits in `base..head` make** (PR-mode reference — left to on-demand fetching, blame makes one network fetch per blob, which both needs credentials git doesn't have and triggers auto-gc races); the hydration fetch carries the same `Authorization` extraHeader as every other fetch, and after it no extraction read touches the network. Emits `ExtractResult` **plus** `markdownSources: { path, text }[]`: the full text at `headSha` of each qualifying markdown file in the diff (markdown reference §1/§2 rules — non-deleted, non-binary `.md`/`.markdown`, ≤ 1 MB), read in the same pinned cache session. The cache directory stays pinned from fetch through the end of extraction; no later stage reads git.
+
+**Tests**
+
+- `github.ts`: installation-token flow and PR resolution against a mocked GitHub API; `pr_not_found` on a 404; a mocked compare response with commits present but an empty net changed-file list (the change-then-revert shape) resolves with `hasNetDiff: false`, and one with files resolves `true`.
+- `gitCache.ts`: a second fetch of the same PR reuses the directory; eviction removes the least-recently-used idle directory and never a pinned one; the per-PR size cap aborts an oversized fetch; credential wiring — the spawned git fetch receives the `Authorization` extraHeader with the current token and no token appears in the remote URL or on disk, and a later fetch (e.g. the batch blob hydration) after the cached token expires mints and uses a fresh one (stubbed token source and captured git invocations); on a shallow PR-only fixture, a PR that merges its base branch into itself fails the §8 connectivity check **before any head fetch** — no base-branch history is fetched — with the plain-English error.
+- `extract.ts`: against a **partial (blobless) fixture clone with missing blobs**, extraction issues the single batch-hydration fetch (with the `Authorization` extraHeader, re-minting an expired token) and then completes with no further fetch subprocess; on a fixture repo with a known multi-commit branch, extraction yields the expected `ExtractResult` units and owners (implement the reference Tests section's Extract cases from the spec, including the reverse-blame deletion cases); `markdownSources` holds a changed markdown file's **complete** text at `headSha` (including content outside every hunk, e.g. a fence opened above the first change), and an oversized, binary or deleted file gets no entry.
+
+**Screenshots it must match**
+
+- none
+
+**"Done when" items it delivers**
+
+- none
+
+## PR 3 — chore: build the engine that turns a pull request into readable chapters
+
+Everything between an `ExtractResult` and a stored chapters document: the `LlmClient` interface with the Anthropic and fake implementations, the four pipeline stages with the content-hash stage cache, the lease-based run consumer, and the optional startup wiring. Pipeline tests run against PR 2's extraction on fixture repos with the fake LLM; client-behavior tests mock the Anthropic SDK.
+
+**Changes**
+
+- Add `@anthropic-ai/sdk` and `zod` to `server/package.json` dependencies (with the lockfile update) — neither is currently declared.
+- Add `server/src/lib/prReviewer/llm/LlmClient.ts` (interface: `structured<T>(stage input) → validated T or a validation-failure result`), `anthropicClient.ts` (Anthropic SDK, `claude-opus-5-5`, zod-to-strict-tool-schema, `tool_choice` auto with parallel tool use disabled, per reference §6.1 — `structured()` makes **exactly one** request and reports schema/validation failure to the caller; it never retries internally), and `fakeClient.ts` for tests; a factory picks the implementation from env (D6).
+- Add `server/src/lib/prReviewer/pipeline/` with the four stages — `outline.ts`, `writeChapter.ts` (bounded concurrency, configurable, default 3), `summarize.ts`, `assemble.ts` (pure code; joins `ExtractResult` + stage outputs into the extended chapters.json v1 document per reference §7 + PR-mode `pr` field; validates every extracted run is covered; carries the extraction-captured `markdownSources` through to publication — it never reads git). **Validation retry belongs to the pipeline alone** (reference §6.3): each LLM stage checks `pr_reviewer_stage_outputs` by sha256 cache key; on a validation failure it retries once with the validation error appended; on a second failure it emits that stage's deterministic fallback (outline → one chapter per commit, write → one step per file with empty explanation, summarize → branch + joined subjects). Stage cache rows store `{ output, fallbackUsed }`, so a cache hit restores both the result and its fallback provenance, and `document.fallbacks[]` stays correct across crash recovery. Network/auth errors abort the attempt, never fall back.
+- Add `server/src/lib/prReviewer/runner.ts`: claims `queued` runs (and `generating` runs with expired leases) by minting a fresh `lease_token` UUID and bumping `attempt` — **every heartbeat, progress, failure and publish write is conditioned on the row still carrying this claim's `lease_token`, so a stalled worker whose run was reclaimed — or exhausted, explicitly retried, and re-claimed — can never overwrite the new claimant** (`attempt` only bounds the automatic budget; it is never a claim identity, since Retry resets it). Executes the pipeline updating `progress`; publishes the document + `pr_reviewer_run_files` rows + `ready` status in one transaction; marks `failed` with the plain-English `failure` and raw `failure_detail` after the automatic attempt bound. An explicit Retry (PR 4's endpoint) resets `attempt` to 0, renewing the automatic budget for the same pinned revision.
+- Startup wiring in `server/src/server.ts`: start the runner only when the reviewer can run — a configured database (`DATABASE_URL`) plus LLM and GitHub App credentials (or their fake/test stand-ins). Otherwise log one line and boot exactly as today; the existing `KV_BACKEND=memory` database-free path is untouched.
+
+**Tests**
+
+- `anthropicClient.ts` (mocked SDK): a schema-valid response returns typed output; a schema-invalid response returns a validation-failure result after exactly one request.
+- Pipeline with the **mocked Anthropic client**: a stage whose first response is invalid makes exactly two requests, then succeeds; two invalid responses make exactly two requests and yield that stage's deterministic fallback.
+- Pipeline on a fixture repo with the fake LLM: produces a stored document that schema-validates as extended chapters.json v1, with every extracted run covered; scripted double-invalid responses for each LLM stage yield its deterministic fallback, recorded in `document.fallbacks[]`; a fallback-producing stage followed by a simulated crash and a resumed attempt reassembles from the stage cache with `fallbacks[]` still correct; a second run of the same revision makes zero LLM calls (all stage-cache hits); the extraction-captured markdown sources land in `pr_reviewer_run_files` at publication (and survive clearing the git cache before publish).
+- `runner.ts`: a run whose consumer dies mid-write (expired lease) is reclaimed and finishes reusing completed stage outputs; two overlapping workers — the reclaimed (stale) worker's progress, status and publish writes are all rejected, and only the current claimant publishes; a stalled worker that resumes **after** its run was exhausted, explicitly retried (attempt reset to 0) and claimed anew still has every write rejected, because its old `lease_token` no longer matches; a run only ever becomes `ready` with its complete document; attempts past the bound leave `failed` with `failure` and `failure_detail` set; a failed run whose attempt budget is exhausted completes after its `attempt` is reset (the Retry path), reusing cached stages.
+- Boot regression: the server starts cleanly with `KV_BACKEND=memory` and no `DATABASE_URL` and no reviewer credentials, with the runner off.
+- Database-backed suites (stage cache, runner, publication) use the repo's existing `DATABASE_URL` gate (`(dbUrl ? describe : describe.skip)`, as in `kv.lib.test.ts`) so the DB-less CI job passes unchanged; they run in the `server-db` job against the migrated database, deleting their own rows between tests and never dropping tables.
+
+**Screenshots it must match**
+
+- none
+
+**"Done when" items it delivers**
+
+- none
+
+## PR 4 — chore: add the web endpoints that start and serve chapter generation
+
+The eight `/v1/pr-reviewer` endpoints from `ApiContract.md`, wired to PR 3's engine behind the existing `authenticate` middleware.
+
+**Changes**
+
+- Add `server/src/api/prReviewer/index.ts` and `prReviewer.api.ts` implementing, exactly per `ApiContract.md`: `GET /:org/:repo/pulls/:prNumber/runs/latest` (live GitHub resolution + `run`: the PR's newest **ready** run, else its newest run of any status, else null, plus `newerRun`: the most recently created run when it differs from `run`; read-only, never enqueues), `POST /:org/:repo/pulls/:prNumber/runs` (resolves the PR through PR 2's `github.ts`, whose compare-based resolution reports `hasNetDiff` for the pinned `baseSha…headSha` revision — `false` → `422 empty_diff` before any row exists, so a branch whose commits cancel out is rejected without commit counting or git work in the request path; then an **atomic** find-or-create on the unique revision key: insert with unique-conflict recovery — `ON CONFLICT DO NOTHING` then re-select, never look-then-insert — so concurrent first visits converge on one run and one enqueue), `GET /runs/:runId` (poll), `POST /runs/:runId/retry` (re-enqueue this failed run's pinned revision, resetting `attempt` to 0 and clearing `failure`/`failureDetail`; `409 run_not_failed` otherwise), `GET /runs/:runId/chapters` (`{ run, document, reviewed }` with the stored document verbatim; `409 run_not_ready` otherwise), `GET /runs/:runId/files?path=` (stored markdown source; `404 file_not_available` for any other path), and `PUT`/`DELETE /runs/:runId/chapters/:chapterKey/reviewed` (idempotent, keyed on the JWT email; `404` for a key not in the document). When the reviewer is not configured (PR 3's startup guard), every route answers `503 { "error": "pr_reviewer_unavailable" }`.
+- Mount the router in `server/src/api/routes.ts` at `/v1/pr-reviewer` behind `authenticate`, following the existing `/v1/factory` pattern.
+
+**Tests**
+
+- Supertest coverage in the existing API test style: each endpoint's success shape from `ApiContract.md`, asserted against the same schema-valid fixture document used by the client tests; 401 without a token; `404 pr_not_found` on create; `422 empty_diff` when the mocked compare reports commits but zero net changed files (the change-then-revert shape), asserting **no run row was inserted and nothing was enqueued** — not a mock of the 422 itself; two **concurrent** creates for the same previously unseen revision, fired together against Postgres, both succeed with the same run id and leave exactly one run row and one enqueue (exercising the unique-conflict recovery path, not just sequential idempotence), and a later sequential create returns that same run; create for a new head SHA creates a second run; `runs/latest` after the mocked PR gains commits returns `currentHeadSha` differing from the run's `headSha` **without creating or enqueuing anything**; `runs/latest` with an older ready run A and a newer generating run B returns `run` = A and `newerRun` = B (with B's id and status), returns `run` = B with no `newerRun` once B is ready, and omits `newerRun` when only one run exists; retry of a failed run resets its attempt and re-enqueues the same pinned revision even when the mocked PR head has moved, and `409 run_not_failed` on a ready run; every run response (create, poll, latest, retry) carries `pr` metadata; `409 run_not_ready` for chapters of a generating run; `files` serves a stored markdown path and 404s a path with no row; reviewed marks are per-user (two tokens see independent `reviewed` lists) and idempotent (double PUT, DELETE of an absent mark), and PUT 404s a chapter key not in the document; with the reviewer unconfigured, routes answer 503. Database-backed endpoint suites use the same `DATABASE_URL` gate as PR 3's (skipped in the DB-less CI job, run in `server-db` against the migrated database, cleaning up their own rows); the unconfigured-503 tests need no database and run in both jobs.
+
+**Screenshots it must match**
+
+- none
+
+**"Done when" items it delivers**
+
+- none
+
+## PR 5 — feature: read a pull request as narrated chapters and mark them reviewed
+
+The page. A signed-in user visits `/pr-reviewer/:org/:repo/pulls/:prNumber`, generation starts on first visit, progress shows until ready, and the chapters render per the reference capture with persistent per-user reviewed toggles.
+
+**Changes**
+
+- Add `markdown-it` and `@types/markdown-it` to `client/package.json` (with the lockfile update) — not currently declared.
+- Add `client/src/Services/PrReviewerService.ts`: typed calls to the eight endpoints (latest, create, poll, retry, chapters, markdown file, set/clear reviewed), following `FactoryService.ts` conventions.
+- Add `client/src/Pages/PrReviewerPage/` implementing the chapters UI in React from the bundled reference specs and `screenshots/chapters--ready.png` (the Preact original is not in this repo; the specs are the source). Page container: on mount (and on window focus) call `runs/latest`; on the **initial, untroubled** lookup only, no run → POST create; queued/generating → poll `GET /runs/:id` every few seconds; ready → fetch chapters and render the document; run head ≠ `pr.currentHeadSha` → superseded banner with Generate-for-latest (POST); failed → error card with collapsed `failureDetail` and Retry (`POST /runs/:id/retry`). **A later freshness lookup never switches the displayed run:** the latest-run candidate is `newerRun ?? run` (by the contract, the most recently created run). Offer the **View latest** banner only when the candidate's id differs from the displayed run's **and** its `createdAt` is newer — so after the user has switched to generating run B, a lookup that returns `run` = older ready A plus `newerRun` = B offers nothing backward. Whether the newer run arrives as `newerRun` (still generating) or as the lookup's `run` itself (it became ready), keep the displayed document; the banner's **View latest** button is the explicit switch to that run id, with no POST (Design.md, superseded state). Recovery after a lookup error is read-only: **Try again** re-runs `runs/latest` and never POSTs; if the recovered lookup returns no run, render the PR header with a **Generate chapters** button that POSTs only when pressed (Design.md's unavailable/request-error state). Rendering from the document, per the reference specs: header (PR title, branch chips, commit count, "generated for `<sha>`", GitHub link from `document.pr.url`), left rail (chapter list with counts, active highlight, "N of M reviewed" progress, "NOT IN A CHAPTER" section from `document.excluded`), summary card from `document.title`/`summary`, chapter cards with step explanations and split diffs built from `document.files`/`runs`/`chapters`, markdown blocks rendered per `reference/chapters-markdown-rendered-diff-design.md` (markdown-it with its safety rules, Rendered/Code toggle, full text from `GET /runs/:id/files`, **cached by `(runId, path)`** — the reference's per-page-load path cache would go stale across a View-latest run switch — code-diff fallback with a note when the fetch 404s; asks/comments parts excluded), per-chapter Reviewed toggle keyed by `chapters[].key` (optimistic, reconciled from the server), Chapter order / File order toggle, and the generating / empty-diff / unavailable-or-request-error (503 or network failure → message card with **Try again** re-running the read, never generating; a failed freshness lookup or poll with a document on screen keeps the chapters and shows a dismissible note) / loading states described in `Design.md` — all inside marge-web's standard chrome.
+- Add the route in `client/src/App.tsx` under `ProtectedRoute` at `/pr-reviewer/:org/:repo/pulls/:prNumber`.
+
+**Tests**
+
+- Vitest + testing-library in the existing client test style, against the same schema-valid fixture document as PR 4's server tests: first visit (latest returns no run) posts run creation and shows the generating stages; a ready run renders summary, ordered chapters, split diffs with owner commits, and the excluded section; a markdown block defaults to Rendered (including a fence opened above the hunk, rendered from the full file text), toggles to Code, and falls back to the code diff with a note when the file fetch 404s; toggling Reviewed calls PUT/DELETE with the chapter key and updates "N of M reviewed"; reviewed state comes from the server response on load; a failed run shows the failure with collapsed detail and Retry calls the retry endpoint (not create); the superseded banner appears when `latest` reports a newer head for a ready run **without any POST being made**, and Generate-for-latest posts a new run; a focus-triggered freshness lookup returning `run` = the displayed ready run A plus `newerRun` = generating run B (the same A-ready/B-generating fixture as PR 4's endpoint test) keeps A's document on screen with no automatic switch and shows the view-latest banner, and pressing **View latest** polls and shows B by its id; a later lookup returning `run` = **ready** run B with no `newerRun` while A is still displayed likewise keeps A's document, shows the ready-for-latest banner, and switches to B only on the button press, with no POST; after switching to generating run B, a further focus lookup returning `run` = A and `newerRun` = B stays on B with **no** backward View latest offer and no automatic switch; when runs A and B both change the same markdown path and the user switches from A to B via View latest, B's file text is fetched (by B's run id) and rendered — A's cached text is never reused; empty-diff and pr-not-found responses render their messages; an initial `503 pr_reviewer_unavailable` renders the unavailable card whose Try again re-runs the read without any POST; a failed initial lookup followed by a successful Try again returning no run makes **no POST** and renders the header with a Generate chapters button, and pressing that button posts run creation; a failed freshness lookup while a document is displayed keeps the chapters visible and shows the dismissible note. Renderer assertions from the reference's own test lists (mvp reference Tests §UI, markdown reference §6), which distinguish the chapters UI from a generic split diff: a line written by another chapter shows that chapter's badge and earlier/later/excluded roles are marked; lines outside a step's ±3-line window collapse to the expandable "▸ N lines · M from ch K…" bar that expands on click; in the File order view, on a file fixture whose hunks mix changes from two chapters and an excluded run, **each changed line** carries its own chapter-number badge — or "—" for the excluded line — not just a per-block badge (mvp reference §8); marking a chapter reviewed collapses its card and advances to the next unreviewed chapter; in the rendered markdown view deleted text is never shown: a pure deletion produces one "− N lines removed" marker with the right count in the right position (markdown reference §3.2), while a replaced line highlights its new text with **no** removal marker; and the markdown safety cases — raw HTML in the source is escaped, a `javascript:` link renders without a clickable href, and images render as text, never fetched.
+
+**Screenshots it must match**
+
+- `screenshots/chapters--ready.png`
+
+**"Done when" items it delivers**
+
+- 1. Visiting `marge.playola.fm/pr-reviewer/<org>/<repo>/pulls/<n>` while signed in starts generation for that PR on first visit and shows stage progress until the chapters are ready.
+- 2. The finished page shows the PR summary, ordered chapters with step explanations and side-by-side diffs, and the "not in a chapter" section, matching the reference capture's layout.
+- 3. Toggling **Reviewed** on a chapter persists: after a refresh or from another browser, the same account sees the same marks and the correct "N of M reviewed" count.
+- 4. A second signed-in user opening the same PR revision gets the already-generated chapters (no second generation) but their own independent reviewed marks.
+- 5. When the PR gains new commits after generation, the page says the chapters are for an older revision and **Generate for latest** produces chapters for the new head.
+- 6. A failed generation shows what failed and **Retry** completes the run without redoing already-completed stages.
+- 7. Generated chapters remain readable after the server redeploys or its git cache is cleared.
+
+<!-- factory: finished plan for design 71416f0af9cd3255abc5eceb814b11f68e13f7bde6a64f3bcb6be2c3f06b6c66, plan 14d28fa5cf55f2afb87a1557c77f0e8e2663a47c5307649062cf2ca183669098. Any edit to this file or the design undoes it; run "factory finalize" again. -->
