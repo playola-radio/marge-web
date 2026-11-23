@@ -241,6 +241,18 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
     assert.deepEqual(await filesOf(id), extracted.markdownSources);
   });
 
+  it("stores NUL characters as U+FFFD but keeps escape text in the source verbatim", async () => {
+    await insertRun();
+    const store = new RunStore(sequelize, 60_000);
+    const claim = (await store.claimNext(3)) as Claim;
+    const title = "s.replace(/\\u0000/g, '') a\u0000b";
+    assert.isTrue(await store.publish(claim, await assembledWith(title)));
+    assert.equal(
+      (await documentOf(claim.run.id))!.title,
+      "s.replace(/\\u0000/g, '') a\ufffdb",
+    );
+  });
+
   it("never marks a run ready when its publication fails part-way", async () => {
     const id = await insertRun();
     const execute: RunExecutor = async (claim, ctx) => {

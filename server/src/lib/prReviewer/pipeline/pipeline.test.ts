@@ -4,7 +4,7 @@ import {
   AnthropicLlmClient,
   type MessagesApi,
 } from "../llm/anthropicClient.js";
-import { FakeLlmClient } from "../llm/fakeClient.js";
+import { defaultAnswer, FakeLlmClient } from "../llm/fakeClient.js";
 import { FixtureRepo, lines } from "../repoFixtures.test.js";
 import { assertCovered, featureExtract } from "./pipelineFixtures.test.js";
 import {
@@ -249,6 +249,37 @@ describe("pipeline", () => {
     assert.equal((caught as StageFailure).chapterNumber, 2);
   });
 
+  it("lets chapter writes already in flight finish before failing the attempt", async () => {
+    let slowFinished = false;
+    const llm = new FakeLlmClient({
+      script: {
+        outline: [INVALID, INVALID],
+        write: [
+          new Error("boom"),
+          async (req) => {
+            await new Promise((resolve) => setTimeout(resolve, 30));
+            slowFinished = true;
+            return defaultAnswer("write", req.input);
+          },
+        ],
+      },
+    });
+    let caught: unknown;
+    try {
+      await generateChapters({
+        extract: extracted,
+        llm,
+        cache: new MemoryStageCache(),
+        concurrency: 2,
+      });
+    } catch (err) {
+      caught = err;
+    }
+    assert.instanceOf(caught, StageFailure);
+    assert.isTrue(slowFinished);
+    assert.lengthOf(llm.callsFor("write"), 2);
+  });
+
   it("after a crash, reassembles a fallback stage from the stage cache with fallbacks[] intact", async () => {
     const cache = new MemoryStageCache();
     const crashing = new FakeLlmClient({
@@ -468,5 +499,11 @@ describe("outlineFallback", () => {
     assert.equal(out.chapters[11].headline, "Step 11 (and 2 more commits)");
     assert.lengthOf(out.chapters[11].runIds, 3);
     assert.deepEqual(out.excluded, []);
+  });
+
+  it("never reuses a key when a subject already ends in a number", () => {
+    const r = result(["Fix bug", "Fix bug", "Fix bug 2"]);
+    const keys = outlineFallback(r, unitViews(r)).chapters.map((c) => c.key);
+    assert.deepEqual(keys, ["fix-bug", "fix-bug-2", "fix-bug-2-2"]);
   });
 });

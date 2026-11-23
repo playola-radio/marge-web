@@ -79,7 +79,6 @@ export interface LlmStageOptions<T> {
 export interface LlmStageResult<T> {
   output: T;
   fallbackUsed: boolean;
-  cacheHit: boolean;
 }
 
 export async function runLlmStage<T>(
@@ -89,12 +88,7 @@ export async function runLlmStage<T>(
   // A hit is trusted as stored: it was validated (or is a fallback, which
   // need not meet the LLM schema — e.g. an empty intro) when it was written.
   const hit = await opts.cache.get(key);
-  if (hit)
-    return {
-      output: hit.output as T,
-      fallbackUsed: hit.fallbackUsed,
-      cacheHit: true,
-    };
+  if (hit) return { output: hit.output as T, fallbackUsed: hit.fallbackUsed };
 
   let user = opts.user;
   let result: { output: T; fallbackUsed: boolean } | null = null;
@@ -116,7 +110,7 @@ export async function runLlmStage<T>(
   }
   result ??= { output: opts.fallback(), fallbackUsed: true };
   await opts.cache.put(key, opts.stage, result);
-  return { ...result, cacheHit: false };
+  return result;
 }
 
 /** Which stage an attempt failed in, for the run's plain-English failure line. */

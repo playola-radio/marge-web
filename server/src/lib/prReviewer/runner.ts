@@ -44,7 +44,6 @@ export interface RunRow {
   prNumber: number;
   headSha: string;
   baseSha: string;
-  pipelineVersion: string;
   attempt: number;
   prMeta: PrMeta;
 }
@@ -75,7 +74,6 @@ interface RunRecord {
   pr_number: number;
   head_sha: string;
   base_sha: string;
-  pipeline_version: string;
   attempt: number;
   pr_meta: PrMeta;
   lease_token: string;
@@ -83,7 +81,9 @@ interface RunRecord {
 
 /** PostgreSQL's jsonb refuses NUL; a diff line can still carry one past git's binary check. */
 function storable(document: ChaptersDocument): string {
-  return JSON.stringify(document).replaceAll("\\u0000", "\\ufffd");
+  return JSON.stringify(document, (_key, v) =>
+    typeof v === "string" ? v.replaceAll("\0", "\ufffd") : v,
+  );
 }
 
 export class RunStore {
@@ -134,7 +134,6 @@ export class RunStore {
         prNumber: row.pr_number,
         headSha: row.head_sha,
         baseSha: row.base_sha,
-        pipelineVersion: row.pipeline_version,
         attempt: row.attempt,
         prMeta: row.pr_meta,
       },
@@ -227,17 +226,11 @@ export class RunStore {
         const runId = claim.run.id;
         await this.sequelize.query(
           `INSERT INTO pr_reviewer_documents (run_id, document, created_at)
-           VALUES ($runId, $document::jsonb, now())
-           ON CONFLICT (run_id)
-           DO UPDATE SET document = EXCLUDED.document, created_at = now()`,
+           VALUES ($runId, $document::jsonb, now())`,
           {
             bind: { runId, document: storable(assembled.document) },
             transaction,
           },
-        );
-        await this.sequelize.query(
-          `DELETE FROM pr_reviewer_run_files WHERE run_id = $runId`,
-          { bind: { runId }, transaction },
         );
         if (assembled.markdownSources.length)
           await this.sequelize.query(

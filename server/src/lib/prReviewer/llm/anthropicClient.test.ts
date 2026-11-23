@@ -59,7 +59,6 @@ describe("AnthropicLlmClient", () => {
     assert.deepEqual(result, {
       ok: true,
       value: { title: "Fix tests", summary: "It fixes." },
-      raw: { title: "Fix tests", summary: "It fixes." },
     });
     assert.lengthOf(messages.requests, 1);
   });
@@ -110,7 +109,6 @@ describe("AnthropicLlmClient", () => {
     if (!result.ok) {
       assert.include(result.error, "title");
       assert.include(result.error, "summary");
-      assert.deepEqual(result.raw, { title: "", summary: 3 });
     }
     assert.lengthOf(messages.requests, 1);
   });

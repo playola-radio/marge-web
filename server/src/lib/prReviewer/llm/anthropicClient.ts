@@ -119,7 +119,6 @@ export class AnthropicLlmClient implements LlmClient {
       return {
         ok: false,
         error: `The response did not call the \`${name}\` tool.`,
-        raw: response.content ?? null,
       };
     return validateRaw(req.schema, call.input);
   }

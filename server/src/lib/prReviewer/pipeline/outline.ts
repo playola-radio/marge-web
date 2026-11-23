@@ -121,7 +121,7 @@ export function outlineFallback(
     .flatMap(([, ids]) => ids);
 
   const chapters: OutlineOutput["chapters"] = [];
-  const used = new Map<string, number>();
+  const keys = new Set<string>();
   ordered.forEach((commit, i) => {
     const ids = byCommit.get(commit.sha)!;
     if (i >= MAX_CHAPTERS) {
@@ -131,10 +131,11 @@ export function outlineFallback(
     const headline =
       commit.subject.trim() || `Commit ${commit.sha.slice(0, 7)}`;
     const base = slug(headline) || `commit-${commit.sha.slice(0, 7)}`;
-    const n = (used.get(base) ?? 0) + 1;
-    used.set(base, n);
+    let key = base;
+    for (let n = 2; keys.has(key); n += 1) key = `${base}-${n}`;
+    keys.add(key);
     chapters.push({
-      key: n === 1 ? base : `${base}-${n}`,
+      key,
       headline,
       runIds: [...ids],
     });

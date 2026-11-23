@@ -175,7 +175,12 @@ export async function writeChapters(opts: {
     1,
     Math.min(opts.concurrency ?? DEFAULT_WRITE_CONCURRENCY, total),
   );
-  await Promise.all(Array.from({ length: width }, worker));
+  // Settle every worker before failing, so no request outlives the attempt.
+  const settled = await Promise.allSettled(
+    Array.from({ length: width }, worker),
+  );
+  const rejected = settled.find((s) => s.status === "rejected");
+  if (rejected) throw rejected.reason;
   return {
     chapters: written,
     fallbacks: outline.chapters

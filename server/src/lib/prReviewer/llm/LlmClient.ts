@@ -19,8 +19,8 @@ export interface StructuredRequest<T> {
 }
 
 export type StructuredResult<T> =
-  | { ok: true; value: T; raw: unknown }
-  | { ok: false; error: string; raw: unknown };
+  | { ok: true; value: T }
+  | { ok: false; error: string };
 
 export interface LlmClient {
   readonly model: string;
@@ -59,6 +59,6 @@ export function validateRaw<T>(
 ): StructuredResult<T> {
   const parsed = schema.safeParse(raw);
   return parsed.success
-    ? { ok: true, value: parsed.data, raw }
-    : { ok: false, error: describeIssues(parsed.error), raw };
+    ? { ok: true, value: parsed.data }
+    : { ok: false, error: describeIssues(parsed.error) };
 }
