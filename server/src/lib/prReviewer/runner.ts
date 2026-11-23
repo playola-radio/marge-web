@@ -141,8 +141,8 @@ export class RunStore {
   }
 
   /** Fails runs whose workers died on every attempt of their budget. */
-  async failExhausted(maxAttempts: number): Promise<number> {
-    const rows = await this.rows<{ id: string }>(
+  async failExhausted(maxAttempts: number): Promise<void> {
+    await this.rows(
       `UPDATE pr_reviewer_runs
           SET status = 'failed',
               failure = 'Generation stopped before it finished, too many times',
@@ -153,11 +153,9 @@ export class RunStore {
               updated_at = now()
         WHERE attempt >= $maxAttempts
           AND (status = 'queued'
-               OR (status = 'generating' AND lease_expires_at < now()))
-       RETURNING id`,
+               OR (status = 'generating' AND lease_expires_at < now()))`,
       { maxAttempts },
     );
-    return rows.length;
   }
 
   private async fenced(
@@ -309,7 +307,6 @@ export interface RunnerOptions {
   execute: RunExecutor;
   maxAttempts?: number;
   leaseMs?: number;
-  pollMs?: number;
   log?: (message: string) => void;
 }
 
@@ -318,7 +315,6 @@ export class Runner {
   private readonly execute: RunExecutor;
   private readonly maxAttempts: number;
   private readonly leaseMs: number;
-  private readonly pollMs: number;
   private readonly log: (message: string) => void;
   private timer: NodeJS.Timeout | null = null;
   private loop: Promise<void> | null = null;
@@ -330,7 +326,6 @@ export class Runner {
     this.execute = options.execute;
     this.maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
     this.leaseMs = options.leaseMs ?? DEFAULT_LEASE_MS;
-    this.pollMs = options.pollMs ?? DEFAULT_POLL_MS;
     this.log = options.log ?? ((m) => console.log(m));
   }
 
@@ -413,7 +408,7 @@ export class Runner {
         if (!worked && !this.stopped)
           await new Promise<void>((resolve) => {
             this.wakeUp = resolve;
-            this.timer = setTimeout(resolve, this.pollMs);
+            this.timer = setTimeout(resolve, DEFAULT_POLL_MS);
           });
       }
     })();

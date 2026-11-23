@@ -139,6 +139,31 @@ describe("AnthropicLlmClient", () => {
     assert.include((caught as Error).message, "401 invalid x-api-key");
     assert.lengthOf(messages.requests, 1);
   });
+
+  it("leaves retries to the runner: a 503 from the real SDK is one request", async () => {
+    const realFetch = globalThis.fetch;
+    let requests = 0;
+    globalThis.fetch = (async () => {
+      requests += 1;
+      return new Response('{"type":"error"}', {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      });
+    }) as typeof fetch;
+    try {
+      const sdkClient = new AnthropicLlmClient({ apiKey: "test-key" });
+      let caught: unknown;
+      try {
+        await sdkClient.structured(req);
+      } catch (err) {
+        caught = err;
+      }
+      assert.instanceOf(caught, LlmRequestError);
+      assert.equal(requests, 1);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
 });
 
 describe("toStrictToolSchema", () => {

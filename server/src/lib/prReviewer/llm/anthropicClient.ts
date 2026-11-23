@@ -82,7 +82,7 @@ export class AnthropicLlmClient implements LlmClient {
     else {
       if (!options.apiKey)
         throw new Error("ANTHROPIC_API_KEY is required for the LLM client");
-      const sdk = new Anthropic({ apiKey: options.apiKey });
+      const sdk = new Anthropic({ apiKey: options.apiKey, maxRetries: 0 });
       this.messages = sdk.messages as unknown as MessagesApi;
     }
   }

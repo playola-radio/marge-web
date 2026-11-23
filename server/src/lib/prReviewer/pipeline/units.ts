@@ -37,7 +37,7 @@ export function unitViews(result: ExtractResult): UnitView[] {
   const runs = new Map(result.runs.map((r) => [r.id, r]));
   const where = new Map<
     string,
-    { file: FileDiff; lines: DiffLine[]; first: number; last: number }
+    { lines: DiffLine[]; first: number; last: number }
   >();
   for (const file of result.files)
     for (const hunk of file.hunks)
@@ -45,8 +45,7 @@ export function unitViews(result: ExtractResult): UnitView[] {
         if (!line.runId) return;
         const at = where.get(line.runId);
         if (at) at.last = i;
-        else
-          where.set(line.runId, { file, lines: hunk.lines, first: i, last: i });
+        else where.set(line.runId, { lines: hunk.lines, first: i, last: i });
       });
   const hunkHeader = new Map<DiffLine[], string>();
   for (const file of result.files)

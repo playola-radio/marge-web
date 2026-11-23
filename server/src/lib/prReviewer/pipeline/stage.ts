@@ -22,7 +22,7 @@ export interface StageCache {
 }
 
 export class MemoryStageCache implements StageCache {
-  readonly entries = new Map<string, StageCacheEntry & { stage: LlmStage }>();
+  readonly entries = new Map<string, StageCacheEntry>();
 
   async get(key: string): Promise<StageCacheEntry | null> {
     const hit = this.entries.get(key);
@@ -31,9 +31,8 @@ export class MemoryStageCache implements StageCache {
       : null;
   }
 
-  async put(key: string, stage: LlmStage, entry: StageCacheEntry) {
-    if (!this.entries.has(key))
-      this.entries.set(key, { ...structuredClone(entry), stage });
+  async put(key: string, _stage: LlmStage, entry: StageCacheEntry) {
+    if (!this.entries.has(key)) this.entries.set(key, structuredClone(entry));
   }
 }
 

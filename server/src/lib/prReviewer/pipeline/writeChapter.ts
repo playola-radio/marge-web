@@ -116,7 +116,7 @@ export async function writeChapters(opts: {
   llm: LlmClient;
   cache: StageCache;
   concurrency?: number;
-  onChapterDone?: (completed: number, total: number) => Promise<void> | void;
+  onChapterDone?: (completed: number) => Promise<void> | void;
 }): Promise<{ chapters: WrittenChapter[]; fallbacks: string[] }> {
   const { outline, units } = opts;
   const total = outline.chapters.length;
@@ -156,7 +156,7 @@ export async function writeChapters(opts: {
       throw new StageFailure("write", err, i + 1);
     }
     completed += 1;
-    await opts.onChapterDone?.(completed, total);
+    await opts.onChapterDone?.(completed);
   };
 
   const worker = async () => {
