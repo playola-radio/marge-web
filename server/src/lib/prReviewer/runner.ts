@@ -92,7 +92,6 @@ export class RunStore {
   constructor(
     private readonly sequelize: Sequelize,
     private readonly leaseMs = DEFAULT_LEASE_MS,
-    private readonly retryDelayMs = DEFAULT_RETRY_DELAY_MS,
   ) {}
 
   private async rows<T>(
@@ -132,7 +131,7 @@ export class RunStore {
       {
         token,
         leaseMs: this.leaseMs,
-        retryDelayMs: this.retryDelayMs,
+        retryDelayMs: DEFAULT_RETRY_DELAY_MS,
         maxAttempts,
       },
     );

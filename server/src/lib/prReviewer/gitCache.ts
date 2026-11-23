@@ -23,7 +23,16 @@ export interface GitSpawnOptions {
   input?: string;
   signal?: AbortSignal;
   env: NodeJS.ProcessEnv;
+  /** Kills git past this deadline (default GIT_TIMEOUT_MS). */
+  timeoutMs?: number;
 }
+
+/**
+ * No git command may outlive this: a stalled network transfer would otherwise
+ * keep the run's lease alive forever and block the serial runner. A killed
+ * fetch fails like any git error, so the run is retried.
+ */
+export const GIT_TIMEOUT_MS = 15 * 60_000;
 
 /** Runs `git <argv>` and resolves with stdout; rejects on a non-zero exit. */
 export type GitSpawn = (
@@ -37,6 +46,7 @@ export const spawnGit: GitSpawn = (argv, opts) =>
       cwd: opts.cwd,
       env: opts.env,
       signal: opts.signal,
+      timeout: opts.timeoutMs ?? GIT_TIMEOUT_MS,
       stdio: ["pipe", "pipe", "pipe"],
     });
     const out: Buffer[] = [];

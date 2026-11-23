@@ -334,26 +334,6 @@ describe("pipeline", () => {
     assert.deepEqual(second.document, first.document);
   });
 
-  it("stops before any LLM call when the diff is empty", async () => {
-    const llm = new FakeLlmClient();
-    const empty: ExtractOutput = {
-      result: { ...extracted.result, files: [], runs: [] },
-      markdownSources: [],
-    };
-    let caught: unknown;
-    try {
-      await generateChapters({
-        extract: empty,
-        llm,
-        cache: new MemoryStageCache(),
-      });
-    } catch (err) {
-      caught = err;
-    }
-    assert.instanceOf(caught, EmptyDiffError);
-    assert.lengthOf(llm.calls, 0);
-  });
-
   describe("with the mocked Anthropic client", () => {
     /** A messages API that answers each request from `answer(toolName, n)`. */
     function scripted(answer: (tool: string, n: number) => unknown) {
@@ -446,6 +426,38 @@ describe("pipeline", () => {
       assert.deepEqual(document.fallbacks, ["summarize"]);
       assert.equal(document.title, "feature");
     });
+  });
+});
+
+describe("generateChapters on an empty diff", () => {
+  it("stops before any LLM call", async () => {
+    const llm = new FakeLlmClient();
+    const empty: ExtractOutput = {
+      result: {
+        baseRef: "main",
+        baseSha: "b".repeat(40),
+        headSha: "c".repeat(40),
+        branch: "feature",
+        repo: "widgets",
+        commits: [],
+        files: [],
+        runs: [],
+        ownerFallbacks: [],
+      },
+      markdownSources: [],
+    };
+    let caught: unknown;
+    try {
+      await generateChapters({
+        extract: empty,
+        llm,
+        cache: new MemoryStageCache(),
+      });
+    } catch (err) {
+      caught = err;
+    }
+    assert.instanceOf(caught, EmptyDiffError);
+    assert.lengthOf(llm.calls, 0);
   });
 });
 

@@ -26,14 +26,7 @@ export function mockMessages(
 
 /** An SDK response whose only content is one `emit_<stage>` tool call. */
 export function toolUse(name: string, input: unknown) {
-  return {
-    id: "msg_1",
-    type: "message",
-    role: "assistant",
-    stop_reason: "tool_use",
-    content: [{ type: "tool_use", id: "toolu_1", name, input }],
-    usage: { input_tokens: 10, output_tokens: 5 },
-  };
+  return { content: [{ type: "tool_use", name, input }] };
 }
 
 const schema = z.object({ title: z.string().min(1), summary: z.string() });
@@ -115,11 +108,7 @@ describe("AnthropicLlmClient", () => {
 
   it("treats a response with no tool call as a validation failure", async () => {
     const messages = mockMessages([
-      {
-        ...toolUse("emit_summarize", {}),
-        stop_reason: "end_turn",
-        content: [{ type: "text", text: "```json\n{}\n```" }],
-      },
+      { content: [{ type: "text", text: "```json\n{}\n```" }] },
     ]);
     const result = await client(messages).structured(req);
     assert.isFalse(result.ok);
