@@ -46,6 +46,26 @@ describe("FakeLlmClient", () => {
   });
 
   describe("narration from the commits", () => {
+    it("keeps commits with identical subjects in separate chapters", () => {
+      const out = defaultAnswer("outline", {
+        commits: [
+          { sha: "a", subject: "Fix tests", body: "" },
+          { sha: "b", subject: "Fix tests", body: "" },
+        ],
+        runs: [
+          { id: "r1", path: "a.ts", owners: ["a"] },
+          { id: "r2", path: "b.ts", owners: ["b"] },
+        ],
+      }) as { chapters: { headline: string; runIds: string[] }[] };
+      assert.deepEqual(
+        out.chapters.map((c) => [c.headline, c.runIds]),
+        [
+          ["Fix tests", ["r1"]],
+          ["Fix tests", ["r2"]],
+        ],
+      );
+    });
+
     it("makes one chapter per commit, headed by its subject, oldest first", () => {
       const out = defaultAnswer("outline", {
         commits: [

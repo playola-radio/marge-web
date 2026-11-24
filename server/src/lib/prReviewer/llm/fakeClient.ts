@@ -70,12 +70,11 @@ export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
     const lockfiles = all.every(isLock) ? [] : all.filter(isLock);
     const kept = lockfiles.length > 0 ? all.filter((r) => !isLock(r)) : all;
     const subjects = new Map(commits.map((c) => [c.sha, c.subject]));
-    const groups = new Map<string, string[]>(
-      commits.map((c) => [c.subject, []]),
-    );
+    const groups = new Map<string, string[]>(commits.map((c) => [c.sha, []]));
     for (const run of kept) {
-      const headline = subjects.get(run.owners?.[0] ?? "") ?? "Other changes";
-      groups.set(headline, [...(groups.get(headline) ?? []), run.id]);
+      const owner = run.owners?.[0] ?? "";
+      const key = subjects.has(owner) ? owner : "";
+      groups.set(key, [...(groups.get(key) ?? []), run.id]);
     }
     const entries = [...groups.entries()].filter(([, ids]) => ids.length > 0);
     while (entries.length > 12) {
@@ -83,9 +82,9 @@ export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
       entries[entries.length - 1][1].push(...ids);
     }
     return {
-      chapters: entries.map(([headline, ids], i) => ({
+      chapters: entries.map(([sha, ids], i) => ({
         key: `chapter-${i + 1}`,
-        headline,
+        headline: subjects.get(sha) ?? "Other changes",
         runIds: ids,
       })),
       excluded: lockfiles.map((r) => ({
