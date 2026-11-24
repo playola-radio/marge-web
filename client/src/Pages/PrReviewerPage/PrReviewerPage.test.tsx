@@ -494,6 +494,21 @@ test("a failed run shows the failure with collapsed detail, and Retry calls the 
   expect(screen.getByText("What this PR does")).toBeInTheDocument();
 });
 
+test("Retry on a run someone else already retried follows the run's current state", async () => {
+  vi.useFakeTimers();
+  api.latest.mockResolvedValue(
+    latest(makeRun({ status: "failed", failure: "Generation failed" })),
+  );
+  api.retry.mockRejectedValue(httpError(409, { error: "run_not_failed" }));
+  api.poll.mockResolvedValue(makeRun());
+  renderApp(PAGE);
+  await flush();
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  await flush();
+  expect(api.poll).toHaveBeenCalledWith(RUN_A);
+  expect(screen.getByText("What this PR does")).toBeInTheDocument();
+});
+
 /* ---------------- Freshness ---------------- */
 
 describe("superseded revision", () => {

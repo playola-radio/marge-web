@@ -280,7 +280,12 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
     if (current.kind !== "run") return;
     setBusy(true);
     try {
-      const run = await retryRun(current.run.id);
+      // Someone else already retried it: follow the run's current state.
+      const run = await retryRun(current.run.id).catch((error) => {
+        if (errorCode(error) === "run_not_failed")
+          return fetchRun(current.run.id);
+        throw error;
+      });
       if (mounted.current) display(run);
     } catch (error) {
       if (!mounted.current || signedOut(error)) return;

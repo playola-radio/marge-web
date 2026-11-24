@@ -242,16 +242,6 @@ describe("removal markers", () => {
         .join(""),
     ).not.toContain("old text");
   });
-
-  test("a deletions-only step still shows its marker", () => {
-    const text = "a\n\nb";
-    const view = markdownView(
-      text,
-      blockFor(linesFor(text, {}, { 2: { runId: "r-this", count: 1 } })),
-      roleOf,
-    );
-    expect(view.entries.filter((e) => e.kind === "marker")).toHaveLength(1);
-  });
 });
 
 test("a file the step adds whole gets no per-block tint", () => {

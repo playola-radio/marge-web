@@ -122,7 +122,6 @@ export type MdMarker = {
   count: number;
   role: Role | null;
   laterChapter?: number;
-  oldRange: [number, number];
   visible: boolean;
 };
 
@@ -256,10 +255,6 @@ export function markdownView(
           count: removed.length,
           role,
           laterChapter: roles.find((r) => r.role === "later")?.chapter,
-          oldRange: [
-            removed[0].oldNo ?? 0,
-            removed[removed.length - 1].oldNo ?? 0,
-          ],
           visible: removed.some(
             (l) => l.oldNo !== undefined && visibleOld.has(l.oldNo),
           ),
