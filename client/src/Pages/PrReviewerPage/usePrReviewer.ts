@@ -337,6 +337,9 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
         update((l) => ({ ...l, confirmed: flip(l.confirmed) }));
       } catch (error) {
         if (!mounted.current || signedOut(error)) return;
+        // A newer click is queued behind this save; its own save settles
+        // the toggle, so don't roll it back.
+        if (saves.current.get(saveKey) !== save) return;
         update((l) => {
           const shown = new Set(l.shown);
           if (l.confirmed.has(key)) shown.add(key);

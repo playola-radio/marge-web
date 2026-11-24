@@ -384,6 +384,24 @@ describe("reviewed", () => {
     expect(screen.getByText("0 of 2 reviewed")).toBeInTheDocument();
   });
 
+  test("a failed save with newer clicks queued behind it leaves the newest click standing", async () => {
+    let failMark: (e: unknown) => void = () => {};
+    api.mark
+      .mockReturnValueOnce(new Promise<void>((_r, j) => (failMark = j)))
+      .mockResolvedValue(undefined);
+    await renderReady();
+    fireEvent.click(reviewedButton(CH1));
+    fireEvent.click(reviewedButton(CH1));
+    fireEvent.click(reviewedButton(CH1));
+    await act(async () => failMark(networkError()));
+    await act(async () => {});
+    expect(api.unmark).toHaveBeenCalledWith(RUN_A, "setup-timeouts");
+    expect(api.mark).toHaveBeenCalledTimes(2);
+    expect(reviewedButton(CH1)).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("1 of 2 reviewed")).toBeInTheDocument();
+    expect(screen.queryByText(/Couldn't save your Reviewed mark/)).toBeNull();
+  });
+
   test("marks come from the chapters response on load", async () => {
     api.chapters.mockResolvedValue(
       chaptersOf(makeRun(), fixtureDocument(), ["retry-logic"]),

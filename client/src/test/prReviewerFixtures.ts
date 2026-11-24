@@ -85,12 +85,11 @@ export const README_TEXT = [
 
 /* ---- Synthetic documents for renderer tests ---- */
 
-let lineNo = 0;
-const ctx = (oldNo: number, newNo: number, text = `line ${++lineNo}`) =>
+const ctx = (oldNo: number, newNo: number, text: string) =>
   ({ kind: " ", oldNo, newNo, text }) as DiffLine;
-const add = (newNo: number, runId: string, text = `added ${newNo}`) =>
+const add = (newNo: number, runId: string, text: string) =>
   ({ kind: "+", newNo, text, runId }) as DiffLine;
-const del = (oldNo: number, runId: string, text = `removed ${oldNo}`) =>
+const del = (oldNo: number, runId: string, text: string) =>
   ({ kind: "-", oldNo, text, runId }) as DiffLine;
 
 /**

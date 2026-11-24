@@ -241,7 +241,7 @@ function ChapterCard({
   return (
     <li
       id={`chapter-${chapter.key}`}
-      className={`chapter${expanded ? " chapter--expanded" : ""}${current ? " chapter--current" : ""}${reviewed ? " chapter--reviewed" : ""}`}
+      className={`chapter${expanded ? " chapter--expanded" : ""}${current ? " chapter--current" : ""}`}
       aria-labelledby={headingId}
     >
       <div className="chapter__head">

@@ -46,7 +46,6 @@ export default function SplitDiff({
             key={seg.start}
             lines={hunk.lines.slice(seg.start, seg.end)}
             roleOf={roleOf}
-            badgeOf={badgeOf}
           />
         ),
       )}
@@ -54,29 +53,14 @@ export default function SplitDiff({
   );
 }
 
-function Bar({
-  lines,
-  roleOf,
-  badgeOf,
-}: {
-  lines: DiffLine[];
-  roleOf: RoleOf;
-  badgeOf?: (runId: string | undefined) => string;
-}) {
+function Bar({ lines, roleOf }: { lines: DiffLine[]; roleOf: RoleOf }) {
   const [open, setOpen] = useState(false);
   const firstRow = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (open) firstRow.current?.focus();
   }, [open]);
   if (open) {
-    return (
-      <Rows
-        lines={lines}
-        roleOf={roleOf}
-        badgeOf={badgeOf}
-        firstRef={firstRow}
-      />
-    );
+    return <Rows lines={lines} roleOf={roleOf} firstRef={firstRow} />;
   }
   return (
     <div className="diff__bar-row">

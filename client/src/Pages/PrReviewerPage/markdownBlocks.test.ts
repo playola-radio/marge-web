@@ -50,7 +50,7 @@ const roleOf: RoleOf = (runId) => {
 /** Context lines for every new-side line of `text`, except those in `changed`. */
 function linesFor(
   text: string,
-  changed: Record<number, { runId: string; kind?: "+" }>,
+  changed: Record<number, { runId: string }>,
   deletions: Record<number, { runId: string; count: number }> = {},
 ): DiffLine[] {
   const out: DiffLine[] = [];
