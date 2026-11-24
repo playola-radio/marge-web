@@ -14,7 +14,7 @@ import type {
 /** Where the outline put a run: a chapter step, or "not in a chapter". */
 export type Placement =
   | { kind: "chapter"; chapterIdx: number; stepIdx: number; number: number }
-  | { kind: "excluded"; reason: string };
+  | { kind: "excluded" };
 
 export type Role = "this" | "earlier" | "later" | "excluded";
 
@@ -42,8 +42,8 @@ export function indexDocument(doc: ChaptersDocument): DocIndex {
       ),
     ),
   );
-  for (const { runId, reason } of doc.excluded) {
-    placements.set(runId, { kind: "excluded", reason });
+  for (const { runId } of doc.excluded) {
+    placements.set(runId, { kind: "excluded" });
   }
   return {
     placements,

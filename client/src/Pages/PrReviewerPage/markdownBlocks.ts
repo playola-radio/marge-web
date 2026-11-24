@@ -92,11 +92,6 @@ function createParser() {
 
 const md = createParser();
 
-/** Renders a whole markdown text with the view's safety rules. */
-export function renderMarkdown(text: string): string {
-  return md.render(text);
-}
-
 /** Block tokens a changed line can attach to (the innermost wins). */
 const ATTACHABLE = new Set([
   "paragraph_open",
@@ -174,21 +169,21 @@ export function markdownView(
   const tokens = md.parse(text, {});
   const tops = topLevelBlocks(tokens);
 
-  const attachable = tokens
-    .map((t, i) => ({ t, i }))
-    .filter(({ t }) => ATTACHABLE.has(t.type) && t.map && !t.hidden);
+  const attachable = tokens.filter(
+    (t) => ATTACHABLE.has(t.type) && t.map && !t.hidden,
+  );
   const innermost = (line: number) => {
-    let best: { t: Token; i: number } | null = null;
-    for (const c of attachable) {
-      const [from, to] = c.t.map!;
+    let best: Token | null = null;
+    for (const t of attachable) {
+      const [from, to] = t.map!;
       if (line < from || line >= to) continue;
-      if (!best || c.t.level >= best.t.level) best = c;
+      if (!best || t.level >= best.level) best = t;
     }
     return best;
   };
   const inCode = (line: number) => {
     const inner = innermost(line);
-    return !!inner && CODE.has(inner.t.type);
+    return !!inner && CODE.has(inner.type);
   };
   const topIndexAt = (line: number) => {
     const holding = tops.findIndex((b) => line >= b.from && line < b.to);
@@ -228,7 +223,7 @@ export function markdownView(
     for (const [line, role] of lineRoles) {
       const inner = innermost(line);
       if (!inner) continue;
-      tokenRoles.set(inner.t, [...(tokenRoles.get(inner.t) ?? []), role.role]);
+      tokenRoles.set(inner, [...(tokenRoles.get(inner) ?? []), role.role]);
     }
     for (const [token, roles] of tokenRoles) {
       token.attrJoin("class", `md-${strongest(roles)}`);

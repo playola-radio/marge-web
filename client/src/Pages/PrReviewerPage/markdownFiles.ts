@@ -44,8 +44,13 @@ export function useMarkdownFile(
     const key = cacheKey(runId, path);
     let pending = cache?.get(key);
     if (!pending) {
-      pending = fetchMarkdownFile(runId, path).then((f) => f.text);
-      cache?.set(key, pending);
+      const fetched = fetchMarkdownFile(runId, path).then((f) => f.text);
+      // A failure isn't kept, so the next showing of the file fetches again.
+      fetched.catch(() => {
+        if (cache?.get(key) === fetched) cache.delete(key);
+      });
+      cache?.set(key, fetched);
+      pending = fetched;
     }
     setFile({ kind: "loading" });
     pending.then(

@@ -94,6 +94,7 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
     undefined,
   );
   const mounted = useRef(true);
+  const saves = useRef(new Map<string, Promise<void>>());
 
   const signedOut = useCallback(
     (error: unknown) => {
@@ -323,8 +324,15 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
             : s,
         );
       update((l) => ({ ...l, shown: flip(l.shown) }));
+      // One chapter's saves go out in click order, so a quick undo can't
+      // land before the mark it undoes.
+      const saveKey = `${runId}\0${key}`;
+      const save = (saves.current.get(saveKey) ?? Promise.resolve())
+        .catch(() => {})
+        .then(() => setChapterReviewed(runId, key, reviewed));
+      saves.current.set(saveKey, save);
       try {
-        await setChapterReviewed(runId, key, reviewed);
+        await save;
         if (!mounted.current) return;
         update((l) => ({ ...l, confirmed: flip(l.confirmed) }));
       } catch (error) {

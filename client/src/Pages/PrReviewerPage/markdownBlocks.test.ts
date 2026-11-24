@@ -1,4 +1,4 @@
-import { markdownView, renderMarkdown, type MdEntry } from "./markdownBlocks";
+import { markdownView, type MdEntry } from "./markdownBlocks";
 import type { RoleOf, StepBlock } from "./diffModel";
 import type { DiffLine } from "../../Services/PrReviewerService";
 
@@ -268,6 +268,16 @@ test("a file the step adds whole gets no per-block tint", () => {
   ).not.toContain("md-this");
   expect(blocks(view.entries).every((b) => b.changedHere)).toBe(true);
 });
+
+/** The page's rendering of `text` as a file the step adds whole. */
+function renderMarkdown(text: string): string {
+  const lines: DiffLine[] = text
+    .split("\n")
+    .map((t, i) => ({ kind: "+", newNo: i + 1, text: t, runId: "r-this" }));
+  return blocks(markdownView(text, blockFor(lines), roleOf).entries)
+    .map((b) => b.html)
+    .join("");
+}
 
 describe("safety", () => {
   test("raw HTML is escaped", () => {

@@ -370,6 +370,20 @@ describe("reviewed", () => {
     expect(screen.getByText("1 of 2 reviewed")).toBeInTheDocument();
   });
 
+  test("a quick undo waits for the mark's save, so the saves land in click order", async () => {
+    let finishMark = () => {};
+    api.mark.mockReturnValue(new Promise<void>((r) => (finishMark = r)));
+    await renderReady();
+    fireEvent.click(reviewedButton(CH1));
+    fireEvent.click(reviewedButton(CH1));
+    await act(async () => {});
+    expect(api.unmark).not.toHaveBeenCalled();
+    await act(async () => finishMark());
+    expect(api.unmark).toHaveBeenCalledWith(RUN_A, "setup-timeouts");
+    expect(reviewedButton(CH1)).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("0 of 2 reviewed")).toBeInTheDocument();
+  });
+
   test("marks come from the chapters response on load", async () => {
     api.chapters.mockResolvedValue(
       chaptersOf(makeRun(), fixtureDocument(), ["retry-logic"]),
@@ -936,6 +950,17 @@ describe("markdown blocks", () => {
     expect(
       screen.getByText("Run `npm test`.").closest(".diff__cell"),
     ).toHaveClass("diff__cell--del");
+    fireEvent.click(screen.getByRole("button", { name: "Rendered" }));
+    await screen.findByText(/Flaky calls retry up to/);
+    expect(api.file).toHaveBeenCalledTimes(2);
+  });
+
+  test("after a failed fetch, going to Code and back to Rendered fetches again", async () => {
+    serve(fixtureDocument(), README_TEXT);
+    api.file.mockRejectedValueOnce(networkError());
+    await renderReady();
+    await screen.findByText("Couldn't render this file: the request failed.");
+    fireEvent.click(screen.getByRole("button", { name: "Code" }));
     fireEvent.click(screen.getByRole("button", { name: "Rendered" }));
     await screen.findByText(/Flaky calls retry up to/);
     expect(api.file).toHaveBeenCalledTimes(2);
