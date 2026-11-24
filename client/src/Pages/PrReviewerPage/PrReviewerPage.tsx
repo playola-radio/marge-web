@@ -239,9 +239,9 @@ function PrHeader({
     <section className="pr-header" aria-label="Pull request">
       <h1 className="pr-header__title">{title ?? pr.title}</h1>
       <p className="pr-header__meta">
-        <code className="chip">{pr.baseRef}</code>
+        <code className="pr-chip">{pr.baseRef}</code>
         <span aria-label="from"> ← </span>
-        <code className="chip">{pr.headRef}</code>
+        <code className="pr-chip">{pr.headRef}</code>
         <span>
           {" "}
           · {pr.commits} {pr.commits === 1 ? "commit" : "commits"}
@@ -250,7 +250,7 @@ function PrHeader({
           <span>
             {" "}
             · generated for{" "}
-            <code className="chip">{shortSha(generatedFor)}</code>
+            <code className="pr-chip">{shortSha(generatedFor)}</code>
           </span>
         ) : null}
       </p>

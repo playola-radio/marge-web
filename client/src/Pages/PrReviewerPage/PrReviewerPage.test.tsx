@@ -305,6 +305,34 @@ describe("ready page", () => {
     ).toBeNull();
   });
 
+  test("two excluded runs in one file are told apart by their lines", async () => {
+    const doc = fixtureDocument();
+    doc.runs.push({
+      id: "run-lockfile-2",
+      path: "package-lock.json",
+      commitSha: "2".repeat(40),
+      added: 2,
+      removed: 0,
+      newRange: [8, 9],
+    });
+    doc.excluded.push({
+      runId: "run-lockfile-2",
+      reason: "Generated lockfile change",
+    });
+    api.chapters.mockResolvedValue(chaptersOf(makeRun(), doc));
+    await renderReady();
+    expect(
+      screen.getByRole("button", {
+        name: "Generated lockfile change (line 2)",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Generated lockfile change (lines 8–9)",
+      }),
+    ).toBeInTheDocument();
+  });
+
   test("with nothing excluded, the rail says every change is in a chapter", async () => {
     api.chapters.mockResolvedValue(
       chaptersOf(makeRun(), { ...fixtureDocument(), excluded: [] }),

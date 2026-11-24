@@ -296,6 +296,15 @@ function ChapterCard({
   );
 }
 
+/** "(lines 8–14)": where an excluded run sits, to tell same-file runs apart. */
+function linesOf(index: DocIndex, runId: string): string {
+  const run = index.runsById.get(runId);
+  const range = run?.newRange ?? run?.oldRange;
+  if (!range) return "";
+  const [from, to] = range;
+  return from === to ? `(line ${from})` : `(lines ${from}–${to})`;
+}
+
 function ExcludedList({
   doc,
   index,
@@ -336,6 +345,12 @@ function ExcludedList({
                       }
                     >
                       {ex.reason}
+                      {items.length > 1 ? (
+                        <span className="excluded__lines">
+                          {" "}
+                          {linesOf(index, ex.runId)}
+                        </span>
+                      ) : null}
                     </button>
                   </li>
                 ))}
