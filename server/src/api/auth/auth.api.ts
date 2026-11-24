@@ -57,16 +57,15 @@ export function googleSignIn(deps: AppDeps): RequestHandler {
   };
 }
 
-export const devLogin: RequestHandler = (_req, res, next) => {
+const DEV_USER = { email: "dev@marge.local", name: "Dev User" };
+const SECOND_DEV_USER = { email: "dev2@marge.local", name: "Second Dev User" };
+
+export const devLogin: RequestHandler = (req, res, next) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     next(new Error("JWT_SECRET is not set"));
     return;
   }
-  res.json({
-    margeToken: signMargeToken(
-      { email: "dev@marge.local", name: "Dev User" },
-      secret,
-    ),
-  });
+  const user = req.query.as === "second" ? SECOND_DEV_USER : DEV_USER;
+  res.json({ margeToken: signMargeToken(user, secret) });
 };

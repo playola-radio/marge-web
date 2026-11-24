@@ -262,6 +262,14 @@ describe("GitHubApp", () => {
   });
 
   describe("repository reads for the git cache", () => {
+    it("clones over HTTPS from github.com, with no credentials in the URL", () => {
+      const app = makeApp(fakeGitHub(() => undefined).fetchFn, Date.now);
+      assert.strictEqual(
+        app.remoteUrl("acme", "widgets"),
+        "https://github.com/acme/widgets.git",
+      );
+    });
+
     it("reads the repository size in KB", async () => {
       const clock = () => Date.now();
       const routes = standardRoutes({ clock });

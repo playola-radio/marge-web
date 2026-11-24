@@ -50,6 +50,18 @@ describe("POST /v1/auth/dev-login", () => {
     assert.strictEqual(payload.exp! - payload.iat!, THIRTY_DAYS);
   });
 
+  it("signs in a second dev user with ?as=second, for two-account demos", async () => {
+    const res = await request(makeApp("development")).post(
+      "/v1/auth/dev-login?as=second",
+    );
+    assert.strictEqual(res.status, 200);
+    const payload = jwt.verify(res.body.margeToken, "test-secret", {
+      algorithms: ["HS256"],
+    }) as JwtPayload;
+    assert.strictEqual(payload.email, "dev2@marge.local");
+    assert.strictEqual(payload.name, "Second Dev User");
+  });
+
   it("returns a token that GET /v1/me accepts", async () => {
     const app = makeApp("development");
     const { body } = await request(app).post("/v1/auth/dev-login");

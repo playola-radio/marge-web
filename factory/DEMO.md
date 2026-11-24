@@ -15,15 +15,17 @@ bring the environment up.
 - `make` and `curl`.
 - Optional, for real data: `MARGE_PROD_DATABASE_URL`, the production database's connection string.
   - Where to get it: Render dashboard → `marge-api-db` → **Connect** → **External Database URL**.
-  - Where it lives: `~/factory/secrets.env`, which the factory sources and `make demo-env` reads on its
-    own if the variable is not already set:
+  - Where it lives: `~/factory/secrets.env`, which the factory sources. `make demo-env` picks out just this one line (it never
+    sources the file) if the variable is not already set:
     ```bash
     MARGE_PROD_DATABASE_URL=postgres://<user>:<password>@<host>.render.com/<db>
     ```
   - Never commit it. Without it, the environment comes up with sample data instead.
 
-No other secret is needed. The demo server uses fixed, local-only values (`JWT_SECRET=demo-secret`,
-`FACTORY_REPORT_TOKEN=demo-factory-token`) and never sees a production secret.
+No other secret is needed: no GitHub App key and no Anthropic API key. The demo server uses fixed,
+local-only values (`JWT_SECRET=demo-secret`, `FACTORY_REPORT_TOKEN=demo-factory-token`), the PR reviewer
+runs on offline stand-ins (see [PR reviewer](#pr-reviewer)), and the server never sees a production secret:
+`docker-compose.demo.yml` lists every variable it gets.
 
 ## Bring it up
 
@@ -32,7 +34,8 @@ make demo-env
 ```
 
 It starts Postgres, rebuilds the `marge_demo` database (from production or sample data), builds the server and
-website from the checked-out code, runs migrations, waits until everything answers, then prints the URL.
+website from the checked-out code, runs migrations, resets the PR reviewer's canned pull requests, waits until
+everything answers, then prints the URLs. It fails loudly if the PR reviewer is off (its endpoints answer 503).
 First run takes about a minute (image builds); a re-run takes a few seconds. It is safe to re-run at any time;
 each run starts the database over.
 
@@ -46,6 +49,42 @@ the Software Factory is at http://localhost:5180/factory.
 | Postgres | `postgres://postgres:demo@localhost:5433/marge_demo` |
 
 Logs: `docker compose -p marge-demo -f docker-compose.demo.yml logs -f`.
+
+## PR reviewer
+
+The server runs the PR reviewer (design 003) with two offline stand-ins, set in `docker-compose.demo.yml`:
+
+- `PR_REVIEWER_GITHUB=fake`: canned pull requests (`server/src/lib/prReviewer/demoFixture.ts`) in place of
+  GitHub. Each is built into a real git repository inside the server container, with fixed authors and dates
+  (the same commit IDs on every reset), and served to the git cache over `file://`. No network, no token.
+- `PR_REVIEWER_LLM=fake`: scripted answers in place of the LLM, written from the pull request's own commits. One
+  chapter per commit, headed by its subject and introduced by its message, lockfiles left out ("not in a
+  chapter"), and a 1.5 s pause per answer so the stage progress shows on screen.
+
+| Pull request                                        | Use it for                     |
+| --------------------------------------------------- | ------------------------------ |
+| `playola-demo/station-scheduler` **#42**, 4 commits | reading, reviewing, a new push |
+| `playola-demo/station-scheduler` **#43**, 2 commits | a failed run and **Retry**     |
+
+Record at **http://localhost:5180/pr-reviewer/playola-demo/station-scheduler/pulls/42** after signing in
+at `/dev-user`. (The page arrives with design 003's last PR; until then the
+`/v1/pr-reviewer` endpoints answer.) For each Done-when item:
+
+1. **First visit generates.** Open #42; the stages tick through until the chapters show.
+2. **The finished page.** Summary, chapters with diffs, and `package-lock.json` under "not in a chapter".
+3. **Reviewed marks persist.** Mark a chapter, refresh.
+4. **A second user.** In a second browser profile (separate storage), open
+   http://localhost:5180/dev-user?as=second (`dev2@marge.local`), then #42: same chapters, no new
+   generation, its own marks.
+5. **A new push.** `make demo-pr-push` moves #42's branch to one more commit ("Cap the top-songs list at
+   ten"). Reload: the page says the chapters are for an older revision; **Generate for latest**.
+6. **Failure and Retry.** `make demo-llm-outage`, then open #43: the summary stage fails, the runner retries
+   twice (about 45 s), and the page shows the failure. `make demo-llm-restore`, then **Retry**: only the
+   summary runs again.
+7. **Survives a redeploy.** `make demo-clear-git-cache` and/or
+   `docker compose -p marge-demo -f docker-compose.demo.yml restart server`, then reload #42.
+
+`make demo-env` resets all of this: the canned repositories, the git cache and the outage switch.
 
 ## Data
 

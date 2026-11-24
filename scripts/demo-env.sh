@@ -9,10 +9,11 @@ cd "$(dirname "$0")/.."
 
 SECRETS_FILE="$HOME/factory/secrets.env"
 if [ -z "${MARGE_PROD_DATABASE_URL:-}" ] && [ -f "$SECRETS_FILE" ]; then
-  set -a
-  # shellcheck disable=SC1090
-  . "$SECRETS_FILE"
-  set +a
+  # Pick out the one line; the file is never sourced, so no other secret in it
+  # (such as a GitHub App key) is evaluated or passed on.
+  MARGE_PROD_DATABASE_URL=$(sed -n -E \
+    "s/^(export[[:space:]]+)?MARGE_PROD_DATABASE_URL=[\"']?([^\"']*)[\"']?[[:space:]]*$/\2/p" \
+    "$SECRETS_FILE" | tail -n 1)
 fi
 
 compose() { docker compose -p marge-demo -f docker-compose.demo.yml "$@"; }
@@ -29,13 +30,15 @@ if [ -n "${MARGE_PROD_DATABASE_URL:-}" ]; then
   echo "==> Copying production into marge_demo (read-only on production)"
   # Every production command runs in a read-only session. Relay sessions in
   # kv_store (sealed sign-in codes) are left out; only the factory snapshot row
-  # is copied. Nothing is written to disk.
+  # is copied, and the PR reviewer's tables come over empty (no private pull
+  # request content). Nothing is written to disk.
   # shellcheck disable=SC2016 # $PROD_URL expands inside the container
   PROD_URL="$MARGE_PROD_DATABASE_URL" compose exec -T -e PROD_URL postgres sh -c '
     set -eo pipefail
     RO="-c default_transaction_read_only=on"
     PGOPTIONS="$RO" pg_dump --format=custom --no-owner --no-acl \
-      --exclude-table-data=kv_store --dbname="$PROD_URL" |
+      --exclude-table-data=kv_store --exclude-table-data='"'"'pr_reviewer_*'"'"' \
+      --dbname="$PROD_URL" |
       pg_restore --no-owner --no-acl --exit-on-error -U postgres -d marge_demo
     PGOPTIONS="$RO" psql "$PROD_URL" -qAt -v ON_ERROR_STOP=1 \
       -c "COPY (SELECT key, val, expires_at FROM kv_store WHERE key = '"'"'factory:snapshot'"'"') TO STDOUT" |
@@ -61,8 +64,32 @@ fi
 curl -fsS -o /dev/null http://localhost:3030/v1/healthCheck
 curl -fsS -o /dev/null http://localhost:5180/
 
+echo "==> Resetting the PR reviewer's canned GitHub, git cache and LLM outage switch"
+compose exec -T server rm -rf /tmp/marge-pr-reviewer-github /tmp/marge-pr-reviewer /tmp/marge-demo-llm-outage
+
+PR_PATH="playola-demo/station-scheduler/pulls/42"
+echo "==> Checking the PR reviewer is on (GET /v1/pr-reviewer/$PR_PATH/runs/latest)"
+TOKEN=$(curl -fsS -X POST http://localhost:3030/v1/auth/dev-login |
+  sed -n 's/.*"margeToken":"\([^"]*\)".*/\1/p')
+BODY=$(mktemp)
+STATUS=$(curl -sS -o "$BODY" -w '%{http_code}' -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3030/v1/pr-reviewer/$PR_PATH/runs/latest" || true)
+if [ "$STATUS" != "200" ]; then
+  echo >&2
+  echo "ERROR: the PR reviewer answered HTTP $STATUS, not 200:" >&2
+  cat "$BODY" >&2
+  echo >&2
+  echo "The reviewer logs why it is off at startup:" >&2
+  compose logs server | grep pr_reviewer >&2 || true
+  rm -f "$BODY"
+  exit 1
+fi
+rm -f "$BODY"
+
 echo
 echo "Demo environment ready ($DATA_SOURCE)."
 echo "Record at: http://localhost:5180/dev-user  (signs in as dev@marge.local)"
+echo "PR reviewer: http://localhost:5180/pr-reviewer/$PR_PATH"
+echo "  (second user: http://localhost:5180/dev-user?as=second in another browser profile)"
 echo "API:       http://localhost:3030"
 echo "Postgres:  postgres://postgres:demo@localhost:5433/marge_demo"

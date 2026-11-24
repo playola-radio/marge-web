@@ -25,9 +25,11 @@ export async function signIn(code: string): Promise<SignInResult> {
   }
 }
 
-export async function devSignIn(): Promise<void> {
+/** `as` picks another dev account (e.g. "second"), for two-user demos. */
+export async function devSignIn(as?: string): Promise<void> {
+  const query = as ? `?as=${encodeURIComponent(as)}` : "";
   const { data } = await axios.post<{ margeToken: string }>(
-    `${serverBaseUrl}/v1/auth/dev-login`,
+    `${serverBaseUrl}/v1/auth/dev-login${query}`,
   );
   saveSession(data.margeToken);
 }
