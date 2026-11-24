@@ -7,6 +7,7 @@ import {
 } from "react";
 import axios from "axios";
 import { fetchMarkdownFile } from "../../Services/PrReviewerService";
+import { useSignedOut } from "./usePrReviewer";
 
 /**
  * Markdown file texts for the rendered view, fetched at most once per
@@ -38,6 +39,7 @@ export function useMarkdownFile(
   const cache = useContext(MarkdownFilesContext);
   const [file, setFile] = useState<MarkdownFileState>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
+  const signedOut = useSignedOut();
 
   useEffect(() => {
     let live = true;
@@ -55,12 +57,15 @@ export function useMarkdownFile(
     setFile({ kind: "loading" });
     pending.then(
       (text) => live && setFile({ kind: "loaded", text }),
-      (error) => live && setFile({ kind: "failed", reason: reasonOf(error) }),
+      (error) => {
+        if (!live || signedOut(error)) return;
+        setFile({ kind: "failed", reason: reasonOf(error) });
+      },
     );
     return () => {
       live = false;
     };
-  }, [cache, runId, path, attempt]);
+  }, [cache, runId, path, attempt, signedOut]);
 
   const reload = useCallback(() => {
     cache?.delete(cacheKey(runId, path));

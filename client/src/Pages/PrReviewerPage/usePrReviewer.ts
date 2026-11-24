@@ -38,6 +38,27 @@ function status(error: unknown): number | undefined {
   return axios.isAxiosError(error) ? error.response?.status : undefined;
 }
 
+/**
+ * Returns a check that, for a 401, clears the session and sends the reader to
+ * sign in (coming back here afterwards) and answers true; otherwise false.
+ */
+export function useSignedOut(): (error: unknown) => boolean {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return useCallback(
+    (error: unknown) => {
+      if (status(error) !== 401) return false;
+      clearSession();
+      const redirectTo = encodeURIComponent(
+        location.pathname + location.search,
+      );
+      navigate(`/?redirectTo=${redirectTo}`, { replace: true });
+      return true;
+    },
+    [location.pathname, location.search, navigate],
+  );
+}
+
 function errorCode(error: unknown): string | undefined {
   if (!axios.isAxiosError(error)) return undefined;
   const data = error.response?.data as { error?: unknown } | undefined;
@@ -84,8 +105,6 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
   const stateRef = useRef(state);
   stateRef.current = state;
   /** Bumped on every switch of displayed run; stale async results are dropped. */
@@ -96,18 +115,7 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
   const mounted = useRef(true);
   const saves = useRef(new Map<string, Promise<void>>());
 
-  const signedOut = useCallback(
-    (error: unknown) => {
-      if (status(error) !== 401) return false;
-      clearSession();
-      const redirectTo = encodeURIComponent(
-        location.pathname + location.search,
-      );
-      navigate(`/?redirectTo=${redirectTo}`, { replace: true });
-      return true;
-    },
-    [location.pathname, location.search, navigate],
-  );
+  const signedOut = useSignedOut();
 
   const stopPolling = () => {
     clearTimeout(pollTimer.current);

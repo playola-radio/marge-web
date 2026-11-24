@@ -333,6 +333,30 @@ describe("ready page", () => {
     ).toBeInTheDocument();
   });
 
+  test("an excluded binary file says it has no line changes to show", async () => {
+    const doc = fixtureDocument();
+    doc.files.push({
+      path: "logo.png",
+      status: "modified",
+      binary: true,
+      hunks: [],
+    });
+    doc.runs.push({
+      id: "run-logo",
+      path: "logo.png",
+      commitSha: "2".repeat(40),
+      added: 0,
+      removed: 0,
+    });
+    doc.excluded.push({ runId: "run-logo", reason: "Binary asset" });
+    api.chapters.mockResolvedValue(chaptersOf(makeRun(), doc));
+    await renderReady();
+    fireEvent.click(screen.getByRole("button", { name: "Binary asset" }));
+    expect(
+      screen.getByRole("region", { name: "Change not in a chapter" }),
+    ).toHaveTextContent("Binary file — no line changes to show.");
+  });
+
   test("with nothing excluded, the rail says every change is in a chapter", async () => {
     api.chapters.mockResolvedValue(
       chaptersOf(makeRun(), { ...fixtureDocument(), excluded: [] }),
@@ -986,6 +1010,16 @@ describe("markdown blocks", () => {
     fireEvent.click(screen.getByRole("button", { name: "Rendered" }));
     await screen.findByText(/Flaky calls retry up to/);
     expect(api.file).toHaveBeenCalledTimes(2);
+  });
+
+  test("a 401 on the file fetch signs out back to the landing page", async () => {
+    serve(fixtureDocument(), README_TEXT);
+    api.file.mockRejectedValue(httpError(401, { error: "unauthorized" }));
+    await renderReady();
+    expect(
+      await screen.findByRole("button", { name: /sign in with google/i }),
+    ).toBeInTheDocument();
+    expect(window.location.search).toContain("redirectTo=%2Fpr-reviewer");
   });
 
   test("after a failed fetch, going to Code and back to Rendered fetches again", async () => {

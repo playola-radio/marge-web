@@ -395,14 +395,22 @@ function ExcludedDiff({
           Close
         </button>
       </div>
-      {hunks.map((hunk, i) => (
-        <SplitDiff
-          key={i}
-          hunk={hunk}
-          roleOf={roleOf}
-          focus={new Set([runId])}
-        />
-      ))}
+      {hunks.length === 0 ? (
+        <p className="block__empty">
+          {file?.binary
+            ? "Binary file — no line changes to show."
+            : "No line changes to show (a rename or mode change)."}
+        </p>
+      ) : (
+        hunks.map((hunk, i) => (
+          <SplitDiff
+            key={i}
+            hunk={hunk}
+            roleOf={roleOf}
+            focus={new Set([runId])}
+          />
+        ))
+      )}
     </section>
   );
 }

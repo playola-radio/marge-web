@@ -103,6 +103,31 @@ describe("innermost token per changed line", () => {
     expect(html).toMatch(/<tr>\s*<td>1<\/td>/);
   });
 
+  test("another chapter's row in a hunk this step doesn't touch is still marked", () => {
+    const rows = Array.from({ length: 30 }, (_, i) => `| ${i + 1} | x |`);
+    const text = ["| a | b |", "| - | - |", ...rows].join("\n");
+    const lines = linesFor(text, {
+      3: { runId: "r-this" },
+      30: { runId: "r-later" },
+    });
+    const hunk = (from: number, to: number) => ({
+      header: "@@",
+      oldStart: 1,
+      oldLines: 0,
+      newStart: 1,
+      newLines: 0,
+      lines: lines.slice(from, to),
+    });
+    const block = blockFor([]);
+    block.file!.hunks = [hunk(0, 8), hunk(24, lines.length)];
+    block.hunks = [block.file!.hunks[0]];
+    const html = blocks(markdownView(text, block, roleOf).entries)
+      .map((b) => b.html)
+      .join("");
+    expect(html).toMatch(/<tr class="md-this">\s*<td>1<\/td>/);
+    expect(html).toMatch(/<tr class="md-later">\s*<td>28<\/td>/);
+  });
+
   test("a nested list item is marked, not its parent", () => {
     const text = "- one\n  - inner\n- two";
     const view = markdownView(

@@ -197,7 +197,9 @@ export function markdownView(
   const visibleNew = new Set<number>();
   const visibleOld = new Set<number>();
   let wholeFileAdded = block.hunks.length > 0;
-  for (const hunk of block.hunks) {
+  // Roles come from every hunk of the file: a rendered table or fence can
+  // hold another chapter's change that sits in a hunk this step doesn't touch.
+  for (const hunk of block.file?.hunks ?? block.hunks) {
     for (const line of hunk.lines) {
       const role = roleOf(line.runId);
       if (line.kind !== "+" || role?.role !== "this") wholeFileAdded = false;
@@ -206,6 +208,8 @@ export function markdownView(
       if (line.text.trim() === "" && !inCode(at)) continue;
       lineRoles.set(at, role);
     }
+  }
+  for (const hunk of block.hunks) {
     for (const seg of segmentHunk(hunk, focus)) {
       if (seg.kind !== "lines") continue;
       for (const line of hunk.lines.slice(seg.start, seg.end)) {
