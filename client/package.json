@@ -17,6 +17,7 @@
     "@react-oauth/google": "^0.12.2",
     "axios": "^1.15.0",
     "jwt-decode": "^4.0.0",
+    "markdown-it": "^15.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.14.0"
@@ -25,6 +26,7 @@
     "@eslint/js": "^9.22.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
+    "@types/markdown-it": "^14.2.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.3.4",
