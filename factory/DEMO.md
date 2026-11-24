@@ -15,8 +15,8 @@ bring the environment up.
 - `make` and `curl`.
 - Optional, for real data: `MARGE_PROD_DATABASE_URL`, the production database's connection string.
   - Where to get it: Render dashboard → `marge-api-db` → **Connect** → **External Database URL**.
-  - Where it lives: `~/factory/secrets.env`, which the factory sources and `make demo-env` reads on its
-    own if the variable is not already set:
+  - Where it lives: `~/factory/secrets.env`, which the factory sources. `make demo-env` picks out just this one line (it never
+    sources the file) if the variable is not already set:
     ```bash
     MARGE_PROD_DATABASE_URL=postgres://<user>:<password>@<host>.render.com/<db>
     ```

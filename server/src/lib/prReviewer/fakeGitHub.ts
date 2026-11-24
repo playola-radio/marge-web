@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { DEMO_REPO } from "./demoFixture.js";
 import { FixtureRepo } from "./fixtureRepo.js";
 import {
   GitHubError,
@@ -11,7 +12,7 @@ import {
 
 /**
  * An offline stand-in for GitHub (the demo environment, via
- * `PR_REVIEWER_GITHUB=fake`). The canned repository is built on first use
+ * `PR_REVIEWER_GITHUB=fake`). The canned repository (demoFixture.ts) is built on first use
  * into a real git repository under `root`, with fixed authors and dates so
  * its commit IDs are the same on every build, and served over file:// — so
  * the git cache and extraction run unchanged, with no network and no token.
@@ -44,15 +45,10 @@ export interface DemoRepo {
   pulls: DemoPull[];
 }
 
-export interface FakeGitHubOptions {
-  root: string;
-  repo: DemoRepo;
-}
-
 const BASE_REF = "main";
 
 export class FakeGitHub implements GitHubSource {
-  constructor(private readonly options: FakeGitHubOptions) {}
+  constructor(private readonly root: string) {}
 
   async installationToken(org: string, repo: string): Promise<string> {
     this.find(org, repo);
@@ -107,7 +103,7 @@ export class FakeGitHub implements GitHubSource {
   }
 
   private find(org: string, repo: string): DemoRepo {
-    const entry = this.options.repo;
+    const entry = DEMO_REPO;
     if (
       entry.org.toLowerCase() !== org.toLowerCase() ||
       entry.repo.toLowerCase() !== repo.toLowerCase()
@@ -123,7 +119,7 @@ export class FakeGitHub implements GitHubSource {
   /** The repository's directory, built first if it isn't there. */
   private open(org: string, repo: string): FixtureRepo {
     const entry = this.find(org, repo);
-    const dir = join(this.options.root, entry.org, entry.repo);
+    const dir = join(this.root, entry.org, entry.repo);
     if (!existsSync(dir)) build(entry, dir);
     return FixtureRepo.open(dir);
   }

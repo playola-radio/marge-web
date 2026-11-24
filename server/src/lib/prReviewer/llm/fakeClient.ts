@@ -66,14 +66,14 @@ export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
     // Lockfiles are left out (unless nothing else changed); the rest is one
     // chapter per commit that wrote it (at most 12), oldest commit first.
     const { commits = [], runs: all } = input as OutlineIn;
-    const kept = all.filter((r) => !LOCKFILE.test(r.path));
-    const lockfiles =
-      kept.length > 0 ? all.filter((r) => !kept.includes(r)) : [];
+    const isLock = (r: { path: string }) => LOCKFILE.test(r.path);
+    const lockfiles = all.every(isLock) ? [] : all.filter(isLock);
+    const kept = lockfiles.length > 0 ? all.filter((r) => !isLock(r)) : all;
     const subjects = new Map(commits.map((c) => [c.sha, c.subject]));
     const groups = new Map<string, string[]>(
       commits.map((c) => [c.subject, []]),
     );
-    for (const run of lockfiles.length > 0 ? kept : all) {
+    for (const run of kept) {
       const headline = subjects.get(run.owners?.[0] ?? "") ?? "Other changes";
       groups.set(headline, [...(groups.get(headline) ?? []), run.id]);
     }

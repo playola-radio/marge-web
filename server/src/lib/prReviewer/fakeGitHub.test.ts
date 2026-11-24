@@ -1,38 +1,17 @@
 import { assert } from "chai";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { DEMO_REPO } from "./demoFixture.js";
-import { FakeGitHub, type DemoRepo } from "./fakeGitHub.js";
+import { FakeGitHub } from "./fakeGitHub.js";
 import { GitCache } from "./gitCache.js";
 import { GitHubError } from "./github.js";
 import { FakeLlmClient } from "./llm/index.js";
 import { MemoryStageCache } from "./pipeline/stage.js";
-import { lines, removeDir, tempDir } from "./repoFixtures.test.js";
+import { removeDir, tempDir } from "./repoFixtures.test.js";
 import { createExecutor, type RunProgress } from "./runner.js";
 
-const REPO: DemoRepo = {
-  org: "acme",
-  repo: "widgets",
-  history: [{ message: "Start", files: { "a.txt": lines("one", "two") } }],
-  pulls: [
-    {
-      number: 5,
-      title: "Count to three",
-      headRef: "feature/three",
-      commits: [
-        {
-          message: "Add three",
-          files: { "a.txt": lines("one", "two", "3") },
-        },
-        {
-          message: "Spell it out",
-          files: { "a.txt": lines("one", "two", "three") },
-        },
-      ],
-      pushedLater: [{ message: "Add four", files: { "b.txt": lines("four") } }],
-    },
-  ],
-};
+const ORG = "playola-demo";
+const REPO = "station-scheduler";
+const BRANCH = "feature/weekly-top-songs";
 
 const git = (dir: string, ...args: string[]) =>
   execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
@@ -45,32 +24,31 @@ describe("FakeGitHub", () => {
   afterEach(() => removeDir(root));
 
   it("resolves a fixture pull request from the repository it builds", async () => {
-    const github = new FakeGitHub({ root, repo: REPO });
-    const pr = await github.resolvePullRequest("acme", "widgets", 5);
-    const dir = join(root, "acme", "widgets");
+    const github = new FakeGitHub(root);
+    const pr = await github.resolvePullRequest(ORG, REPO, 42);
+    const dir = join(root, ORG, REPO);
     assert.deepEqual(pr, {
-      title: "Count to three",
-      url: "https://github.com/acme/widgets/pull/5",
+      title: "Show listeners this week's most-played songs",
+      url: `https://github.com/${ORG}/${REPO}/pull/42`,
       baseRef: "main",
-      headRef: "feature/three",
-      headSha: git(dir, "rev-parse", "feature/three"),
+      headRef: BRANCH,
+      headSha: git(dir, "rev-parse", BRANCH),
       baseSha: git(dir, "rev-parse", "main"),
-      commits: 2,
+      commits: 4,
       hasNetDiff: true,
     });
-    assert.strictEqual(github.remoteUrl("acme", "widgets"), `file://${dir}`);
+    assert.strictEqual(github.remoteUrl(ORG, REPO), `file://${dir}`);
     assert.deepEqual(
-      (await github.compareCommits("acme", "widgets", pr.baseSha, pr.headSha))
-        .length,
-      2,
+      (await github.compareCommits(ORG, REPO, pr.baseSha, pr.headSha)).length,
+      4,
     );
   });
 
   it("answers pr_not_found for a pull request or repository it doesn't have", async () => {
-    const github = new FakeGitHub({ root, repo: REPO });
+    const github = new FakeGitHub(root);
     for (const [org, repo, n] of [
-      ["acme", "widgets", 6],
-      ["acme", "gadgets", 5],
+      [ORG, REPO, 99],
+      [ORG, "gadgets", 42],
     ] as const) {
       const err = await github.resolvePullRequest(org, repo, n).then(
         () => null,
@@ -82,37 +60,33 @@ describe("FakeGitHub", () => {
   });
 
   it("sees a push: moving the branch to its pushed-later commits changes the head, not the base", async () => {
-    const github = new FakeGitHub({ root, repo: REPO });
-    const before = await github.resolvePullRequest("acme", "widgets", 5);
+    const github = new FakeGitHub(root);
+    const before = await github.resolvePullRequest(ORG, REPO, 42);
     git(
-      join(root, "acme", "widgets"),
+      join(root, ORG, REPO),
       "update-ref",
-      "refs/heads/feature/three",
-      "refs/pushed-later/feature/three",
+      `refs/heads/${BRANCH}`,
+      `refs/pushed-later/${BRANCH}`,
     );
-    const after = await github.resolvePullRequest("acme", "widgets", 5);
+    const after = await github.resolvePullRequest(ORG, REPO, 42);
     assert.notStrictEqual(after.headSha, before.headSha);
     assert.strictEqual(after.baseSha, before.baseSha);
-    assert.strictEqual(after.commits, 3);
+    assert.strictEqual(after.commits, 5);
   });
 
   it("rebuilds a repository whose directory was removed (the demo reset), with the same commit IDs", async () => {
-    const github = new FakeGitHub({ root, repo: REPO });
-    const first = await github.resolvePullRequest("acme", "widgets", 5);
-    removeDir(join(root, "acme"));
-    const again = await github.resolvePullRequest("acme", "widgets", 5);
+    const github = new FakeGitHub(root);
+    const first = await github.resolvePullRequest(ORG, REPO, 42);
+    removeDir(join(root, ORG));
+    const again = await github.resolvePullRequest(ORG, REPO, 42);
     assert.strictEqual(again.headSha, first.headSha);
     assert.strictEqual(again.baseSha, first.baseSha);
   });
 
   it("serves the demo pull request offline through the real git cache, extraction and pipeline", async function () {
     this.timeout(30_000);
-    const github = new FakeGitHub({ root, repo: DEMO_REPO });
-    const pr = await github.resolvePullRequest(
-      "playola-demo",
-      "station-scheduler",
-      42,
-    );
+    const github = new FakeGitHub(root);
+    const pr = await github.resolvePullRequest(ORG, REPO, 42);
     const stages: RunProgress["stage"][] = [];
     const execute = createExecutor({
       github,
@@ -125,8 +99,8 @@ describe("FakeGitHub", () => {
         leaseToken: "t",
         run: {
           id: "r",
-          org: "playola-demo",
-          repo: "station-scheduler",
+          org: ORG,
+          repo: REPO,
           prNumber: 42,
           headSha: pr.headSha,
           baseSha: pr.baseSha,

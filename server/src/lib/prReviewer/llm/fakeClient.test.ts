@@ -90,24 +90,26 @@ describe("FakeLlmClient", () => {
   });
 
   describe("demo switches", () => {
-    let dir: string;
-    beforeEach(() => {
-      dir = tempDir("fake-llm");
-    });
-    afterEach(() => rmSync(dir, { recursive: true, force: true }));
-
-    it("fails summarize while the outage file exists, and answers once it is gone", async () => {
-      const outageFile = join(dir, "outage");
-      const llm = new FakeLlmClient({ outageFile });
-      writeFileSync(outageFile, "");
-      const err = await summarize(llm).then(
-        () => null,
-        (e: unknown) => e,
-      );
-      assert.instanceOf(err, LlmRequestError);
-      rmSync(outageFile);
-      const ok = await summarize(llm);
-      assert.isTrue(ok.ok && ok.value.title === "X");
+    it("fails summarize while the outage file named in env exists, and answers once it is gone", async () => {
+      const dir = tempDir("fake-llm");
+      try {
+        const outageFile = join(dir, "outage");
+        const llm = createLlmClient({
+          PR_REVIEWER_LLM: "fake",
+          PR_REVIEWER_FAKE_LLM_OUTAGE_FILE: outageFile,
+        }) as FakeLlmClient;
+        writeFileSync(outageFile, "");
+        const err = await summarize(llm).then(
+          () => null,
+          (e: unknown) => e,
+        );
+        assert.instanceOf(err, LlmRequestError);
+        rmSync(outageFile);
+        const ok = await summarize(llm);
+        assert.isTrue(ok.ok && ok.value.title === "X");
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
     });
 
     it("waits delayMs before answering", async () => {
@@ -116,24 +118,5 @@ describe("FakeLlmClient", () => {
       await summarize(llm);
       assert.isAtLeast(Date.now() - start, 45);
     });
-  });
-
-  it("createLlmClient reads the demo switches from env", async () => {
-    const outageFile = join(tempDir("fake-llm"), "outage");
-    try {
-      writeFileSync(outageFile, "");
-      const llm = createLlmClient({
-        PR_REVIEWER_LLM: "fake",
-        PR_REVIEWER_FAKE_LLM_OUTAGE_FILE: outageFile,
-        PR_REVIEWER_FAKE_LLM_DELAY_MS: "1",
-      }) as FakeLlmClient;
-      const err = await summarize(llm).then(
-        () => null,
-        (e: unknown) => e,
-      );
-      assert.instanceOf(err, LlmRequestError);
-    } finally {
-      rmSync(join(outageFile, ".."), { recursive: true, force: true });
-    }
   });
 });

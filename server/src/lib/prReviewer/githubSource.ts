@@ -1,6 +1,5 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEMO_REPO } from "./demoFixture.js";
 import { FakeGitHub } from "./fakeGitHub.js";
 import { GitHubApp, type GitHubSource } from "./github.js";
 
@@ -14,10 +13,7 @@ export function createGitHubSource(
   env: NodeJS.ProcessEnv,
 ): GitHubSource | null {
   if (env.PR_REVIEWER_GITHUB === "fake")
-    return new FakeGitHub({
-      root: join(tmpdir(), "marge-pr-reviewer-github"),
-      repo: DEMO_REPO,
-    });
+    return new FakeGitHub(join(tmpdir(), "marge-pr-reviewer-github"));
   if (env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY)
     return new GitHubApp({
       appId: env.GITHUB_APP_ID,

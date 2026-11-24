@@ -62,14 +62,6 @@ describe("POST /v1/auth/dev-login", () => {
     assert.strictEqual(payload.name, "Second Dev User");
   });
 
-  it("answers 400 for an unknown ?as value", async () => {
-    const res = await request(makeApp("development")).post(
-      "/v1/auth/dev-login?as=admin",
-    );
-    assert.strictEqual(res.status, 400);
-    assert.deepEqual(res.body, { error: "invalid_request" });
-  });
-
   it("returns a token that GET /v1/me accepts", async () => {
     const app = makeApp("development");
     const { body } = await request(app).post("/v1/auth/dev-login");

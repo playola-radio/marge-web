@@ -9,9 +9,11 @@ cd "$(dirname "$0")/.."
 
 SECRETS_FILE="$HOME/factory/secrets.env"
 if [ -z "${MARGE_PROD_DATABASE_URL:-}" ] && [ -f "$SECRETS_FILE" ]; then
-  # Only the database URL leaves the subshell; no other secret reaches compose.
-  # shellcheck disable=SC1090
-  MARGE_PROD_DATABASE_URL=$(. "$SECRETS_FILE" && printf '%s' "${MARGE_PROD_DATABASE_URL:-}")
+  # Pick out the one line; the file is never sourced, so no other secret in it
+  # (such as a GitHub App key) is evaluated or passed on.
+  MARGE_PROD_DATABASE_URL=$(sed -n -E \
+    "s/^(export[[:space:]]+)?MARGE_PROD_DATABASE_URL=[\"']?([^\"']*)[\"']?[[:space:]]*$/\2/p" \
+    "$SECRETS_FILE" | tail -n 1)
 fi
 
 compose() { docker compose -p marge-demo -f docker-compose.demo.yml "$@"; }
