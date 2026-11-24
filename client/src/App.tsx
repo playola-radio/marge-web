@@ -12,6 +12,7 @@ import ProtectedRoute from "./Routes/ProtectedRoute";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import TitlePage from "./Pages/TitlePage/TitlePage";
 import FactoryPage from "./Pages/FactoryPage/FactoryPage";
+import PrReviewerPage from "./Pages/PrReviewerPage/PrReviewerPage";
 
 function devUserRoute() {
   if (!import.meta.env.DEV) return null;
@@ -65,6 +66,14 @@ export default function App({
           element={
             <ProtectedRoute>
               <FactoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pr-reviewer/:org/:repo/pulls/:prNumber"
+          element={
+            <ProtectedRoute>
+              <PrReviewerPage />
             </ProtectedRoute>
           }
         />
