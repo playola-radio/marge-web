@@ -61,8 +61,32 @@ fi
 curl -fsS -o /dev/null http://localhost:3030/v1/healthCheck
 curl -fsS -o /dev/null http://localhost:5180/
 
+echo "==> Resetting the PR reviewer's canned GitHub, git cache and LLM outage switch"
+compose exec -T server rm -rf /tmp/marge-pr-reviewer-github /tmp/marge-pr-reviewer /tmp/marge-demo-llm-outage
+
+PR_PATH="playola-demo/station-scheduler/pulls/42"
+echo "==> Checking the PR reviewer is on (GET /v1/pr-reviewer/$PR_PATH/runs/latest)"
+TOKEN=$(curl -fsS -X POST http://localhost:3030/v1/auth/dev-login |
+  sed -n 's/.*"margeToken":"\([^"]*\)".*/\1/p')
+BODY=$(mktemp)
+STATUS=$(curl -sS -o "$BODY" -w '%{http_code}' -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3030/v1/pr-reviewer/$PR_PATH/runs/latest" || true)
+if [ "$STATUS" != "200" ]; then
+  echo >&2
+  echo "ERROR: the PR reviewer answered HTTP $STATUS, not 200:" >&2
+  cat "$BODY" >&2
+  echo >&2
+  echo "The reviewer logs why it is off at startup:" >&2
+  compose logs server | grep pr_reviewer >&2 || true
+  rm -f "$BODY"
+  exit 1
+fi
+rm -f "$BODY"
+
 echo
 echo "Demo environment ready ($DATA_SOURCE)."
 echo "Record at: http://localhost:5180/dev-user  (signs in as dev@marge.local)"
+echo "PR reviewer: http://localhost:5180/pr-reviewer/$PR_PATH"
+echo "  (second user: http://localhost:5180/dev-user?as=second in another browser profile)"
 echo "API:       http://localhost:3030"
 echo "Postgres:  postgres://postgres:demo@localhost:5433/marge_demo"

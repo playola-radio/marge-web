@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { setTimeout as sleep } from "node:timers/promises";
 import {
   LlmRequestError,
   validateRaw,
@@ -13,6 +15,10 @@ import {
  * a raw tool input (validated like a real response), an Error (thrown, like a
  * network failure), or a function of the request — and otherwise from a
  * deterministic default built from the stage's input.
+ *
+ * Two switches exist for recording the demo: `delayMs` slows every answer so
+ * the stage progress is visible, and summarize fails while `outageFile`
+ * exists, so a run fails part-way and can be retried.
  */
 
 export type FakeAnswer =
@@ -24,7 +30,12 @@ export interface FakeLlmOptions {
   script?: Partial<Record<LlmStage, FakeAnswer[]>>;
   model?: string;
   effort?: string;
+  delayMs?: number;
+  outageFile?: string;
 }
+
+const LOCKFILE =
+  /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|[^/]+\.lock)$/;
 
 interface OutlineIn {
   runs: { id: string; path: string }[];
@@ -41,9 +52,14 @@ interface SummarizeIn {
 /** A valid answer for each stage, derived from its input. */
 export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
   if (stage === "outline") {
-    // One chapter per top-level directory (at most 12), in first-seen order.
+    // Lockfiles are left out (unless nothing else changed); the rest is one
+    // chapter per top-level directory (at most 12), in first-seen order.
+    const all = (input as OutlineIn).runs;
+    const kept = all.filter((r) => !LOCKFILE.test(r.path));
+    const lockfiles =
+      kept.length > 0 ? all.filter((r) => !kept.includes(r)) : [];
     const groups = new Map<string, string[]>();
-    for (const run of (input as OutlineIn).runs) {
+    for (const run of lockfiles.length > 0 ? kept : all) {
       const top = run.path.includes("/") ? run.path.split("/")[0] : "(root)";
       groups.set(top, [...(groups.get(top) ?? []), run.id]);
     }
@@ -58,7 +74,10 @@ export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
         headline: dir === "(root)" ? "Top-level files" : `Changes in ${dir}`,
         runIds: ids,
       })),
-      excluded: [],
+      excluded: lockfiles.map((r) => ({
+        runId: r.id,
+        reason: "Generated lockfile.",
+      })),
     };
   }
   if (stage === "write") {
@@ -85,10 +104,14 @@ export class FakeLlmClient implements LlmClient {
   readonly effort: string;
   readonly calls: StructuredRequest<unknown>[] = [];
   private readonly script: Partial<Record<LlmStage, FakeAnswer[]>>;
+  private readonly delayMs: number;
+  private readonly outageFile?: string;
 
   constructor(options: FakeLlmOptions = {}) {
     this.model = options.model ?? "fake";
     this.effort = options.effort ?? "low";
+    this.delayMs = options.delayMs ?? 0;
+    this.outageFile = options.outageFile;
     this.script = Object.fromEntries(
       Object.entries(options.script ?? {}).map(([k, v]) => [k, [...v]]),
     );
@@ -100,6 +123,13 @@ export class FakeLlmClient implements LlmClient {
 
   async structured<T>(req: StructuredRequest<T>): Promise<StructuredResult<T>> {
     this.calls.push(req as StructuredRequest<unknown>);
+    if (this.delayMs > 0) await sleep(this.delayMs);
+    if (
+      req.stage === "summarize" &&
+      this.outageFile &&
+      existsSync(this.outageFile)
+    )
+      throw new LlmRequestError("The LLM is unavailable (demo outage).");
     const next = this.script[req.stage]?.shift();
     if (next instanceof Error) {
       throw next instanceof LlmRequestError

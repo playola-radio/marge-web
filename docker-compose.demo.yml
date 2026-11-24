@@ -44,6 +44,12 @@ services:
       PORT: "3000"
       NODE_ENV: development
       CLIENT_ORIGINS: http://localhost:5180
+      # The PR reviewer runs on offline stand-ins: canned pull requests in
+      # place of GitHub and scripted answers in place of the LLM. No secrets.
+      PR_REVIEWER_GITHUB: fake
+      PR_REVIEWER_LLM: fake
+      PR_REVIEWER_FAKE_LLM_DELAY_MS: "1500"
+      PR_REVIEWER_FAKE_LLM_OUTAGE_FILE: /tmp/marge-demo-llm-outage
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/v1/healthCheck"]
       interval: 1s

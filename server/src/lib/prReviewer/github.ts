@@ -40,6 +40,29 @@ export interface PrCommit {
   parents: string[];
 }
 
+/**
+ * Everything the reviewer reads from GitHub. The real one is the GitHub App
+ * below; the demo environment uses FakeGitHub (see githubSource.ts).
+ */
+export interface GitHubSource {
+  /** A current token for git fetches from `remoteUrl`. */
+  installationToken(org: string, repo: string): Promise<string>;
+  resolvePullRequest(
+    org: string,
+    repo: string,
+    prNumber: number,
+  ): Promise<PullRequestInfo>;
+  repoSizeKb(org: string, repo: string): Promise<number>;
+  compareCommits(
+    org: string,
+    repo: string,
+    baseSha: string,
+    headSha: string,
+  ): Promise<PrCommit[]>;
+  /** The clone URL, with no credentials in it. */
+  remoteUrl(org: string, repo: string): string;
+}
+
 export interface GitHubAppOptions {
   appId: string;
   /** PEM private key; literal "\n" sequences (as env vars often carry) are accepted. */
@@ -66,7 +89,7 @@ function checkName(org: string, repo: string): void {
     );
 }
 
-export class GitHubApp {
+export class GitHubApp implements GitHubSource {
   private readonly appId: string;
   private readonly privateKey: string;
   private readonly fetchFn: typeof fetch;
@@ -80,6 +103,10 @@ export class GitHubApp {
     this.privateKey = options.privateKey.replace(/\\n/g, "\n");
     this.fetchFn = options.fetch ?? fetch;
     this.now = options.now ?? Date.now;
+  }
+
+  remoteUrl(org: string, repo: string): string {
+    return `https://github.com/${org}/${repo}.git`;
   }
 
   /** A current installation token for the repo, minted or from cache. */

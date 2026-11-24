@@ -1,7 +1,7 @@
 import type { Request, RequestHandler } from "express";
 import { QueryTypes, type Sequelize } from "sequelize";
 import type { AppDeps } from "../../app.js";
-import { GitHubError, type GitHubApp } from "../../lib/prReviewer/github.js";
+import { GitHubError, type GitHubSource } from "../../lib/prReviewer/github.js";
 import { PIPELINE_VERSION, type PrMeta } from "../../lib/prReviewer/runner.js";
 import type { AuthedRequest } from "../middleware/security.js";
 
@@ -13,7 +13,7 @@ import type { AuthedRequest } from "../middleware/security.js";
 
 export interface PrReviewerDeps {
   sequelize: Sequelize;
-  github: Pick<GitHubApp, "resolvePullRequest">;
+  github: Pick<GitHubSource, "resolvePullRequest">;
   /** Tells the runner a run was just enqueued, so it checks now instead of at its next poll. */
   wake: () => void;
 }

@@ -33,3 +33,14 @@ test('a failed dev sign-in shows "Dev sign-in failed" and stores nothing', async
   expect(await screen.findByText("Dev sign-in failed")).toBeInTheDocument();
   expect(localStorage.length).toBe(0);
 });
+
+test("/dev-user?as=second signs in as the second dev user", async () => {
+  post.mockResolvedValue({
+    data: { margeToken: makeToken({ email: "dev2@marge.local" }) },
+  });
+  renderApp("/dev-user?as=second");
+  expect(await screen.findByText("dev2@marge.local")).toBeInTheDocument();
+  expect(post).toHaveBeenCalledWith(
+    expect.stringMatching(/\/v1\/auth\/dev-login\?as=second$/),
+  );
+});

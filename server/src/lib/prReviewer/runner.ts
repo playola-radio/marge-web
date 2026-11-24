@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Sequelize, Transaction } from "sequelize";
 import { extract } from "./extract.js";
 import { GitCacheError, redact, type GitCache } from "./gitCache.js";
-import type { GitHubApp } from "./github.js";
+import type { GitHubSource } from "./github.js";
 import type { LlmClient } from "./llm/LlmClient.js";
 import {
   EmptyDiffError,
@@ -433,16 +433,14 @@ export class Runner {
 
 export interface ExecutorDeps {
   github: Pick<
-    GitHubApp,
-    "installationToken" | "repoSizeKb" | "compareCommits"
+    GitHubSource,
+    "installationToken" | "repoSizeKb" | "compareCommits" | "remoteUrl"
   >;
   gitCache: GitCache;
   llm: LlmClient;
   cache: StageCache;
   /** WriteChapter calls in flight per run (default 3). */
   concurrency?: number;
-  /** The HTTPS clone URL; tests point it at a fixture. */
-  remoteUrl?: (org: string, repo: string) => string;
 }
 
 /**
@@ -451,9 +449,6 @@ export interface ExecutorDeps {
  * cache, then run the LLM pipeline. Nothing after extraction reads git.
  */
 export function createExecutor(deps: ExecutorDeps): RunExecutor {
-  const remoteUrl =
-    deps.remoteUrl ??
-    ((org: string, repo: string) => `https://github.com/${org}/${repo}.git`);
   return async ({ run }, ctx) => {
     const { org, repo, headSha, baseSha } = run;
     const token = () => deps.github.installationToken(org, repo);
@@ -464,7 +459,7 @@ export function createExecutor(deps: ExecutorDeps): RunExecutor {
       prNumber: run.prNumber,
       headSha,
       baseSha,
-      remoteUrl: remoteUrl(org, repo),
+      remoteUrl: deps.github.remoteUrl(org, repo),
       token,
       repoSizeKb: () => deps.github.repoSizeKb(org, repo),
       prCommits: () => deps.github.compareCommits(org, repo, baseSha, headSha),

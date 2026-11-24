@@ -57,16 +57,25 @@ export function googleSignIn(deps: AppDeps): RequestHandler {
   };
 }
 
-export const devLogin: RequestHandler = (_req, res, next) => {
+const DEV_USERS: Record<string, { email: string; name: string }> = {
+  first: { email: "dev@marge.local", name: "Dev User" },
+  second: { email: "dev2@marge.local", name: "Second Dev User" },
+};
+
+export const devLogin: RequestHandler = (req, res, next) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     next(new Error("JWT_SECRET is not set"));
     return;
   }
-  res.json({
-    margeToken: signMargeToken(
-      { email: "dev@marge.local", name: "Dev User" },
-      secret,
-    ),
-  });
+  const as = req.query.as ?? "first";
+  const user =
+    typeof as === "string" && Object.hasOwn(DEV_USERS, as)
+      ? DEV_USERS[as]
+      : null;
+  if (!user) {
+    res.status(400).json({ error: "invalid_request" });
+    return;
+  }
+  res.json({ margeToken: signMargeToken(user, secret) });
 };

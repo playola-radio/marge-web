@@ -487,10 +487,12 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
     afterEach(() => removeDir(root));
 
     function github(
+      remoteUrl = () => up.url,
       prCommits = () =>
         up.prCommits(extracted.result.baseSha, extracted.result.headSha),
     ) {
       return {
+        remoteUrl,
         installationToken: async () => TOKEN,
         repoSizeKb: async () => 10,
         compareCommits: async () => prCommits(),
@@ -513,7 +515,6 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
         gitCache: new GitCache({ root }),
         llm: client,
         cache,
-        remoteUrl: () => up.url,
       });
       await runner(execute).runOnce();
 
@@ -541,7 +542,6 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
           gitCache: new GitCache({ root }),
           llm: second,
           cache,
-          remoteUrl: () => up.url,
         }),
       ).runOnce();
       assert.equal((await runState(again)).status, "ready");
@@ -551,11 +551,10 @@ async function until(check: () => boolean | Promise<boolean>, what: string) {
     it("stores a git authentication failure's detail without the token or its Basic value", async () => {
       const id = await insertRun();
       const execute = createExecutor({
-        github: github(),
+        github: github(() => `file://${root}/no-such-upstream.git`),
         gitCache: new GitCache({ root }),
         llm: llm(),
         cache,
-        remoteUrl: () => `file://${root}/no-such-upstream.git`,
       });
       await runner(execute, { maxAttempts: 1 }).runOnce();
 

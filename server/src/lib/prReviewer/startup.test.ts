@@ -5,6 +5,7 @@ import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import jwt from "jsonwebtoken";
 import { Sequelize } from "sequelize";
+import { FakeGitHub } from "./fakeGitHub.js";
 import { startPrReviewer } from "./index.js";
 import { refuseLiveRuns } from "./runner.test.js";
 
@@ -22,6 +23,7 @@ const github = {
   installationToken: async () => "t",
   repoSizeKb: async () => 1,
   compareCommits: async () => [],
+  remoteUrl: () => "file:///unused",
   resolvePullRequest: async () => {
     throw new Error("unused");
   },
@@ -51,6 +53,16 @@ describe("PR reviewer startup", () => {
     assert.deepEqual(logs, [
       "pr_reviewer_off missing GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY",
     ]);
+  });
+
+  it("counts the fake GitHub and fake LLM as available, so only a database is missing", () => {
+    const logs: string[] = [];
+    const reviewer = startPrReviewer(
+      { PR_REVIEWER_GITHUB: "fake", PR_REVIEWER_LLM: "fake" },
+      { log: (m) => logs.push(m), sequelize: null },
+    );
+    assert.isNull(reviewer);
+    assert.deepEqual(logs, ["pr_reviewer_off missing DATABASE_URL"]);
   });
 
   it("boots the server with KV_BACKEND=memory, no DATABASE_URL and no reviewer credentials, runner off", async function () {
@@ -126,6 +138,28 @@ describe("PR reviewer startup", () => {
         );
         assert.isNotNull(reviewer);
         assert.include(logs, "pr_reviewer_on model=fake");
+      } finally {
+        await reviewer?.runner.stop();
+        await sequelize.close();
+      }
+    },
+  );
+
+  (dbUrl ? it : it.skip)(
+    "starts the runner with a database and both fakes, with no secrets",
+    async () => {
+      const sequelize = new Sequelize(dbUrl as string, {
+        dialect: "postgres",
+        logging: false,
+      });
+      let reviewer: ReturnType<typeof startPrReviewer> | undefined;
+      try {
+        await refuseLiveRuns(sequelize);
+        reviewer = startPrReviewer(
+          { PR_REVIEWER_GITHUB: "fake", PR_REVIEWER_LLM: "fake" },
+          { log: () => {}, sequelize },
+        );
+        assert.instanceOf(reviewer?.github, FakeGitHub);
       } finally {
         await reviewer?.runner.stop();
         await sequelize.close();
