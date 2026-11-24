@@ -67,11 +67,11 @@ The server runs the PR reviewer (design 003) with two offline stand-ins, set in 
 | `playola-demo/station-scheduler` **#43**, 2 commits | a failed run and **Retry**     |
 
 Record at **http://localhost:5180/pr-reviewer/playola-demo/station-scheduler/pulls/42** after signing in
-at `/dev-user`. (The page arrives with design 003's last PR; until then the
-`/v1/pr-reviewer` endpoints answer.) For each Done-when item:
+at `/dev-user`. For each Done-when item:
 
 1. **First visit generates.** Open #42; the stages tick through until the chapters show.
 2. **The finished page.** Summary, chapters with diffs, and `package-lock.json` under "not in a chapter".
+   Chapter 4 changes `docs/api.md`, which renders as markdown (**Rendered / Code** per block).
 3. **Reviewed marks persist.** Mark a chapter, refresh.
 4. **A second user.** In a second browser profile (separate storage), open
    http://localhost:5180/dev-user?as=second (`dev2@marge.local`), then #42: same chapters, no new
