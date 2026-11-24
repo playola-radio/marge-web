@@ -11,7 +11,7 @@ import {
 
 /**
  * An offline stand-in for GitHub (the demo environment, via
- * `PR_REVIEWER_GITHUB=fake`). Each canned repository is built on first use
+ * `PR_REVIEWER_GITHUB=fake`). The canned repository is built on first use
  * into a real git repository under `root`, with fixed authors and dates so
  * its commit IDs are the same on every build, and served over file:// — so
  * the git cache and extraction run unchanged, with no network and no token.
@@ -46,7 +46,7 @@ export interface DemoRepo {
 
 export interface FakeGitHubOptions {
   root: string;
-  repos: DemoRepo[];
+  repo: DemoRepo;
 }
 
 const BASE_REF = "main";
@@ -107,12 +107,11 @@ export class FakeGitHub implements GitHubSource {
   }
 
   private find(org: string, repo: string): DemoRepo {
-    const entry = this.options.repos.find(
-      (r) =>
-        r.org.toLowerCase() === org.toLowerCase() &&
-        r.repo.toLowerCase() === repo.toLowerCase(),
-    );
-    if (!entry)
+    const entry = this.options.repo;
+    if (
+      entry.org.toLowerCase() !== org.toLowerCase() ||
+      entry.repo.toLowerCase() !== repo.toLowerCase()
+    )
       throw new GitHubError(
         "pr_not_found",
         `GitHub: not found (${org}/${repo})`,

@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { DEMO_REPOS } from "./demoFixture.js";
+import { DEMO_REPO } from "./demoFixture.js";
 import { FakeGitHub, type DemoRepo } from "./fakeGitHub.js";
 import { GitCache } from "./gitCache.js";
 import { GitHubError } from "./github.js";
@@ -10,33 +10,29 @@ import { MemoryStageCache } from "./pipeline/stage.js";
 import { lines, removeDir, tempDir } from "./repoFixtures.test.js";
 import { createExecutor, type RunProgress } from "./runner.js";
 
-const REPOS: DemoRepo[] = [
-  {
-    org: "acme",
-    repo: "widgets",
-    history: [{ message: "Start", files: { "a.txt": lines("one", "two") } }],
-    pulls: [
-      {
-        number: 5,
-        title: "Count to three",
-        headRef: "feature/three",
-        commits: [
-          {
-            message: "Add three",
-            files: { "a.txt": lines("one", "two", "3") },
-          },
-          {
-            message: "Spell it out",
-            files: { "a.txt": lines("one", "two", "three") },
-          },
-        ],
-        pushedLater: [
-          { message: "Add four", files: { "b.txt": lines("four") } },
-        ],
-      },
-    ],
-  },
-];
+const REPO: DemoRepo = {
+  org: "acme",
+  repo: "widgets",
+  history: [{ message: "Start", files: { "a.txt": lines("one", "two") } }],
+  pulls: [
+    {
+      number: 5,
+      title: "Count to three",
+      headRef: "feature/three",
+      commits: [
+        {
+          message: "Add three",
+          files: { "a.txt": lines("one", "two", "3") },
+        },
+        {
+          message: "Spell it out",
+          files: { "a.txt": lines("one", "two", "three") },
+        },
+      ],
+      pushedLater: [{ message: "Add four", files: { "b.txt": lines("four") } }],
+    },
+  ],
+};
 
 const git = (dir: string, ...args: string[]) =>
   execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
@@ -49,7 +45,7 @@ describe("FakeGitHub", () => {
   afterEach(() => removeDir(root));
 
   it("resolves a fixture pull request from the repository it builds", async () => {
-    const github = new FakeGitHub({ root, repos: REPOS });
+    const github = new FakeGitHub({ root, repo: REPO });
     const pr = await github.resolvePullRequest("acme", "widgets", 5);
     const dir = join(root, "acme", "widgets");
     assert.deepEqual(pr, {
@@ -70,27 +66,8 @@ describe("FakeGitHub", () => {
     );
   });
 
-  it("builds the same commit IDs every time", async () => {
-    const other = tempDir("fake-github");
-    try {
-      const a = await new FakeGitHub({ root, repos: REPOS }).resolvePullRequest(
-        "acme",
-        "widgets",
-        5,
-      );
-      const b = await new FakeGitHub({
-        root: other,
-        repos: REPOS,
-      }).resolvePullRequest("acme", "widgets", 5);
-      assert.strictEqual(a.headSha, b.headSha);
-      assert.strictEqual(a.baseSha, b.baseSha);
-    } finally {
-      removeDir(other);
-    }
-  });
-
   it("answers pr_not_found for a pull request or repository it doesn't have", async () => {
-    const github = new FakeGitHub({ root, repos: REPOS });
+    const github = new FakeGitHub({ root, repo: REPO });
     for (const [org, repo, n] of [
       ["acme", "widgets", 6],
       ["acme", "gadgets", 5],
@@ -105,7 +82,7 @@ describe("FakeGitHub", () => {
   });
 
   it("sees a push: moving the branch to its pushed-later commits changes the head, not the base", async () => {
-    const github = new FakeGitHub({ root, repos: REPOS });
+    const github = new FakeGitHub({ root, repo: REPO });
     const before = await github.resolvePullRequest("acme", "widgets", 5);
     git(
       join(root, "acme", "widgets"),
@@ -119,17 +96,18 @@ describe("FakeGitHub", () => {
     assert.strictEqual(after.commits, 3);
   });
 
-  it("rebuilds a repository whose directory was removed (the demo reset)", async () => {
-    const github = new FakeGitHub({ root, repos: REPOS });
+  it("rebuilds a repository whose directory was removed (the demo reset), with the same commit IDs", async () => {
+    const github = new FakeGitHub({ root, repo: REPO });
     const first = await github.resolvePullRequest("acme", "widgets", 5);
     removeDir(join(root, "acme"));
     const again = await github.resolvePullRequest("acme", "widgets", 5);
     assert.strictEqual(again.headSha, first.headSha);
+    assert.strictEqual(again.baseSha, first.baseSha);
   });
 
   it("serves the demo pull request offline through the real git cache, extraction and pipeline", async function () {
     this.timeout(30_000);
-    const github = new FakeGitHub({ root, repos: DEMO_REPOS });
+    const github = new FakeGitHub({ root, repo: DEMO_REPO });
     const pr = await github.resolvePullRequest(
       "playola-demo",
       "station-scheduler",
@@ -165,7 +143,15 @@ describe("FakeGitHub", () => {
 
     assert.includeMembers(stages, ["fetch", "extract", "outline", "summarize"]);
     assert.lengthOf(doc.document.commits, 4);
-    assert.isAbove(doc.document.chapters.length, 1);
+    assert.deepEqual(
+      doc.document.chapters.map((c) => c.headline),
+      [
+        "Count each song's plays over the last seven days",
+        "Serve the weekly top songs from the stations API",
+        "Show the top songs on the station page",
+        "Document the top-songs endpoint",
+      ],
+    );
     assert.deepEqual(
       doc.markdownSources.map((m) => m.path),
       ["docs/api.md"],

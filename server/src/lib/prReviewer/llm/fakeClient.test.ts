@@ -45,6 +45,50 @@ describe("FakeLlmClient", () => {
     });
   });
 
+  describe("narration from the commits", () => {
+    it("makes one chapter per commit, headed by its subject, oldest first", () => {
+      const out = defaultAnswer("outline", {
+        commits: [
+          { sha: "aaaaaaa", subject: "Count plays", body: "" },
+          { sha: "bbbbbbb", subject: "Serve them", body: "" },
+        ],
+        runs: [
+          { id: "r1", path: "api.ts", owners: ["bbbbbbb"] },
+          { id: "r2", path: "plays.ts", owners: ["aaaaaaa"] },
+          { id: "r3", path: "plays.test.ts", owners: ["aaaaaaa"] },
+        ],
+      }) as { chapters: { headline: string; runIds: string[] }[] };
+      assert.deepEqual(
+        out.chapters.map((c) => [c.headline, c.runIds]),
+        [
+          ["Count plays", ["r2", "r3"]],
+          ["Serve them", ["r1"]],
+        ],
+      );
+    });
+
+    it("introduces a chapter with its commit's message body", () => {
+      const out = defaultAnswer("write", {
+        headline: "Count plays",
+        runs: runs("plays.ts"),
+        commits: [{ sha: "a", subject: "Count plays", body: "One query." }],
+      }) as { intro: string };
+      assert.strictEqual(out.intro, "One query.");
+    });
+
+    it("titles the pull request from its branch and summarises its commits", () => {
+      const out = defaultAnswer("summarize", {
+        branch: "feature/weekly-top-songs",
+        subjects: ["Count plays", "Serve them"],
+        chapters: [],
+      });
+      assert.deepEqual(out, {
+        title: "Weekly top songs",
+        summary: "Count plays, then serve them.",
+      });
+    });
+  });
+
   describe("demo switches", () => {
     let dir: string;
     beforeEach(() => {
@@ -63,7 +107,7 @@ describe("FakeLlmClient", () => {
       assert.instanceOf(err, LlmRequestError);
       rmSync(outageFile);
       const ok = await summarize(llm);
-      assert.isTrue(ok.ok && ok.value.title === "feature/x");
+      assert.isTrue(ok.ok && ok.value.title === "X");
     });
 
     it("waits delayMs before answering", async () => {

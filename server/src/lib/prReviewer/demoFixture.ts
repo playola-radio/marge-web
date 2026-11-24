@@ -207,151 +207,149 @@ const topSongsComponent = (limit: boolean) =>
     "}",
   );
 
-export const DEMO_REPOS: DemoRepo[] = [
-  {
-    org: "playola-demo",
-    repo: "station-scheduler",
-    history: [
-      {
-        message: "Start the station scheduler",
-        files: {
-          "README.md": lines(
-            "# Station Scheduler",
-            "",
-            "Schedules shows and tracks plays for Playola stations.",
-          ),
-          "package.json": packageJson(baseDeps),
-          "package-lock.json": lockfile(baseDeps),
-          "docs/api.md": apiDoc,
-          "server/src/db.ts": db,
-          "server/src/routes/stations.ts": stationsRoute,
-          "server/src/routes/stations.test.ts": stationsTest,
-          "client/src/StationPage/StationPage.tsx": stationPage(false),
+export const DEMO_REPO: DemoRepo = {
+  org: "playola-demo",
+  repo: "station-scheduler",
+  history: [
+    {
+      message: "Start the station scheduler",
+      files: {
+        "README.md": lines(
+          "# Station Scheduler",
+          "",
+          "Schedules shows and tracks plays for Playola stations.",
+        ),
+        "package.json": packageJson(baseDeps),
+        "package-lock.json": lockfile(baseDeps),
+        "docs/api.md": apiDoc,
+        "server/src/db.ts": db,
+        "server/src/routes/stations.ts": stationsRoute,
+        "server/src/routes/stations.test.ts": stationsTest,
+        "client/src/StationPage/StationPage.tsx": stationPage(false),
+      },
+    },
+  ],
+  pulls: [
+    {
+      number: 42,
+      title: "Show listeners this week's most-played songs",
+      headRef: "feature/weekly-top-songs",
+      commits: [
+        {
+          message:
+            "Count each song's plays over the last seven days\n\nOne grouped query; older plays are ignored.",
+          files: {
+            "server/src/plays/topSongs.ts": topSongs(false),
+            "server/src/plays/topSongs.test.ts": topSongsTest,
+            "package.json": packageJson(prDeps),
+            "package-lock.json": lockfile(prDeps),
+          },
         },
-      },
-    ],
-    pulls: [
-      {
-        number: 42,
-        title: "Show listeners this week's most-played songs",
-        headRef: "feature/weekly-top-songs",
-        commits: [
-          {
-            message:
-              "Count each song's plays over the last seven days\n\nOne grouped query; older plays are ignored.",
-            files: {
-              "server/src/plays/topSongs.ts": topSongs(false),
-              "server/src/plays/topSongs.test.ts": topSongsTest,
-              "package.json": packageJson(prDeps),
-              "package-lock.json": lockfile(prDeps),
-            },
-          },
-          {
-            message: "Serve the weekly top songs from the stations API",
-            files: {
-              "server/src/routes/stations.ts":
-                stationsRoute.replace(
-                  'import { db } from "../db.js";\n',
-                  'import { db } from "../db.js";\nimport { topSongs } from "../plays/topSongs.js";\n',
-                ) +
-                lines(
-                  "",
-                  'stations.get("/:id/top-songs", async (req, res) => {',
-                  "  res.json({ songs: await topSongs(req.params.id) });",
-                  "});",
-                ),
-              "server/src/routes/stations.test.ts": stationsTest.replace(
-                /\}\);\n$/,
-                lines(
-                  "",
-                  '  it("lists the week\'s top songs", async () => {',
-                  '    const res = await request(app).get("/stations/kxyz/top-songs");',
-                  "    expect(res.status).toBe(200);",
-                  "    expect(res.body.songs).toBeInstanceOf(Array);",
-                  "  });",
-                  "});",
-                ),
+        {
+          message: "Serve the weekly top songs from the stations API",
+          files: {
+            "server/src/routes/stations.ts":
+              stationsRoute.replace(
+                'import { db } from "../db.js";\n',
+                'import { db } from "../db.js";\nimport { topSongs } from "../plays/topSongs.js";\n',
+              ) +
+              lines(
+                "",
+                'stations.get("/:id/top-songs", async (req, res) => {',
+                "  res.json({ songs: await topSongs(req.params.id) });",
+                "});",
               ),
-            },
+            "server/src/routes/stations.test.ts": stationsTest.replace(
+              /\}\);\n$/,
+              lines(
+                "",
+                '  it("lists the week\'s top songs", async () => {',
+                '    const res = await request(app).get("/stations/kxyz/top-songs");',
+                "    expect(res.status).toBe(200);",
+                "    expect(res.body.songs).toBeInstanceOf(Array);",
+                "  });",
+                "});",
+              ),
+            ),
           },
-          {
-            message: "Show the top songs on the station page",
-            files: {
-              "client/src/StationPage/TopSongs.tsx": topSongsComponent(false),
-              "client/src/StationPage/StationPage.tsx": stationPage(true),
-            },
+        },
+        {
+          message: "Show the top songs on the station page",
+          files: {
+            "client/src/StationPage/TopSongs.tsx": topSongsComponent(false),
+            "client/src/StationPage/StationPage.tsx": stationPage(true),
           },
-          {
-            message: "Document the top-songs endpoint",
-            files: {
-              "docs/api.md":
-                apiDoc +
-                lines(
-                  "",
-                  "## GET /stations/:id/top-songs",
-                  "",
-                  "The station's **most-played songs** over the last seven days, most plays first.",
-                  "",
-                  "- Plays older than seven days are not counted.",
-                  "- Ties are broken by song title.",
-                  "",
-                  "```json",
-                  '{ "songs": [{ "title": "Harvest Moon", "artist": "Neil Young", "plays": 5 }] }',
-                  "```",
-                ),
-            },
+        },
+        {
+          message: "Document the top-songs endpoint",
+          files: {
+            "docs/api.md":
+              apiDoc +
+              lines(
+                "",
+                "## GET /stations/:id/top-songs",
+                "",
+                "The station's **most-played songs** over the last seven days, most plays first.",
+                "",
+                "- Plays older than seven days are not counted.",
+                "- Ties are broken by song title.",
+                "",
+                "```json",
+                '{ "songs": [{ "title": "Harvest Moon", "artist": "Neil Young", "plays": 5 }] }',
+                "```",
+              ),
           },
-        ],
-        pushedLater: [
-          {
-            message: "Cap the top-songs list at ten",
-            files: {
-              "server/src/plays/topSongs.ts": topSongs(true),
-              "client/src/StationPage/TopSongs.tsx": topSongsComponent(true),
-            },
+        },
+      ],
+      pushedLater: [
+        {
+          message: "Cap the top-songs list at ten",
+          files: {
+            "server/src/plays/topSongs.ts": topSongs(true),
+            "client/src/StationPage/TopSongs.tsx": topSongsComponent(true),
           },
-        ],
-      },
-      {
-        number: 43,
-        title: "Show what's on air next",
-        headRef: "feature/up-next",
-        commits: [
-          {
-            message: "Look up the station's next show",
-            files: {
-              "server/src/db.ts": db.replace(
+        },
+      ],
+    },
+    {
+      number: 43,
+      title: "Show what's on air next",
+      headRef: "feature/up-next",
+      commits: [
+        {
+          message: "Look up the station's next show",
+          files: {
+            "server/src/db.ts": db.replace(
+              "  query: pool.query.bind(pool),",
+              lines(
+                "  async nextShow(stationId: string) {",
+                "    const { rows } = await pool.query(",
+                '      "SELECT name, starts_at AS \\"startsAt\\" FROM shows WHERE station_id = $1 AND starts_at > now() ORDER BY starts_at LIMIT 1",',
+                "      [stationId],",
+                "    );",
+                "    return rows[0] ?? null;",
+                "  },",
+                "",
                 "  query: pool.query.bind(pool),",
-                lines(
-                  "  async nextShow(stationId: string) {",
-                  "    const { rows } = await pool.query(",
-                  '      "SELECT name, starts_at AS \\"startsAt\\" FROM shows WHERE station_id = $1 AND starts_at > now() ORDER BY starts_at LIMIT 1",',
-                  "      [stationId],",
-                  "    );",
-                  "    return rows[0] ?? null;",
-                  "  },",
-                  "",
-                  "  query: pool.query.bind(pool),",
-                ).trimEnd(),
-              ),
-            },
+              ).trimEnd(),
+            ),
           },
-          {
-            message: "Show the next show under the one on air",
-            files: {
-              "client/src/StationPage/StationPage.tsx": stationPage(
-                false,
-              ).replace(
-                "      <p>On air: {station.onAir}</p>\n",
-                lines(
-                  "      <p>On air: {station.onAir}</p>",
-                  "      {station.upNext && <p>Up next: {station.upNext.name}</p>}",
-                ),
+        },
+        {
+          message: "Show the next show under the one on air",
+          files: {
+            "client/src/StationPage/StationPage.tsx": stationPage(
+              false,
+            ).replace(
+              "      <p>On air: {station.onAir}</p>\n",
+              lines(
+                "      <p>On air: {station.onAir}</p>",
+                "      {station.upNext && <p>Up next: {station.upNext.name}</p>}",
               ),
-            },
+            ),
           },
-        ],
-      },
-    ],
-  },
-];
+        },
+      ],
+    },
+  ],
+};

@@ -8,6 +8,7 @@ import {
   type StructuredRequest,
   type StructuredResult,
 } from "./LlmClient.js";
+import { SUMMARY_MAX_WORDS } from "../pipeline/schema.js";
 
 /**
  * A scripted stand-in for the LLM (tests, and the demo environment via
@@ -34,44 +35,57 @@ export interface FakeLlmOptions {
   outageFile?: string;
 }
 
-const LOCKFILE =
-  /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|[^/]+\.lock)$/;
+const LOCKFILE = /(^|\/)(package-lock\.json|pnpm-lock\.yaml|[^/]+\.lock)$/;
 
+interface Commit {
+  sha: string;
+  subject: string;
+  body: string;
+}
 interface OutlineIn {
-  runs: { id: string; path: string }[];
+  commits?: Commit[];
+  runs: { id: string; path: string; owners?: string[] }[];
 }
 interface WriteIn {
   headline: string;
   runs: { id: string; path: string }[];
+  commits?: Commit[];
 }
 interface SummarizeIn {
   branch: string;
+  subjects?: string[];
   chapters: { headline: string }[];
 }
+
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+const upperFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** A valid answer for each stage, derived from its input. */
 export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
   if (stage === "outline") {
     // Lockfiles are left out (unless nothing else changed); the rest is one
-    // chapter per top-level directory (at most 12), in first-seen order.
-    const all = (input as OutlineIn).runs;
+    // chapter per commit that wrote it (at most 12), oldest commit first.
+    const { commits = [], runs: all } = input as OutlineIn;
     const kept = all.filter((r) => !LOCKFILE.test(r.path));
     const lockfiles =
       kept.length > 0 ? all.filter((r) => !kept.includes(r)) : [];
-    const groups = new Map<string, string[]>();
+    const subjects = new Map(commits.map((c) => [c.sha, c.subject]));
+    const groups = new Map<string, string[]>(
+      commits.map((c) => [c.subject, []]),
+    );
     for (const run of lockfiles.length > 0 ? kept : all) {
-      const top = run.path.includes("/") ? run.path.split("/")[0] : "(root)";
-      groups.set(top, [...(groups.get(top) ?? []), run.id]);
+      const headline = subjects.get(run.owners?.[0] ?? "") ?? "Other changes";
+      groups.set(headline, [...(groups.get(headline) ?? []), run.id]);
     }
-    const entries = [...groups.entries()];
+    const entries = [...groups.entries()].filter(([, ids]) => ids.length > 0);
     while (entries.length > 12) {
       const [, ids] = entries.pop()!;
       entries[entries.length - 1][1].push(...ids);
     }
     return {
-      chapters: entries.map(([dir, ids], i) => ({
+      chapters: entries.map(([headline, ids], i) => ({
         key: `chapter-${i + 1}`,
-        headline: dir === "(root)" ? "Top-level files" : `Changes in ${dir}`,
+        headline,
         runIds: ids,
       })),
       excluded: lockfiles.map((r) => ({
@@ -81,21 +95,26 @@ export function defaultAnswer(stage: LlmStage, input: unknown): unknown {
     };
   }
   if (stage === "write") {
-    const { headline, runs } = input as WriteIn;
+    const { headline, runs, commits = [] } = input as WriteIn;
     return {
-      intro: `This chapter covers: ${headline}.`,
+      intro:
+        commits.find((c) => c.body)?.body ??
+        `This chapter covers: ${headline}.`,
       steps: runs.map((r) => ({
         runIds: [r.id],
         explanation: `Updates ${r.path}.`,
       })),
     };
   }
-  const { branch, chapters } = input as SummarizeIn;
+  const { branch, subjects = [], chapters } = input as SummarizeIn;
+  const points =
+    subjects.length > 0 ? subjects : chapters.map((c) => c.headline);
+  const summary = points
+    .map((p, i) => (i === 0 ? upperFirst(p) : lowerFirst(p)))
+    .join(", then ");
   return {
-    title: branch,
-    summary: `This pull request ${chapters
-      .map((c) => c.headline.toLowerCase())
-      .join(", then ")}.`,
+    title: upperFirst(branch.split("/").pop()!.replace(/[-_]+/g, " ")),
+    summary: `${summary.split(/\s+/).slice(0, SUMMARY_MAX_WORDS).join(" ")}.`,
   };
 }
 

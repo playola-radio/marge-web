@@ -57,13 +57,14 @@ The server runs the PR reviewer (design 003) with two offline stand-ins, set in 
 - `PR_REVIEWER_GITHUB=fake`: canned pull requests (`server/src/lib/prReviewer/demoFixture.ts`) in place of
   GitHub. Each is built into a real git repository inside the server container, with fixed authors and dates
   (the same commit IDs on every reset), and served to the git cache over `file://`. No network, no token.
-- `PR_REVIEWER_LLM=fake`: scripted answers in place of the LLM. One chapter per top-level folder, lockfiles left
-  out ("not in a chapter"), and a 1.5 s pause per answer so the stage progress shows on screen.
+- `PR_REVIEWER_LLM=fake`: scripted answers in place of the LLM, written from the pull request's own commits. One
+  chapter per commit, headed by its subject and introduced by its message, lockfiles left out ("not in a
+  chapter"), and a 1.5 s pause per answer so the stage progress shows on screen.
 
-| Pull request                                         | Use it for                       |
-| ---------------------------------------------------- | -------------------------------- |
-| `playola-demo/station-scheduler` **#42**, 4 commits  | reading, reviewing, a new push   |
-| `playola-demo/station-scheduler` **#43**, 2 commits  | a failed run and **Retry**       |
+| Pull request                                        | Use it for                     |
+| --------------------------------------------------- | ------------------------------ |
+| `playola-demo/station-scheduler` **#42**, 4 commits | reading, reviewing, a new push |
+| `playola-demo/station-scheduler` **#43**, 2 commits | a failed run and **Retry**     |
 
 Record at **http://localhost:5180/pr-reviewer/playola-demo/station-scheduler/pulls/42** after signing in
 at `/dev-user`. (The page arrives with design 003's last PR; until then the

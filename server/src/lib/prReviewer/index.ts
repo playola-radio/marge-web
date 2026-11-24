@@ -21,8 +21,6 @@ export interface StartOptions {
   log?: (message: string) => void;
   /** Injected in tests; otherwise from DATABASE_URL. */
   sequelize?: Sequelize | null;
-  /** Injected in tests; otherwise from env (createGitHubSource). */
-  github?: GitHubSource;
 }
 
 /**
@@ -43,7 +41,7 @@ export function startPrReviewer(
         ? getSequelize()
         : null;
   const llm = createLlmClient(env);
-  const github = options.github ?? createGitHubSource(env);
+  const github = createGitHubSource(env);
 
   const missing = [
     ...(sequelize ? [] : ["DATABASE_URL"]),

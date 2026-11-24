@@ -19,16 +19,6 @@ async function freePort(): Promise<number> {
   return port;
 }
 
-const github = {
-  installationToken: async () => "t",
-  repoSizeKb: async () => 1,
-  compareCommits: async () => [],
-  remoteUrl: () => "file:///unused",
-  resolvePullRequest: async () => {
-    throw new Error("unused");
-  },
-};
-
 describe("PR reviewer startup", () => {
   it("stays off, logging one line, without a database or credentials", () => {
     const logs: string[] = [];
@@ -122,7 +112,7 @@ describe("PR reviewer startup", () => {
 
   const dbUrl = process.env.DATABASE_URL;
   (dbUrl ? it : it.skip)(
-    "starts the runner with a database, the fake LLM and a GitHub stand-in",
+    "starts the runner with a database and both fakes, with no secrets",
     async () => {
       const sequelize = new Sequelize(dbUrl as string, {
         dialect: "postgres",
@@ -133,33 +123,11 @@ describe("PR reviewer startup", () => {
       try {
         await refuseLiveRuns(sequelize);
         reviewer = startPrReviewer(
-          { PR_REVIEWER_LLM: "fake" },
-          { log: (m) => logs.push(m), sequelize, github },
-        );
-        assert.isNotNull(reviewer);
-        assert.include(logs, "pr_reviewer_on model=fake");
-      } finally {
-        await reviewer?.runner.stop();
-        await sequelize.close();
-      }
-    },
-  );
-
-  (dbUrl ? it : it.skip)(
-    "starts the runner with a database and both fakes, with no secrets",
-    async () => {
-      const sequelize = new Sequelize(dbUrl as string, {
-        dialect: "postgres",
-        logging: false,
-      });
-      let reviewer: ReturnType<typeof startPrReviewer> | undefined;
-      try {
-        await refuseLiveRuns(sequelize);
-        reviewer = startPrReviewer(
           { PR_REVIEWER_GITHUB: "fake", PR_REVIEWER_LLM: "fake" },
-          { log: () => {}, sequelize },
+          { log: (m) => logs.push(m), sequelize },
         );
         assert.instanceOf(reviewer?.github, FakeGitHub);
+        assert.include(logs, "pr_reviewer_on model=fake");
       } finally {
         await reviewer?.runner.stop();
         await sequelize.close();
