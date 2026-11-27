@@ -171,6 +171,12 @@ export function latest(deps: AppDeps): RequestHandler {
         commits: pr.commits,
         currentHeadSha: pr.headSha,
         currentBaseSha: pr.baseSha,
+        author: pr.author,
+        body: pr.body,
+        additions: pr.additions,
+        deletions: pr.deletions,
+        changedFiles: pr.changedFiles,
+        files: pr.files,
       },
       run: run ? runJson(run) : null,
       ...(newest && run && newest.id !== run.id

@@ -59,6 +59,15 @@ export function makePr(overrides: Partial<CurrentPr> = {}): CurrentPr {
     commits: 2,
     currentHeadSha: HEAD_A,
     currentBaseSha: BASE_A,
+    author: "brian-keane",
+    body: "Cuts slow git setup out of the test suite.",
+    additions: 52,
+    deletions: 9,
+    changedFiles: 2,
+    files: [
+      { path: "test/setup.ts", additions: 40, deletions: 7 },
+      { path: "README.md", additions: 12, deletions: 2 },
+    ],
     ...overrides,
   };
 }

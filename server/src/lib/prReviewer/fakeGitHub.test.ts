@@ -27,7 +27,12 @@ describe("FakeGitHub", () => {
     const github = new FakeGitHub(root);
     const pr = await github.resolvePullRequest(ORG, REPO, 42);
     const dir = join(root, ORG, REPO);
-    assert.deepEqual(pr, {
+    const { files, additions, deletions, changedFiles, ...rest } = pr;
+    assert.deepEqual(
+      { files: files.length, additions, deletions, changedFiles },
+      { files: 9, additions: 98, deletions: 2, changedFiles: 9 },
+    );
+    assert.deepEqual(rest, {
       title: "Show listeners this week's most-played songs",
       url: `https://github.com/${ORG}/${REPO}/pull/42`,
       baseRef: "main",
@@ -36,6 +41,8 @@ describe("FakeGitHub", () => {
       baseSha: git(dir, "rev-parse", "main"),
       commits: 4,
       hasNetDiff: true,
+      author: "playola-demo",
+      body: "",
     });
     assert.strictEqual(github.remoteUrl(ORG, REPO), `file://${dir}`);
     assert.deepEqual(

@@ -35,10 +35,23 @@ export type Run = {
   updatedAt: string;
 };
 
+export type ChangedFile = {
+  path: string;
+  additions: number;
+  deletions: number;
+};
+
 /** The PR as GitHub has it now, from `runs/latest`. */
 export type CurrentPr = RunPr & {
   currentHeadSha: string;
   currentBaseSha: string;
+  author: string;
+  body: string;
+  additions: number;
+  deletions: number;
+  changedFiles: number;
+  /** At most 300 (GitHub's limit); `changedFiles` is the true count. */
+  files: ChangedFile[];
 };
 
 export type LatestResponse = {

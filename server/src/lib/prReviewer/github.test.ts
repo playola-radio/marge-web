@@ -78,7 +78,12 @@ function standardRoutes(
           title: "Make widgets spin",
           html_url: "https://github.com/acme/widgets/pull/7",
           state: opts.prState ?? "open",
+          body: "Spins the widgets.",
+          user: { login: "octocat" },
           commits: 3,
+          additions: 12,
+          deletions: 4,
+          changed_files: 1,
           base: { ref: "main", sha: BASE_TIP },
           head: { ref: "feature/spin", sha: HEAD },
         },
@@ -94,7 +99,14 @@ function standardRoutes(
           ahead_by: 3,
           total_commits: 3,
           commits: [],
-          files: opts.compareFiles ?? [{ filename: "src/spin.ts" }],
+          files: opts.compareFiles ?? [
+            {
+              filename: "src/spin.ts",
+              status: "modified",
+              additions: 12,
+              deletions: 4,
+            },
+          ],
         },
       };
     return undefined;
@@ -173,7 +185,7 @@ describe("GitHubApp", () => {
   });
 
   describe("resolvePullRequest", () => {
-    it("resolves title, url, refs, pinned head and merge-base SHAs, and commit count", async () => {
+    it("resolves title, url, refs, pinned head and merge-base SHAs, commit count and size", async () => {
       const clock = () => Date.now();
       const gh = fakeGitHub(standardRoutes({ clock }));
       const app = makeApp(gh.fetchFn, clock);
@@ -189,6 +201,12 @@ describe("GitHubApp", () => {
         baseSha: MERGE_BASE,
         commits: 3,
         hasNetDiff: true,
+        author: "octocat",
+        body: "Spins the widgets.",
+        additions: 12,
+        deletions: 4,
+        changedFiles: 1,
+        files: [{ path: "src/spin.ts", additions: 12, deletions: 4 }],
       });
       const repoCalls = gh.calls.filter((c) => c.path.startsWith("/repos/"));
       assert.isTrue(

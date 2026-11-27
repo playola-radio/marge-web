@@ -158,11 +158,73 @@ const CH2 = "Retry flaky calls a bounded number of times";
 /* ---------------- Generation flow ---------------- */
 
 describe("first visit", () => {
-  test("with no run, posts run creation, shows the stages, and polls until the chapters show", async () => {
+  test("with no run, starts nothing and shows the PR's size, description and files", async () => {
+    api.latest.mockResolvedValue(latest(null));
+    renderApp(PAGE);
+    const preview = await screen.findByRole("region", {
+      name: "Before generating",
+    });
+    expect(post).not.toHaveBeenCalled();
+    expect(within(preview).getByText("@brian-keane")).toBeInTheDocument();
+    expect(within(preview).getByText("2 files changed")).toBeInTheDocument();
+    expect(within(preview).getByText("+52")).toBeInTheDocument();
+    expect(within(preview).getByText("−9")).toBeInTheDocument();
+    expect(
+      within(preview).getByText("Cuts slow git setup out of the test suite."),
+    ).toBeInTheDocument();
+    const files = within(preview).getAllByRole("listitem");
+    expect(files.map((f) => f.textContent)).toEqual([
+      "test/setup.ts+40−7",
+      "README.md+12−2",
+    ]);
+    expect(
+      within(preview).queryByText(/GitHub lists only/),
+    ).not.toBeInTheDocument();
+  });
+
+  test("says when GitHub listed only some of the changed files", async () => {
+    api.latest.mockResolvedValue(latest(null, { changedFiles: 400 }));
+    renderApp(PAGE);
+    expect(
+      await screen.findByText("GitHub lists only the first 2 of 400 files."),
+    ).toBeInTheDocument();
+  });
+
+  test("still offers Generate chapters when an older server sends no preview", async () => {
+    api.latest.mockResolvedValue(
+      latest(null, { author: undefined, body: undefined, files: undefined }),
+    );
+    renderApp(PAGE);
+    expect(
+      await screen.findByRole("button", { name: "Generate chapters" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/files? changed/)).not.toBeInTheDocument();
+  });
+
+  test("a push while the reader was deciding doesn't mark the new run outdated", async () => {
+    vi.useFakeTimers();
+    api.latest.mockResolvedValue(latest(null));
+    api.create.mockResolvedValue(
+      makeRun({ status: "queued", headSha: HEAD_B, baseSha: BASE_B }),
+    );
+    renderApp(PAGE);
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Generate chapters" }));
+    await flush();
+    expect(
+      screen.getByText("Waiting to start generating chapters…"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/the PR has changed/)).not.toBeInTheDocument();
+  });
+
+  test("Generate chapters posts run creation, shows the stages, and polls until the chapters show", async () => {
     vi.useFakeTimers();
     api.latest.mockResolvedValue(latest(null));
     api.create.mockResolvedValue(makeRun({ status: "queued" }));
     renderApp(PAGE);
+    await flush();
+    expect(creates()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Generate chapters" }));
     await flush();
     expect(creates()).toHaveLength(1);
     expect(String(creates()[0][0])).toMatch(
@@ -730,6 +792,9 @@ describe("messages", () => {
     api.latest.mockResolvedValue(latest(null));
     api.create.mockRejectedValue(httpError(422, { error: "empty_diff" }));
     renderApp(PAGE);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Generate chapters" }),
+    );
     expect(await screen.findByText("Nothing to narrate.")).toBeInTheDocument();
     expect(
       screen.getByText(/no changes between its merge base and its head/),
