@@ -65,13 +65,8 @@ export function makePr(overrides: Partial<CurrentPr> = {}): CurrentPr {
     deletions: 9,
     changedFiles: 2,
     files: [
-      {
-        path: "test/setup.ts",
-        status: "modified",
-        additions: 40,
-        deletions: 7,
-      },
-      { path: "README.md", status: "modified", additions: 12, deletions: 2 },
+      { path: "test/setup.ts", additions: 40, deletions: 7 },
+      { path: "README.md", additions: 12, deletions: 2 },
     ],
     ...overrides,
   };

@@ -144,7 +144,8 @@ function Body({
           <h2 className="prr-card__title">
             No chapters yet for this pull request.
           </h2>
-          {pr ? <PrPreview pr={pr} /> : null}
+          {/* An older server sends no preview fields. */}
+          {pr?.files ? <PrPreview pr={pr} /> : null}
           <button
             type="button"
             className="prr-button prr-button--primary"
@@ -279,13 +280,13 @@ function PrHeader({
 function PrPreview({ pr }: { pr: CurrentPr }) {
   return (
     <>
-      <p className="pr-preview__stats">
+      <p>
         by <strong>@{pr.author}</strong> ·{" "}
         <span>
           {pr.changedFiles} {pr.changedFiles === 1 ? "file" : "files"} changed
         </span>{" "}
-        · <span className="pr-preview__add">+{pr.additions}</span>{" "}
-        <span className="pr-preview__del">−{pr.deletions}</span>
+        · <span className="count-add">+{pr.additions}</span>{" "}
+        <span className="count-del">−{pr.deletions}</span>
       </p>
       {pr.body.trim() ? (
         <details className="pr-preview__section" open>
@@ -301,8 +302,8 @@ function PrPreview({ pr }: { pr: CurrentPr }) {
           {pr.files.map((f) => (
             <li key={f.path}>
               <code>{f.path}</code>
-              <span className="pr-preview__add">+{f.additions}</span>
-              <span className="pr-preview__del">−{f.deletions}</span>
+              <span className="count-add">+{f.additions}</span>
+              <span className="count-del">−{f.deletions}</span>
             </li>
           ))}
         </ul>

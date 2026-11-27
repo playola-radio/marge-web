@@ -203,6 +203,15 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
     try {
       const run = await createRun(org, repo, prNumber);
       if (!mounted.current) return;
+      // The run pins the PR's revision now; the preview's may be older.
+      setPr(
+        (prev) =>
+          prev && {
+            ...prev,
+            currentHeadSha: run.headSha,
+            currentBaseSha: run.baseSha,
+          },
+      );
       setCandidate(run);
       display(run);
     } catch (error) {
@@ -233,7 +242,7 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
    * the reader's click. A freshness lookup never switches the run.
    */
   const lookup = useCallback(
-    async (mode: "initial" | "recover" | "fresh") => {
+    async (mode: "initial" | "fresh") => {
       try {
         const data = await fetchLatestRun(org, repo, prNumber);
         if (!mounted.current) return;
@@ -279,7 +288,7 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
 
   const tryAgain = useCallback(() => {
     setState({ kind: "loading" });
-    void lookup("recover");
+    void lookup("initial");
   }, [lookup]);
 
   const retry = useCallback(async () => {

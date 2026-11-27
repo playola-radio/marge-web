@@ -164,27 +164,17 @@
   font-weight: 600;
 }
 
-.pr-preview__add {
-  color: #1a7f37;
-}
-
-.pr-preview__del {
-  color: #d1242f;
-}
-
 .pr-preview__section {
   width: 100%;
 }
 
 .pr-preview__section summary {
   cursor: pointer;
-  color: var(--prr-ink);
   font-weight: 500;
 }
 
 .pr-preview__body {
   white-space: pre-wrap;
-  font-size: 15px;
   margin-top: 8px;
   max-height: 320px;
   overflow: auto;
@@ -204,8 +194,6 @@
 }
 
 .pr-preview__files code {
-  font-family: var(--prr-mono);
-  color: var(--prr-ink);
   overflow-wrap: anywhere;
 }
 

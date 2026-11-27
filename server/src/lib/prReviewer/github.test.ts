@@ -206,14 +206,7 @@ describe("GitHubApp", () => {
         additions: 12,
         deletions: 4,
         changedFiles: 1,
-        files: [
-          {
-            path: "src/spin.ts",
-            status: "modified",
-            additions: 12,
-            deletions: 4,
-          },
-        ],
+        files: [{ path: "src/spin.ts", additions: 12, deletions: 4 }],
       });
       const repoCalls = gh.calls.filter((c) => c.path.startsWith("/repos/"));
       assert.isTrue(

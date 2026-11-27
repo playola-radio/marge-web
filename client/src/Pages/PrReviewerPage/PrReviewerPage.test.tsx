@@ -190,6 +190,33 @@ describe("first visit", () => {
     ).toBeInTheDocument();
   });
 
+  test("still offers Generate chapters when an older server sends no preview", async () => {
+    api.latest.mockResolvedValue(
+      latest(null, { author: undefined, body: undefined, files: undefined }),
+    );
+    renderApp(PAGE);
+    expect(
+      await screen.findByRole("button", { name: "Generate chapters" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/files? changed/)).not.toBeInTheDocument();
+  });
+
+  test("a push while the reader was deciding doesn't mark the new run outdated", async () => {
+    vi.useFakeTimers();
+    api.latest.mockResolvedValue(latest(null));
+    api.create.mockResolvedValue(
+      makeRun({ status: "queued", headSha: HEAD_B, baseSha: BASE_B }),
+    );
+    renderApp(PAGE);
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Generate chapters" }));
+    await flush();
+    expect(
+      screen.getByText("Waiting to start generating chapters…"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/the PR has changed/)).not.toBeInTheDocument();
+  });
+
   test("Generate chapters posts run creation, shows the stages, and polls until the chapters show", async () => {
     vi.useFakeTimers();
     api.latest.mockResolvedValue(latest(null));

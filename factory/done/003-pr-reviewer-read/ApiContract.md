@@ -59,7 +59,7 @@ Response `200`:
     "additions": 120,
     "deletions": 30,
     "changedFiles": 4,
-    "files": [{ "path": "test/setup.ts", "status": "modified", "additions": 40, "deletions": 9 }]
+    "files": [{ "path": "test/setup.ts", "additions": 40, "deletions": 9 }]
   },
   "run": { "…": "run JSON above, or null when the PR has no runs yet" },
   "newerRun": { "…": "run JSON of the most recently created run — only present when it differs from run" }

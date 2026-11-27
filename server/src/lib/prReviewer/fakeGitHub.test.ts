@@ -28,15 +28,9 @@ describe("FakeGitHub", () => {
     const pr = await github.resolvePullRequest(ORG, REPO, 42);
     const dir = join(root, ORG, REPO);
     const { files, additions, deletions, changedFiles, ...rest } = pr;
-    assert.lengthOf(files, changedFiles);
-    assert.isAbove(changedFiles, 0);
-    assert.strictEqual(
-      additions,
-      files.reduce((n, f) => n + f.additions, 0),
-    );
-    assert.strictEqual(
-      deletions,
-      files.reduce((n, f) => n + f.deletions, 0),
+    assert.deepEqual(
+      { files: files.length, additions, deletions, changedFiles },
+      { files: 9, additions: 98, deletions: 2, changedFiles: 9 },
     );
     assert.deepEqual(rest, {
       title: "Show listeners this week's most-played songs",

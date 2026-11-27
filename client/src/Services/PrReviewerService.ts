@@ -37,7 +37,6 @@ export type Run = {
 
 export type ChangedFile = {
   path: string;
-  status: string;
   additions: number;
   deletions: number;
 };

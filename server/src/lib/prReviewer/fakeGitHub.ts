@@ -133,33 +133,24 @@ export class FakeGitHub implements GitHubSource {
   }
 }
 
-const STATUS: Record<string, string> = {
-  A: "added",
-  D: "removed",
-  M: "modified",
-};
-
 /** The base → head file list, shaped like GitHub's compare `files`. */
 function changedFiles(
   up: FixtureRepo,
   baseSha: string,
   headSha: string,
 ): ChangedFile[] {
-  const lines = (...args: string[]) =>
-    up
-      .git("diff", "--no-renames", ...args, baseSha, headSha)
-      .split("\n")
-      .filter(Boolean);
-  const statuses = lines("--name-status").map((l) => l.split("\t"));
-  return lines("--numstat").map((line, i) => {
-    const [added, removed, path] = line.split("\t");
-    return {
-      path,
-      status: STATUS[statuses[i][0]] ?? "modified",
-      additions: Number(added) || 0,
-      deletions: Number(removed) || 0,
-    };
-  });
+  return up
+    .git("diff", "--no-renames", "--numstat", baseSha, headSha)
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const [added, removed, path] = line.split("\t");
+      return {
+        path,
+        additions: Number(added) || 0,
+        deletions: Number(removed) || 0,
+      };
+    });
 }
 
 /** Builds beside `dir` and renames into place, so a half-built repo is never served. */

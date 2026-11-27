@@ -45,7 +45,6 @@ export interface PullRequestInfo {
 
 export interface ChangedFile {
   path: string;
-  status: string;
   additions: number;
   deletions: number;
 }
@@ -183,14 +182,12 @@ export class GitHubApp implements GitHubSource {
       merge_base_commit: { sha: string };
       files?: {
         filename: string;
-        status: string;
         additions: number;
         deletions: number;
       }[];
     };
     const files = (compare.files ?? []).map((f) => ({
       path: f.filename,
-      status: f.status,
       additions: f.additions,
       deletions: f.deletions,
     }));

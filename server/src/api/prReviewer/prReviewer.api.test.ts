@@ -53,14 +53,7 @@ function prInfo(overrides: Partial<PullRequestInfo> = {}): PullRequestInfo {
     additions: 40,
     deletions: 12,
     changedFiles: 1,
-    files: [
-      {
-        path: "test/setup.ts",
-        status: "modified",
-        additions: 40,
-        deletions: 12,
-      },
-    ],
+    files: [{ path: "test/setup.ts", additions: 40, deletions: 12 }],
     ...overrides,
   };
 }
@@ -450,14 +443,7 @@ const dbUrl = process.env.DATABASE_URL;
           additions: 40,
           deletions: 12,
           changedFiles: 1,
-          files: [
-            {
-              path: "test/setup.ts",
-              status: "modified",
-              additions: 40,
-              deletions: 12,
-            },
-          ],
+          files: [{ path: "test/setup.ts", additions: 40, deletions: 12 }],
         },
         run: null,
       });
