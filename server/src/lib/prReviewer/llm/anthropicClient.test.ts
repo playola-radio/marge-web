@@ -218,4 +218,80 @@ describe("createLlmClient", () => {
       }),
     );
   });
+
+  it("exchanges the federation token and authenticates a Messages request without an API key", async () => {
+    const { createLlmClient } = await import("./index.js");
+    const realFetch = globalThis.fetch;
+    const savedEnv: Record<string, string | undefined> = {
+      PR_REVIEWER_LLM: process.env.PR_REVIEWER_LLM,
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      ANTHROPIC_FEDERATION_RULE_ID: process.env.ANTHROPIC_FEDERATION_RULE_ID,
+      ANTHROPIC_ORGANIZATION_ID: process.env.ANTHROPIC_ORGANIZATION_ID,
+      ANTHROPIC_IDENTITY_TOKEN_FILE: process.env.ANTHROPIC_IDENTITY_TOKEN_FILE,
+      ANTHROPIC_IDENTITY_TOKEN: process.env.ANTHROPIC_IDENTITY_TOKEN,
+    };
+    const calls: { url: string; headers: Headers; body: string | null }[] = [];
+    globalThis.fetch = (async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const headers = new Headers(init?.headers);
+      const body = typeof init?.body === "string" ? init.body : null;
+      calls.push({ url, headers, body });
+      if (url.endsWith("/v1/oauth/token")) {
+        return new Response(
+          JSON.stringify({
+            access_token: "fed-access-token",
+            token_type: "Bearer",
+            expires_in: 3600,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify(
+          toolUse("emit_summarize", { title: "Federated", summary: "Works." }),
+        ),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }) as typeof fetch;
+
+    try {
+      delete process.env.PR_REVIEWER_LLM;
+      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.ANTHROPIC_IDENTITY_TOKEN_FILE;
+      process.env.ANTHROPIC_FEDERATION_RULE_ID = "fdrl_test";
+      process.env.ANTHROPIC_ORGANIZATION_ID = "org-test";
+      process.env.ANTHROPIC_IDENTITY_TOKEN = "jwt-value";
+
+      const sdkClient = createLlmClient(process.env);
+      assert.instanceOf(sdkClient, AnthropicLlmClient);
+      const result = await sdkClient!.structured(req);
+
+      assert.deepEqual(result, {
+        ok: true,
+        value: { title: "Federated", summary: "Works." },
+      });
+      assert.lengthOf(calls, 2);
+      assert.isTrue(calls[0].url.endsWith("/v1/oauth/token"));
+      const exchangeBody = JSON.parse(calls[0].body!) as Record<
+        string,
+        unknown
+      >;
+      assert.equal(exchangeBody.federation_rule_id, "fdrl_test");
+      assert.equal(exchangeBody.organization_id, "org-test");
+      assert.equal(exchangeBody.assertion, "jwt-value");
+
+      assert.isTrue(calls[1].url.endsWith("/v1/messages"));
+      assert.equal(
+        calls[1].headers.get("authorization"),
+        "Bearer fed-access-token",
+      );
+      assert.isNull(calls[1].headers.get("x-api-key"));
+    } finally {
+      globalThis.fetch = realFetch;
+      for (const [key, value] of Object.entries(savedEnv)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
 });
