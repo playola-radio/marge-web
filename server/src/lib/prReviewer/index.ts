@@ -45,7 +45,7 @@ export function startPrReviewer(
 
   const missing = [
     ...(sequelize ? [] : ["DATABASE_URL"]),
-    ...(llm ? [] : ["ANTHROPIC_API_KEY"]),
+    ...(llm ? [] : ["ANTHROPIC_API_KEY (or workload identity)"]),
     ...(github ? [] : ["GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY"]),
   ];
   if (!sequelize || !llm || !github) {

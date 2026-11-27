@@ -19,8 +19,12 @@ export interface MessagesApi {
 }
 
 export interface AnthropicLlmClientOptions {
-  /** Injected in tests; otherwise built from `apiKey`. */
+  /** Injected in tests; otherwise the SDK client is built from `apiKey`. */
   messages?: MessagesApi;
+  /**
+   * Explicit API key. When omitted, the SDK resolves credentials from its own
+   * environment variables (workload identity federation on Render).
+   */
   apiKey?: string;
   model?: string;
   effort?: string;
@@ -68,8 +72,6 @@ export class AnthropicLlmClient implements LlmClient {
     this.effort = options.effort ?? DEFAULT_EFFORT;
     if (options.messages) this.messages = options.messages;
     else {
-      if (!options.apiKey)
-        throw new Error("ANTHROPIC_API_KEY is required for the LLM client");
       const sdk = new Anthropic({ apiKey: options.apiKey, maxRetries: 0 });
       this.messages = sdk.messages as unknown as MessagesApi;
     }

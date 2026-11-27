@@ -25,7 +25,7 @@ describe("PR reviewer startup", () => {
     const reviewer = startPrReviewer({}, { log: (m) => logs.push(m) });
     assert.isNull(reviewer);
     assert.deepEqual(logs, [
-      "pr_reviewer_off missing DATABASE_URL, ANTHROPIC_API_KEY, GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY",
+      "pr_reviewer_off missing DATABASE_URL, ANTHROPIC_API_KEY (or workload identity), GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY",
     ]);
   });
 
@@ -37,6 +37,26 @@ describe("PR reviewer startup", () => {
     });
     const reviewer = startPrReviewer(
       { ANTHROPIC_API_KEY: "sk-test" },
+      { log: (m) => logs.push(m), sequelize },
+    );
+    assert.isNull(reviewer);
+    assert.deepEqual(logs, [
+      "pr_reviewer_off missing GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY",
+    ]);
+  });
+
+  it("counts workload identity federation env as LLM credentials", () => {
+    const logs: string[] = [];
+    const sequelize = new Sequelize("postgres://unused@127.0.0.1:1/none", {
+      dialect: "postgres",
+      logging: false,
+    });
+    const reviewer = startPrReviewer(
+      {
+        ANTHROPIC_FEDERATION_RULE_ID: "fdrl_test",
+        ANTHROPIC_ORGANIZATION_ID: "org-test",
+        ANTHROPIC_IDENTITY_TOKEN_FILE: "/var/lib/render/oidc/anthropic.jwt",
+      },
       { log: (m) => logs.push(m), sequelize },
     );
     assert.isNull(reviewer);
@@ -62,6 +82,10 @@ describe("PR reviewer startup", () => {
     for (const key of [
       "DATABASE_URL",
       "ANTHROPIC_API_KEY",
+      "ANTHROPIC_FEDERATION_RULE_ID",
+      "ANTHROPIC_ORGANIZATION_ID",
+      "ANTHROPIC_IDENTITY_TOKEN_FILE",
+      "ANTHROPIC_IDENTITY_TOKEN",
       "PR_REVIEWER_LLM",
       "GITHUB_APP_ID",
       "GITHUB_APP_PRIVATE_KEY",
