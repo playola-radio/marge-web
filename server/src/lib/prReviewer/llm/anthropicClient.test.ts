@@ -191,4 +191,31 @@ describe("createLlmClient", () => {
     );
     assert.isNull(createLlmClient({}));
   });
+
+  it("picks the Anthropic client from workload identity federation env", async () => {
+    const { createLlmClient } = await import("./index.js");
+    const federation = {
+      ANTHROPIC_FEDERATION_RULE_ID: "fdrl_test",
+      ANTHROPIC_ORGANIZATION_ID: "org-test",
+      ANTHROPIC_IDENTITY_TOKEN_FILE: "/var/lib/render/oidc/anthropic.jwt",
+    };
+    assert.instanceOf(createLlmClient(federation), AnthropicLlmClient);
+    assert.instanceOf(
+      createLlmClient({
+        ...federation,
+        ANTHROPIC_IDENTITY_TOKEN_FILE: undefined,
+        ANTHROPIC_IDENTITY_TOKEN: "jwt-value",
+      }),
+      AnthropicLlmClient,
+    );
+    assert.isNull(
+      createLlmClient({ ANTHROPIC_FEDERATION_RULE_ID: "fdrl_test" }),
+    );
+    assert.isNull(
+      createLlmClient({
+        ...federation,
+        ANTHROPIC_IDENTITY_TOKEN_FILE: undefined,
+      }),
+    );
+  });
 });
