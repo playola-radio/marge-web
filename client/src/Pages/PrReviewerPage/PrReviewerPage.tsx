@@ -2,7 +2,12 @@ import { Link, useParams } from "react-router-dom";
 import { readSession } from "../../utils/session";
 import SignOutButton from "../../Components/SignOutButton/SignOutButton";
 import { ArrowLeftIcon } from "../../Components/Icons/Icons";
-import type { Run, RunPr, RunStage } from "../../Services/PrReviewerService";
+import type {
+  CurrentPr,
+  Run,
+  RunPr,
+  RunStage,
+} from "../../Services/PrReviewerService";
 import { isCurrent, usePrReviewer, viewLatestCandidate } from "./usePrReviewer";
 import { shortSha } from "./diffModel";
 import MarkdownFilesProvider from "./MarkdownFilesProvider";
@@ -135,7 +140,11 @@ function Body({
       <main className="prr__body">
         {pr ? <PrHeader prNumber={prNumber} pr={pr} /> : null}
         {note}
-        <MessageCard title="No chapters yet for this pull request.">
+        <section className="prr-card" aria-label="Before generating">
+          <h2 className="prr-card__title">
+            No chapters yet for this pull request.
+          </h2>
+          {pr ? <PrPreview pr={pr} /> : null}
           <button
             type="button"
             className="prr-button prr-button--primary"
@@ -144,7 +153,7 @@ function Body({
           >
             Generate chapters
           </button>
-        </MessageCard>
+        </section>
       </main>
     );
   }
@@ -263,6 +272,48 @@ function PrHeader({
         PR #{prNumber}: {pr.title}
       </a>
     </section>
+  );
+}
+
+/** What a reader needs to decide whether the PR is worth generating chapters for. */
+function PrPreview({ pr }: { pr: CurrentPr }) {
+  return (
+    <>
+      <p className="pr-preview__stats">
+        by <strong>@{pr.author}</strong> ·{" "}
+        <span>
+          {pr.changedFiles} {pr.changedFiles === 1 ? "file" : "files"} changed
+        </span>{" "}
+        · <span className="pr-preview__add">+{pr.additions}</span>{" "}
+        <span className="pr-preview__del">−{pr.deletions}</span>
+      </p>
+      {pr.body.trim() ? (
+        <details className="pr-preview__section" open>
+          <summary>Description</summary>
+          <p className="pr-preview__body">{pr.body}</p>
+        </details>
+      ) : (
+        <p>No description.</p>
+      )}
+      <details className="pr-preview__section">
+        <summary>Changed files</summary>
+        <ul className="pr-preview__files">
+          {pr.files.map((f) => (
+            <li key={f.path}>
+              <code>{f.path}</code>
+              <span className="pr-preview__add">+{f.additions}</span>
+              <span className="pr-preview__del">−{f.deletions}</span>
+            </li>
+          ))}
+        </ul>
+        {pr.files.length < pr.changedFiles ? (
+          <p>
+            GitHub lists only the first {pr.files.length} of {pr.changedFiles}{" "}
+            files.
+          </p>
+        ) : null}
+      </details>
+    </>
   );
 }
 

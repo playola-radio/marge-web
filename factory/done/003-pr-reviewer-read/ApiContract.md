@@ -53,12 +53,20 @@ Response `200`:
     "headRef": "brian-keane/chapters-flaky-test-fix",
     "commits": 3,
     "currentHeadSha": "aa11bb22…",
-    "currentBaseSha": "2f26b5d1…"
+    "currentBaseSha": "2f26b5d1…",
+    "author": "brian-keane",
+    "body": "The PR description, as written on GitHub",
+    "additions": 120,
+    "deletions": 30,
+    "changedFiles": 4,
+    "files": [{ "path": "test/setup.ts", "status": "modified", "additions": 40, "deletions": 9 }]
   },
   "run": { "…": "run JSON above, or null when the PR has no runs yet" },
   "newerRun": { "…": "run JSON of the most recently created run — only present when it differs from run" }
 }
 ```
+
+`author`, `body`, `additions`, `deletions`, `changedFiles` and `files` let the reader judge, before spending tokens, whether the PR is worth generating chapters for. `files` is GitHub's list for merge base → head, capped at 300; `changedFiles` is the true count.
 
 The page compares `run.headSha` with `pr.currentHeadSha` and `run.baseSha` with `pr.currentBaseSha`: the run is current only when both match; otherwise show the superseded banner with **Generate for latest**. Offer **View latest** instead only when the newer run matches both current SHAs; report its status and open it on that explicit action. An outdated newer run does not replace **Generate for latest**. The client re-checks on page load and when the window regains focus.
 
@@ -66,7 +74,7 @@ Errors: `404 { "error": "pr_not_found" }` (no such open PR, or repo not readable
 
 ## POST `/v1/pr-reviewer/:org/:repo/pulls/:prNumber/runs` — new
 
-Find or create the run for the PR's **current** head revision. Resolves the PR via GitHub, pins `headSha`/`baseSha`, and either returns the existing run for that revision (`200`) or creates one and enqueues generation (`201`). Called on first visit when `runs/latest` returned `run: null`, and by **Generate for latest**.
+Find or create the run for the PR's **current** head revision. Resolves the PR via GitHub, pins `headSha`/`baseSha`, and either returns the existing run for that revision (`200`) or creates one and enqueues generation (`201`). Called only on the reader's click: **Generate chapters** (when `runs/latest` returned `run: null`) and **Generate for latest**. Opening the page never generates.
 
 Empty-diff detection happens during that GitHub resolution, before any run row exists: the same `base…head` compare call that yields the merge-base `baseSha` also reports the net changed files, so a branch whose commits cancel out (a change followed by its revert) answers `422 empty_diff` — commit count is never used, and no git work runs in the request path. Find-or-create is atomic on the revision's unique key (insert with unique-conflict recovery), so two concurrent first visits both receive the same run and exactly one row and one enqueued generation exist.
 

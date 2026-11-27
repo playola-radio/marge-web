@@ -5,6 +5,7 @@ import { DEMO_REPO } from "./demoFixture.js";
 import { FixtureRepo } from "./fixtureRepo.js";
 import {
   GitHubError,
+  type ChangedFile,
   type GitHubSource,
   type PrCommit,
   type PullRequestInfo,
@@ -75,6 +76,7 @@ export class FakeGitHub implements GitHubSource {
     const up = this.open(org, repo);
     const headSha = up.git("rev-parse", `refs/heads/${pull.headRef}`);
     const baseSha = up.mergeBase(`refs/heads/${BASE_REF}`, headSha);
+    const files = changedFiles(up, baseSha, headSha);
     return {
       title: pull.title,
       url: `https://github.com/${entry.org}/${entry.repo}/pull/${prNumber}`,
@@ -83,7 +85,13 @@ export class FakeGitHub implements GitHubSource {
       headSha,
       baseSha,
       commits: up.prCommits(baseSha, headSha).length,
-      hasNetDiff: up.git("diff", "--name-only", baseSha, headSha) !== "",
+      hasNetDiff: files.length > 0,
+      author: "playola-demo",
+      body: "",
+      additions: files.reduce((n, f) => n + f.additions, 0),
+      deletions: files.reduce((n, f) => n + f.deletions, 0),
+      changedFiles: files.length,
+      files,
     };
   }
 
@@ -123,6 +131,35 @@ export class FakeGitHub implements GitHubSource {
     if (!existsSync(dir)) build(entry, dir);
     return FixtureRepo.open(dir);
   }
+}
+
+const STATUS: Record<string, string> = {
+  A: "added",
+  D: "removed",
+  M: "modified",
+};
+
+/** The base → head file list, shaped like GitHub's compare `files`. */
+function changedFiles(
+  up: FixtureRepo,
+  baseSha: string,
+  headSha: string,
+): ChangedFile[] {
+  const lines = (...args: string[]) =>
+    up
+      .git("diff", "--no-renames", ...args, baseSha, headSha)
+      .split("\n")
+      .filter(Boolean);
+  const statuses = lines("--name-status").map((l) => l.split("\t"));
+  return lines("--numstat").map((line, i) => {
+    const [added, removed, path] = line.split("\t");
+    return {
+      path,
+      status: STATUS[statuses[i][0]] ?? "modified",
+      additions: Number(added) || 0,
+      deletions: Number(removed) || 0,
+    };
+  });
 }
 
 /** Builds beside `dir` and renames into place, so a half-built repo is never served. */

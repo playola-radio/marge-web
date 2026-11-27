@@ -33,6 +33,21 @@ export interface PullRequestInfo {
   commits: number;
   /** Whether merge base → head changes any file. */
   hasNetDiff: boolean;
+  /** What a reader needs to decide whether the PR is worth generating chapters for. */
+  author: string;
+  body: string;
+  additions: number;
+  deletions: number;
+  changedFiles: number;
+  /** GitHub lists at most 300; `changedFiles` is the true count. */
+  files: ChangedFile[];
+}
+
+export interface ChangedFile {
+  path: string;
+  status: string;
+  additions: number;
+  deletions: number;
 }
 
 export interface PrCommit {
@@ -141,7 +156,12 @@ export class GitHubApp implements GitHubSource {
       title: string;
       html_url: string;
       state: string;
+      body: string | null;
+      user: { login: string } | null;
       commits: number;
+      additions: number;
+      deletions: number;
+      changed_files: number;
       base: { ref: string; sha: string };
       head: { ref: string; sha: string };
     };
@@ -159,7 +179,21 @@ export class GitHubApp implements GitHubSource {
       org,
       repo,
       `/compare/${encodeRef(pr.base.ref)}...${pr.head.sha}?per_page=1`,
-    )) as { merge_base_commit: { sha: string }; files?: unknown[] };
+    )) as {
+      merge_base_commit: { sha: string };
+      files?: {
+        filename: string;
+        status: string;
+        additions: number;
+        deletions: number;
+      }[];
+    };
+    const files = (compare.files ?? []).map((f) => ({
+      path: f.filename,
+      status: f.status,
+      additions: f.additions,
+      deletions: f.deletions,
+    }));
     return {
       title: pr.title,
       url: pr.html_url,
@@ -168,7 +202,13 @@ export class GitHubApp implements GitHubSource {
       headSha: pr.head.sha,
       baseSha: compare.merge_base_commit.sha,
       commits: pr.commits,
-      hasNetDiff: (compare.files ?? []).length > 0,
+      hasNetDiff: files.length > 0,
+      author: pr.user?.login ?? "",
+      body: pr.body ?? "",
+      additions: pr.additions,
+      deletions: pr.deletions,
+      changedFiles: pr.changed_files,
+      files,
     };
   }
 

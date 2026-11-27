@@ -30,7 +30,7 @@ export type PageState =
   | { kind: "error"; unavailable: boolean; detail: string | null }
   | { kind: "notFound" }
   | { kind: "emptyDiff" }
-  /** A recovered lookup found no run: generation waits for the button. */
+  /** No run yet: generation waits for the reader to look the PR over and click. */
   | { kind: "noRun" }
   | { kind: "run"; run: Run; loaded: Loaded | null };
 
@@ -229,8 +229,8 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
   }, [display, org, prNumber, repo, signedOut]);
 
   /**
-   * Reads `runs/latest`. Only the first, untroubled lookup may generate; a
-   * recovery lookup never does; a freshness lookup never switches the run.
+   * Reads `runs/latest`. Never generates — that costs tokens, so it waits for
+   * the reader's click. A freshness lookup never switches the run.
    */
   const lookup = useCallback(
     async (mode: "initial" | "recover" | "fresh") => {
@@ -241,7 +241,6 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
         setCandidate(data.newerRun ?? data.run);
         if (mode === "fresh") return;
         if (data.run) display(data.run);
-        else if (mode === "initial") void generate();
         else setState({ kind: "noRun" });
       } catch (error) {
         if (!mounted.current || signedOut(error)) return;
@@ -259,7 +258,7 @@ export function usePrReviewer(org: string, repo: string, prNumber: string) {
         }
       }
     },
-    [display, generate, org, prNumber, repo, signedOut],
+    [display, org, prNumber, repo, signedOut],
   );
 
   useEffect(() => {

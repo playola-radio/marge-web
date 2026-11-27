@@ -48,6 +48,19 @@ function prInfo(overrides: Partial<PullRequestInfo> = {}): PullRequestInfo {
     baseSha: BASE,
     commits: 3,
     hasNetDiff: true,
+    author: "brian-keane",
+    body: "Cuts slow git setup out of the test suite.",
+    additions: 40,
+    deletions: 12,
+    changedFiles: 1,
+    files: [
+      {
+        path: "test/setup.ts",
+        status: "modified",
+        additions: 40,
+        deletions: 12,
+      },
+    ],
     ...overrides,
   };
 }
@@ -418,7 +431,7 @@ const dbUrl = process.env.DATABASE_URL;
   });
 
   describe("GET runs/latest", () => {
-    it("returns the current revision and run null when the PR has no runs", async () => {
+    it("returns the current revision, its size and changed files, and run null when the PR has no runs", async () => {
       const res = await request(app)
         .get(`${prBase()}/runs/latest`)
         .set("Authorization", auth());
@@ -432,6 +445,19 @@ const dbUrl = process.env.DATABASE_URL;
           commits: 3,
           currentHeadSha: HEAD_A,
           currentBaseSha: BASE,
+          author: "brian-keane",
+          body: "Cuts slow git setup out of the test suite.",
+          additions: 40,
+          deletions: 12,
+          changedFiles: 1,
+          files: [
+            {
+              path: "test/setup.ts",
+              status: "modified",
+              additions: 40,
+              deletions: 12,
+            },
+          ],
         },
         run: null,
       });
